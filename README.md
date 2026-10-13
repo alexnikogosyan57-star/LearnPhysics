@@ -20,7 +20,7 @@ npm run build
 npx playwright test
 ```
 
-The browser tests use the environment's `/usr/bin/chromium`. Six browser tests cover the complete lesson with one observation at a time, pause/resume/reset, all three requested motion cases, live graph synchronization and selected comparisons, progressive hints, assessment, notebook editing/deletion, legacy data preservation, reload persistence, muted audio controls, reduced motion, missing assets, console errors, and layouts at 390, 768 and 1440 pixels. Physics tests cover the three requested SI reference cases and graph coordinates.
+The browser tests use the environment's `/usr/bin/chromium`. Eleven browser tests cover the complete lesson with one observation at a time, pause/resume/reset, all three requested motion cases, live graph synchronization and selected comparisons, progressive hints, assessment, notebook editing/deletion, legacy data preservation, reload persistence, muted audio controls, reduced motion, missing assets, console errors, and layouts at 390, 768 and 1440 pixels. Physics tests cover the three requested SI reference cases and graph coordinates.
 
 ## Architecture
 
@@ -35,7 +35,7 @@ Only the first motion module is available. Future topics are explicitly labeled 
 
 ## Assets and limitations
 
-Noto Sans Armenian is bundled locally via Fontsource (SIL Open Font License, included in the package). Lucide icons use the ISC license. Corridor artwork and the moving delivery robot are original SVG. The companion is a transparent WebP generated from the supplied mascot reference. It uses restrained whole-image entrance animation, not articulated limbs or a 3D rig. Only the icons used by the interface are bundled. No external runtime asset URLs are needed.
+Noto Sans Armenian is bundled locally via Fontsource (SIL Open Font License, included in the package). Lucide icons use the ISC license. Corridor artwork and the moving delivery robot are original SVG. The companion now uses the exact user-provided 6-second MP4 with an opaque beige background, plus its own first and final frames. Greeting playback is muted, once per tab session, with reduced-motion and failure fallbacks. No missing emotional-state videos are fabricated. Only the icons used by the interface are bundled. No external runtime asset URLs are needed.
 
 Authentic licensed mechanical recordings are not supplied; the sound settings explicitly explain this and the app stays silent. Volume preferences are retained for a future recorded-audio layer. There is no synthesized placeholder sound.
 
@@ -51,6 +51,12 @@ Build the GitHub Pages and offline versions:
 npm run export:standalone
 ```
 
-This writes the relative-path site and `dist/physics-app.html`, including the mascot and Armenian fonts as embedded assets. The single HTML file needs no separate asset files. Browser policy in this cloud environment blocks `file://` navigation, so the standalone artifact is tested over local HTTP with no external asset requests. Downloaded-file opening on a user's device depends on their browser policy.
+This writes the relative-path site and `dist/physics-app.html`, including the original MP4, both poster frames and Armenian fonts as embedded assets. The single HTML file needs no separate asset files. Browser policy in this cloud environment blocks `file://` navigation, so the standalone artifact is tested over local HTTP with no external asset requests. Downloaded-file opening on a user's device depends on their browser policy.
 
 Publish the contents of `dist/` plus `.nojekyll` to the `gh-pages` branch. In the repository's Settings → Pages, choose Deploy from a branch → gh-pages → / (root). GitHub Pages activation is separate from pushing the branch. The expected site address is `https://alexnikogosyan57-star.github.io/LearnPhysics/`; public deployment is not confirmed by a local build.
+
+## Animated companion
+
+`src/mascot.js` is a reusable asset registry, renderer and playback controller. Real application navigation mounts and disposes it. A successful playback start is remembered in sessionStorage, with an in-memory fallback, so revisiting or reloading the homepage in the same tab does not replay the greeting. Reduced motion displays a still without requesting the video. An autoplay rejection exposes a keyboard-accessible text action, while media failure keeps the still visible. An ended clip transitions only after the final still has decoded. The fixed 9:16 media footprint prevents layout shifts.
+
+The original MP4 is approximately 2 MB and remains byte-for-byte unchanged. No video player controls, looping, audible playback, picture-in-picture or other unprovided emotional animations are introduced. Five additional browser tests verify desktop/mobile decoding, one-time playback, ending and layout stability, same-session revisits/reload, reduced motion, blocked autoplay and network failure.

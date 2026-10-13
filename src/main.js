@@ -74,7 +74,8 @@ import {
 } from "./content";
 import { read, write } from "./storage";
 import { scene } from "./scene";
-import mascotUrl from "./assets/mascot.webp";
+import { renderMascot, mountMascots } from "./mascot";
+let cleanupMascots = () => {};
 let data = read();
 data.unlockedStage = Math.max(data.unlockedStage || 0, data.stage);
 let page = "home",
@@ -113,7 +114,7 @@ function go(p) {
   window.scrollTo(0, 0);
 }
 function companion(state = "greeting", text = "Եկ միասին պարզենք։") {
-  return `<div class="companion ${state} ${data.mascotSeen ? "returning" : "first-visit"}"><img src="${mascotUrl}" alt="Քո հետազոտական ընկերը՝ բարեհամբույր ռոբոտ" width="600" height="800"><p class="companion-caption">${text}</p></div>`;
+  return renderMascot(state, text);
 }
 function shell(body) {
   const active = page === "lesson" ? "path" : page;
@@ -121,7 +122,7 @@ function shell(body) {
 }
 function home() {
   const done = !!data.assessment;
-  return `<section class="hero"><div class="hero-copy"><span class="eyebrow">Փոքր հարցերից՝ մեծ բացահայտումներ</span><h1>Բարև՛, հետազոտող։<br><span>Սկսենք մի «ինչո՞ւ»-ից։</span></h1><p>Այսօր պարզելու ենք՝ ինչպես են արագությունն ու ժամանակը փոխում ռոբոտի անցած ճանապարհը։</p><button class="button" data-page="lesson">${done ? "Վերադառնալ հետազոտությանը" : data.stage ? "Շարունակել հետազոտությունը" : "Սկսել հետազոտությունը"} ${icon("arrow-right")}</button><span class="hero-meta">${icon("clock-3")} 15–20 րոպե · քո տեմպով</span></div>${companion("greeting", data.mascotSeen ? "Պատրա՞ստ ես նոր փորձի։" : "Բարև՛։ Ես քո հետազոտական ընկերն եմ։")}</section><section class="current-lesson"><div class="lesson-kicker"><span class="lesson-number">01</span><span>Քո ընթացիկ հետազոտությունը</span><span class="lesson-duration">${done ? "Ավարտված" : `Քայլ ${data.stage + 1} / 6`}</span></div><div class="lesson-focus"><div><h2>Փոքր ռոբոտի մեծ ճանապարհը</h2><p>Կանխատեսիր, փորձիր և բացահայտիր շարժման կապը։</p></div><span class="current-stage">${icon(done ? "circle-check" : "circle-dot")}${done ? "Հետազոտությունն ավարտված է" : stages[data.stage]}</span></div><div class="stage-progress" role="img" aria-label="Դասի ${data.stage + 1}-րդ քայլ՝ 6 քայլից">${stages.map((s, i) => `<span class="${i <= data.stage ? "filled" : ""}"></span>`).join("")}</div></section><div class="home-support"><section class="journal-preview"><span class="support-icon">${icon("notebook-pen")}</span><h3>Հետազոտողի տետր</h3>${data.notes.length ? `<p class="notebook-excerpt">«${escape(data.notes.at(-1).conclusion || data.notes.at(-1).observation || "Իմ առաջին դիտարկումը")}»</p>` : "<p>Լավ հարցը մի կորցրու։ Քո կանխատեսումներն ու բացահայտումները կմնան այստեղ։</p>"}<button class="text-button" data-page="notebook">${data.notes.length ? "Կարդալ վերջին գրառումը" : "Բացել տետրը"} ${icon("arrow-up-right")}</button></section><section class="experiment-preview"><span class="support-icon">${icon("flask-conical")}</span><h3>Իսկ եթե երկու անգամ արա՞գ</h3><p>Փոխիր միայն արագությունը։ Նույն ժամանակում ռոբոտն ավելի հեռու կհասնի՞։</p><button class="text-button" data-page="lab">Փորձել լաբորատորիայում ${icon("arrow-up-right")}</button></section></div>`;
+  return `<section class="hero"><div class="hero-copy"><span class="eyebrow">Փոքր հարցերից՝ մեծ բացահայտումներ</span><h1>Բարև՛, հետազոտող։<br><span>Սկսենք մի «ինչո՞ւ»-ից։</span></h1><p>Այսօր պարզելու ենք՝ ինչպես են արագությունն ու ժամանակը փոխում ռոբոտի անցած ճանապարհը։</p><button class="button" data-page="lesson">${done ? "Վերադառնալ հետազոտությանը" : data.stage ? "Շարունակել հետազոտությունը" : "Սկսել հետազոտությունը"} ${icon("arrow-right")}</button><span class="hero-meta">${icon("clock-3")} 15–20 րոպե · քո տեմպով</span></div>${companion("greeting", data.mascotSeen ? "Պատրա՞ստ ես նոր փորձի։" : "Բարև՛։ Եկ միասին փորձենք։")}</section><section class="current-lesson"><div class="lesson-kicker"><span class="lesson-number">01</span><span>Քո ընթացիկ հետազոտությունը</span><span class="lesson-duration">${done ? "Ավարտված" : `Քայլ ${data.stage + 1} / 6`}</span></div><div class="lesson-focus"><div><h2>Փոքր ռոբոտի մեծ ճանապարհը</h2><p>Կանխատեսիր, փորձիր և բացահայտիր շարժման կապը։</p></div><span class="current-stage">${icon(done ? "circle-check" : "circle-dot")}${done ? "Հետազոտությունն ավարտված է" : stages[data.stage]}</span></div><div class="stage-progress" role="img" aria-label="Դասի ${data.stage + 1}-րդ քայլ՝ 6 քայլից">${stages.map((s, i) => `<span class="${i <= data.stage ? "filled" : ""}"></span>`).join("")}</div></section><div class="home-support"><section class="journal-preview"><span class="support-icon">${icon("notebook-pen")}</span><h3>Հետազոտողի տետր</h3>${data.notes.length ? `<p class="notebook-excerpt">«${escape(data.notes.at(-1).conclusion || data.notes.at(-1).observation || "Իմ առաջին դիտարկումը")}»</p>` : "<p>Լավ հարցը մի կորցրու։ Քո կանխատեսումներն ու բացահայտումները կմնան այստեղ։</p>"}<button class="text-button" data-page="notebook">${data.notes.length ? "Կարդալ վերջին գրառումը" : "Բացել տետրը"} ${icon("arrow-up-right")}</button></section><section class="experiment-preview"><span class="support-icon">${icon("flask-conical")}</span><h3>Իսկ եթե երկու անգամ արա՞գ</h3><p>Փոխիր միայն արագությունը։ Նույն ժամանակում ռոբոտն ավելի հեռու կհասնի՞։</p><button class="text-button" data-page="lab">Փորձել լաբորատորիայում ${icon("arrow-up-right")}</button></section></div>`;
 }
 function sim() {
   const latest = data.runs.at(-1);
@@ -373,6 +374,7 @@ function escape(v) {
   );
 }
 function render() {
+  cleanupMascots();
   $("#app").innerHTML = shell(
     {
       home,
@@ -391,6 +393,7 @@ function render() {
   createIcons({ icons });
   bind();
   bindRedesign();
+  cleanupMascots = mountMascots($("#app"));
 }
 function stop() {
   running = false;

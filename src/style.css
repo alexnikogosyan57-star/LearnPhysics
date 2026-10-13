@@ -2180,3 +2180,116 @@ dialog p {
     font-size: 32px;
   }
 }
+/* Opaque original video: feather its background margins, never the robot. */
+.video-companion {
+  max-width: 255px;
+}
+.mascot-media {
+  width: 100%;
+  aspect-ratio: 9/16;
+  position: relative;
+  isolation: isolate;
+  mask-image:
+    linear-gradient(90deg, transparent, #000 8%, #000 94%, transparent),
+    linear-gradient(180deg, transparent, #000 6%, #000 95%, transparent);
+  mask-composite: intersect;
+}
+.video-companion .mascot-poster,
+.mascot-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: contain;
+  display: block;
+  filter: none;
+  animation: none;
+  transform: none;
+}
+.mascot-video {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+.video-companion[data-phase="playing"] .mascot-video {
+  opacity: 1;
+}
+.video-companion .mascot-play {
+  font-size: 13px;
+  margin: 6px auto 0;
+  justify-content: center;
+}
+.mascot-play[hidden] {
+  display: none;
+}
+.mascot-status {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #788268;
+  margin-top: 6px;
+}
+.mascot-status:empty {
+  display: none;
+}
+.video-companion .companion-caption {
+  margin-top: 5px;
+  max-width: 255px;
+}
+.intro-layout .video-companion {
+  max-width: 190px;
+}
+.intro-layout .video-companion .mascot-poster {
+  max-height: none;
+}
+@media (max-width: 850px) {
+  .video-companion {
+    max-width: 210px;
+  }
+}
+@media (max-width: 500px) {
+  .hero .video-companion {
+    max-width: 180px;
+    margin-top: 17px;
+  }
+  .video-companion .mascot-poster {
+    max-height: none;
+  }
+  .hero {
+    padding-bottom: 22px;
+  }
+  .video-companion .companion-caption {
+    font-size: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mascot-video {
+    transition: none;
+  }
+}
+/* Match the clip's warm, opaque studio backdrop with a soft section wash. */
+.hero:has(.video-companion) {
+  background: radial-gradient(
+    ellipse 245px 325px at 79% 45%,
+    #eee4d2 40%,
+    transparent 100%
+  );
+}
+@media (max-width: 850px) and (min-width: 501px) {
+  .hero:has(.video-companion) {
+    background: radial-gradient(
+      ellipse 190px 270px at 79% 45%,
+      #eee4d2 40%,
+      transparent 100%
+    );
+  }
+}
+@media (max-width: 500px) {
+  .hero:has(.video-companion) {
+    background: radial-gradient(
+      ellipse 170px 220px at 50% 75%,
+      #eee4d2 40%,
+      transparent 100%
+    );
+  }
+}
