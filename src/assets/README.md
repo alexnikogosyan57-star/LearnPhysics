@@ -6,6 +6,12 @@ The original source filename is `Robot_waving_hello_animation_1080p_202610132141
 
 `greeting-poster.webp` and `greeting-idle.webp` are proportional, 432 × 768 exports of the first and final video frames. They preserve the same robot. CSS uses `object-fit: contain`, a 9:16 media area, and feathers only the background margins against a matching warm section backdrop. This is visual compositing, not asset transparency.
 
-`src/mascot.js` registers only the real greeting and static idle assets. Unprovided states resolve to idle. It plays the greeting once per tab session, handles rejected autoplay with an accessible text action, retains the final resting frame, respects reduced motion, and releases listeners and playback on navigation.
+`src/mascot.js` registers the supplied greeting and thinking videos, each with real first/final frames, plus static idle. Unprovided states resolve to idle. It plays the greeting once per tab session, handles rejected autoplay with an accessible text action, retains the final resting frame, respects reduced motion, and releases listeners and playback on navigation.
 
-`mascot.webp` is a retained legacy illustration from the previous redesign and is no longer imported or included in the application build. There are no invented thinking, success, encouragement or curious video assets.
+`mascot.webp` is a retained legacy illustration from the previous redesign and is no longer imported or included in the application build. There are no invented success, encouragement or curious video assets.
+
+## Thinking clip
+
+`thinking.mp4` is copied byte-for-byte from the user upload `Robot_thinking_about_physics_que…_20261013231206.mp4`. SHA-256: `840def05e8dfa6c572f329e96bc1eb2f2edf71456a8abe348c6d302deeba3362`. It is 8 seconds, 1080 × 1920, 24 fps, H.264/AAC, approximately 2.4 MB. The visible checkerboard is encoded in the pixels; it is not alpha transparency. No background removal or robot redesign is claimed. `thinking-poster.webp` and `thinking-idle.webp` are proportional first/final frame exports.
+
+Thinking playback is keyed to real question/hint identities in sessionStorage, with a memory fallback. Each event plays once; changing a selected answer does not replay it. New questions and explicitly requested new hints can trigger a fresh reaction. On mobile, question companions use a 64-pixel-wide media area beside their short cue. Hidden introductory companions do not fetch/play media. Both clips stay muted and honor reduced motion.

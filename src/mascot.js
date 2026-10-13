@@ -1,11 +1,15 @@
 import greetingVideo from "./assets/greeting.mp4";
 import greetingPoster from "./assets/greeting-poster.webp";
 import idlePoster from "./assets/greeting-idle.webp";
+import thinkingVideo from "./assets/thinking.mp4";
+import thinkingPoster from "./assets/thinking-poster.webp";
+import thinkingIdle from "./assets/thinking-idle.webp";
 
 // Register additional clips only when real, corresponding assets are supplied.
 export const mascotAnimations = Object.freeze({
   idle: { poster: idlePoster },
   greeting: { src: greetingVideo, poster: greetingPoster, idle: idlePoster },
+  thinking: { src: thinkingVideo, poster: thinkingPoster, idle: thinkingIdle },
 });
 const sessionKey = "physics-mascot-greeting-v1";
 let greetingStarted = false;
@@ -25,12 +29,41 @@ function rememberGreeting() {
   }
 }
 
-export function renderMascot(requestedState, caption) {
+const startedEvents = new Set();
+function hasPlayed(state, eventKey) {
+  if (state === "greeting") return hasGreeted();
+  const key = `physics-mascot:${state}:${eventKey}`;
+  try {
+    return startedEvents.has(key) || sessionStorage.getItem(key) === "played";
+  } catch {
+    return startedEvents.has(key);
+  }
+}
+function rememberPlayback(state, eventKey) {
+  if (state === "greeting") {
+    rememberGreeting();
+    return;
+  }
+  const key = `physics-mascot:${state}:${eventKey}`;
+  startedEvents.add(key);
+  try {
+    sessionStorage.setItem(key, "played");
+  } catch {
+    /* Memory fallback. */
+  }
+}
+export function renderMascot(
+  requestedState,
+  caption,
+  eventKey = requestedState,
+) {
   const state = mascotAnimations[requestedState] ? requestedState : "idle";
   const clip = mascotAnimations[state];
   const poster =
-    state === "greeting" && hasGreeted() ? idlePoster : clip.poster;
-  return `<div class="companion video-companion" data-mascot-state="${state}"><div class="mascot-media"><img class="mascot-poster" src="${poster}" alt="Քո հետազոտական ընկերը՝ ռոբոտը" width="1080" height="1920">${state === "greeting" ? `<video class="mascot-video" muted playsinline preload="none" poster="${poster}" width="1080" height="1920" aria-hidden="true" tabindex="-1" disablepictureinpicture disableremoteplayback></video>` : ""}</div><p class="companion-caption">${caption}</p><button class="text-button mascot-play" type="button" hidden>Դիտել ռոբոտի ողջույնը</button><p class="mascot-status" role="status"></p></div>`;
+    clip.src && hasPlayed(state, eventKey) ? clip.idle : clip.poster;
+  const action =
+    state === "greeting" ? "Դիտել ռոբոտի ողջույնը" : "Դիտել մտածող ռոբոտին";
+  return `<div class="companion video-companion" data-mascot-state="${state}" data-mascot-event="${eventKey}"><div class="mascot-media"><img class="mascot-poster" src="${poster}" alt="Քո հետազոտական ընկերը՝ ռոբոտը" width="1080" height="1920">${clip.src ? `<video class="mascot-video" muted playsinline preload="none" poster="${poster}" width="1080" height="1920" aria-hidden="true" tabindex="-1" disablepictureinpicture disableremoteplayback></video>` : ""}</div><p class="companion-caption">${caption}</p><button class="text-button mascot-play" type="button" hidden>${action}</button><p class="mascot-status" role="status"></p></div>`;
 }
 
 export function mountMascots(root) {
@@ -41,8 +74,16 @@ export function mountMascots(root) {
 }
 function mountMascot(element) {
   const video = element.querySelector("video");
-  if (!video) return () => {};
+  if (!video || element.getClientRects().length === 0) return () => {};
   const poster = element.querySelector(".mascot-poster");
+  const state = element.dataset.mascotState;
+  const eventKey = element.dataset.mascotEvent;
+  const clip = mascotAnimations[state];
+  const alreadyPlayed = () => hasPlayed(state, eventKey);
+  const unavailable =
+    state === "greeting"
+      ? "Ողջույնի տեսանյութն այս պահին հասանելի չէ։"
+      : "Ռոբոտի տեսանյութն այս պահին հասանելի չէ։";
   const trigger = element.querySelector(".mascot-play");
   const status = element.querySelector(".mascot-status");
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
@@ -53,7 +94,7 @@ function mountMascot(element) {
     node.addEventListener(name, handler, { signal: events.signal });
   const alive = () => !disposed && element.isConnected;
   const rest = new Image();
-  rest.src = idlePoster;
+  rest.src = clip.idle;
   video.muted = true;
   video.defaultMuted = true;
   video.loop = false;
@@ -68,7 +109,7 @@ function mountMascot(element) {
   async function finish() {
     if (!alive()) return;
     // Keep the decoded final video frame visible until the idle image is ready.
-    poster.src = idlePoster;
+    poster.src = clip.idle;
     try {
       await poster.decode();
     } catch {
@@ -76,46 +117,47 @@ function mountMascot(element) {
     }
     if (alive()) element.dataset.phase = "idle";
   }
-  async function playGreeting() {
+  async function playAnimation() {
     if (!alive() || pending || motion.matches) return;
     pending = true;
     trigger.hidden = true;
     status.textContent = "";
-    if (!video.getAttribute("src")) video.src = greetingVideo;
+    if (!video.getAttribute("src")) video.src = clip.src;
     try {
       await video.play();
-      if (!alive()) return;
-      rememberGreeting();
+      if (!alive() || motion.matches) {
+        video.pause();
+        return;
+      }
+      rememberPlayback(state, eventKey);
       element.dataset.phase = "playing";
     } catch (error) {
       if (!alive()) return;
       element.dataset.phase = "poster";
       if (error.name === "NotAllowedError") {
         trigger.hidden = false;
-        status.textContent = "Ողջույնը կարող ես դիտել կոճակով։";
+        status.textContent = "Անիմացիան կարող ես դիտել կոճակով։";
       } else if (error.name !== "AbortError") {
-        fallback("Ողջույնի տեսանյութն այս պահին հասանելի չէ։");
+        fallback(unavailable);
       }
     } finally {
       pending = false;
     }
   }
   listen(video, "ended", finish);
-  listen(video, "error", () =>
-    fallback("Ողջույնի տեսանյութն այս պահին հասանելի չէ։"),
-  );
-  listen(trigger, "click", playGreeting);
+  listen(video, "error", () => fallback(unavailable));
+  listen(trigger, "click", playAnimation);
   listen(motion, "change", () => {
     if (motion.matches) {
       fallback();
-      poster.src = hasGreeted() ? idlePoster : greetingPoster;
-    } else if (!hasGreeted()) playGreeting();
+      poster.src = alreadyPlayed() ? clip.idle : clip.poster;
+    } else if (!alreadyPlayed()) playAnimation();
   });
-  if (hasGreeted()) {
-    poster.src = idlePoster;
+  if (alreadyPlayed()) {
+    poster.src = clip.idle;
     element.dataset.phase = "idle";
   } else if (motion.matches) fallback();
-  else playGreeting();
+  else playAnimation();
   return () => {
     disposed = true;
     events.abort();

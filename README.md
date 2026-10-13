@@ -20,7 +20,7 @@ npm run build
 npx playwright test
 ```
 
-The browser tests use the environment's `/usr/bin/chromium`. Eleven browser tests cover the complete lesson with one observation at a time, pause/resume/reset, all three requested motion cases, live graph synchronization and selected comparisons, progressive hints, assessment, notebook editing/deletion, legacy data preservation, reload persistence, muted audio controls, reduced motion, missing assets, console errors, and layouts at 390, 768 and 1440 pixels. Physics tests cover the three requested SI reference cases and graph coordinates.
+The browser tests use the environment's `/usr/bin/chromium`. Fifteen browser tests cover the complete lesson with one observation at a time, pause/resume/reset, all three requested motion cases, live graph synchronization and selected comparisons, progressive hints, assessment, notebook editing/deletion, legacy data preservation, reload persistence, muted audio controls, reduced motion, missing assets, console errors, and layouts at 390, 768 and 1440 pixels. Physics tests cover the three requested SI reference cases and graph coordinates.
 
 ## Architecture
 
@@ -51,7 +51,7 @@ Build the GitHub Pages and offline versions:
 npm run export:standalone
 ```
 
-This writes the relative-path site and `dist/physics-app.html`, including the original MP4, both poster frames and Armenian fonts as embedded assets. The single HTML file needs no separate asset files. Browser policy in this cloud environment blocks `file://` navigation, so the standalone artifact is tested over local HTTP with no external asset requests. Downloaded-file opening on a user's device depends on their browser policy.
+This writes the relative-path site and `dist/physics-app.html`, including both original MP4 clips, their poster frames and Armenian fonts as embedded assets. The single HTML file needs no separate asset files. Browser policy in this cloud environment blocks `file://` navigation, so the standalone artifact is tested over local HTTP with no external asset requests. Downloaded-file opening on a user's device depends on their browser policy.
 
 Publish the contents of `dist/` plus `.nojekyll` to the `gh-pages` branch. In the repository's Settings → Pages, choose Deploy from a branch → gh-pages → / (root). GitHub Pages activation is separate from pushing the branch. The expected site address is `https://alexnikogosyan57-star.github.io/LearnPhysics/`; public deployment is not confirmed by a local build.
 
@@ -60,3 +60,7 @@ Publish the contents of `dist/` plus `.nojekyll` to the `gh-pages` branch. In th
 `src/mascot.js` is a reusable asset registry, renderer and playback controller. Real application navigation mounts and disposes it. A successful playback start is remembered in sessionStorage, with an in-memory fallback, so revisiting or reloading the homepage in the same tab does not replay the greeting. Reduced motion displays a still without requesting the video. An autoplay rejection exposes a keyboard-accessible text action, while media failure keeps the still visible. An ended clip transitions only after the final still has decoded. The fixed 9:16 media footprint prevents layout shifts.
 
 The original MP4 is approximately 2 MB and remains byte-for-byte unchanged. No video player controls, looping, audible playback, picture-in-picture or other unprovided emotional animations are introduced. Five additional browser tests verify desktop/mobile decoding, one-time playback, ending and layout stability, same-session revisits/reload, reduced motion, blocked autoplay and network failure.
+
+### Thinking state
+
+The provided thinking clip appears in prediction, guided observation, assessment and explicit hint sections. The registry uses the real thinking source rather than reusing the greeting. Playback is scoped to question/hint event identities, stays muted, ends on its own final frame and does not restart on each answer selection. A small companion remains separate from simulations and measurements. The source has a baked checkerboard, not a transparent background. Four thinking tests verify real decoding/end state, event-based replay prevention, hints, mobile sizing, reduced motion and media failure.
