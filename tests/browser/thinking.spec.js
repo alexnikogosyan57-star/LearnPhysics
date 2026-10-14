@@ -54,19 +54,18 @@ test("thinking loops past its duration with no poster underneath and no restart 
   await expect(mascot.locator("img")).not.toBeVisible();
   await expect(page.locator("#next-stage")).toBeEnabled();
 });
-test("answers and hints retain the continuously playing thinking video", async ({
+test("thinking resumes after answer and hint reactions and persists into the next observation", async ({
   page,
 }) => {
   await stage(page, 3);
   const mascot = page.locator('[data-mascot-state="thinking"]');
   await expect(mascot).toHaveAttribute("data-phase", "playing");
-  await mascot.locator("video").evaluate((v) => (window.liveThinking = v));
   await page.locator('[data-observe="0:1"]').click();
+  await expect(page.locator('[data-mascot-state="confused"]')).toHaveAttribute("data-phase", "playing");
   await page.locator('[data-hint="0"]').click();
-  await expect(mascot).toHaveAttribute("data-phase", "playing");
-  expect(
-    await mascot.locator("video").evaluate((v) => v === window.liveThinking),
-  ).toBe(true);
+  await expect(page.locator('[data-mascot-state="eureka"]')).toHaveAttribute("data-phase", "playing");
+  await expect(mascot).toHaveAttribute("data-phase", "playing", {timeout:7000});
+  await mascot.locator("video").evaluate((v) => (window.liveThinking = v));
   await page.locator('[data-observe="0:0"]').click();
   await page.locator("#next-observation").click();
   await expect(mascot).toHaveAttribute("data-phase", "playing");

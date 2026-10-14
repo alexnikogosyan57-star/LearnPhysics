@@ -60,3 +60,12 @@ fallbacks retain real alpha and have no audio.
 Primary quiet presence follows the home greeting and short guidance/success
 clips after a 0.7-second hold. The secondary quiet presence accompanies progress.
 Reduced-motion and unavailable-media modes intentionally keep transparent stills.
+
+## Eureka and supportive head-scratching
+
+User originals eureka.mp4 and confused.mp4 are unchanged. Processing script
+selects 1.75–3.75 and 0.75–3.25 seconds, excluding the irrelevant lead-ins and
+final returns. Eureka's real bulb/rays use an additional upper-image golden mask
+to preserve that disconnected feature. Both get audio-free alpha WebM, PNGs and
+actual animated WebP fallbacks. Runtime returns them to the thinking loop after
+a 0.7-second final-pose hold. No unrelated graphic is drawn behind the robot.

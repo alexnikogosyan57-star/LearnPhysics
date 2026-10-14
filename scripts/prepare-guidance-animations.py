@@ -19,7 +19,8 @@ session=new_session('u2net',sess_opts=options,providers=['CPUExecutionProvider']
 # Remove standing introductions, the right-pointing greeting and trailing returns.
 clips=[('point-left',.75,2.25,True),('point-right',1.0,2.5,False),
        ('success-answer',1.05,2.125,False),('success-complete',.75,2.75,True),
-       ('idle-primary',.75,2.75,False),('idle-secondary',.75,2.75,True)]
+       ('idle-primary',.75,2.75,False),('idle-secondary',.75,2.75,True),
+       ('eureka',1.75,2.0,False),('confused',.75,2.5,False)]
 for name,start,length,checker in clips:
     if len(sys.argv)>1 and name not in sys.argv[1:]:continue
     reader=subprocess.Popen(['ffmpeg','-v','error','-ss',str(start),'-i',str(root/f'{name}.mp4'),'-t',str(length),'-vf',f'scale={w}:{h}','-f','rawvideo','-pix_fmt','rgb24','pipe:1'],stdout=subprocess.PIPE)
@@ -37,6 +38,12 @@ for name,start,length,checker in clips:
         closed=cv2.morphologyEx((alpha>.6).astype(np.uint8),cv2.MORPH_CLOSE,cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(25,25)))
         repair=ndimage.gaussian_filter(closed.astype(np.float32),.5)
         alpha[95:245,65:405]=np.maximum(alpha[95:245,65:405],repair[95:245,65:405])
+        if name == 'eureka':
+            # Retain the real golden light bulb/rays, which are separate from the body.
+            colors=rgb.astype(np.int16)
+            golden=(colors[:,:,0]>180)&(colors[:,:,1]>130)&(colors[:,:,1]-colors[:,:,2]>30)
+            golden[280:]=False
+            alpha=np.maximum(alpha,ndimage.gaussian_filter(golden.astype(np.float32),.45))
         alpha=np.clip(alpha*255+.5,0,255).astype(np.uint8);alpha[alpha<3]=0
         rgba=np.dstack([rgb,alpha]);rgba[alpha==0,:3]=0
         if alpha[0,0]!=0:raise RuntimeError('Opaque background')

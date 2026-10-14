@@ -109,3 +109,19 @@ short fade eases the handoff without stacking an image under the moving video.
 Generate them with `prepare-guidance-animations.py idle-primary idle-secondary`,
 then `smooth-idle-loops.py` using the same one-time Python tooling. Their actual
 animated WebP alternatives loop too. Accessibility stills remain intentional.
+
+### Simple practice and two new reactions
+
+The lesson now has a compact title, six-step progress bar driven by actual stage
+completion, tactile answer states, and one consistent action dock (fixed within
+reach on mobile). It retains the original palette and scientific investigation,
+with no XP, streak counters or imitation of another product's branding.
+
+The supplied eureka clip uses 1.75–3.75 seconds: introductory thinking is removed,
+while its actual golden bulb/rays are preserved by the matte. It accompanies the
+first correct application answer and explicitly revealed hints. The supplied
+head-scratching clip uses 0.75–3.25 seconds after incorrect observation/application
+answers. Both are truly transparent, music-free, finish on their own pose briefly,
+then return to continuously thinking. Feedback remains supportive and explains
+reasoning. The other two success clips still mark later correct answers and the
+completed investigation.

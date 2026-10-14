@@ -5,7 +5,7 @@ async function stage(page, number, extra={}) {
   await page.reload();
   await page.locator('.hero [data-page="lesson"]').click();
 }
-async function transparent(page, state) {
+async function transparent(page, state, next = "idle") {
   const wrapper = page.locator(`[data-mascot-state="${state}"]`);
   await expect(wrapper).toHaveAttribute('data-phase','playing');
   await expect(wrapper.locator('img')).not.toBeVisible();
@@ -15,7 +15,7 @@ async function transparent(page, state) {
     return {corner:ctx.getImageData(0,0,1,1).data[3], muted:v.muted, duration:v.duration};
   });
   expect(alpha.corner).toBe(0);expect(alpha.muted).toBe(true);expect(alpha.duration).toBeLessThan(3);
-  await expect(page.locator('[data-mascot-state="idle"]')).toHaveAttribute('data-phase','playing',{timeout:7000});
+  await expect(page.locator(`[data-mascot-state="${next}"]`)).toHaveAttribute('data-phase','playing',{timeout:7000});
 }
 test('both guidance clips and both success clips have real alpha and separate roles',async({page})=>{
   await stage(page,0);await transparent(page,'point-left');
@@ -23,6 +23,9 @@ test('both guidance clips and both success clips have real alpha and separate ro
   await page.locator('#stage-select').selectOption('5');
   await page.locator('[data-quiz="1"]').click();
   await page.locator('#submit-quiz').click();
+  await transparent(page,'eureka','thinking');
+  await page.locator('#submit-quiz').click();
+  await page.locator('[data-quiz="0"]').click();await page.locator('#submit-quiz').click();
   await transparent(page,'success-answer');
   await stage(page,5,{assessment:{score:3,created:Date.now()}});await transparent(page,'success-complete');
 });
@@ -72,4 +75,20 @@ test('both quiet poses genuinely loop without a permanent still after greeting',
   await expect(page.locator('[data-mascot-state="idle-secondary"]')).toHaveAttribute('data-phase','playing');
   const state=await page.locator('.mascot-video').evaluate(v=>{const c=document.createElement('canvas');c.width=c.height=1;const x=c.getContext('2d');x.drawImage(v,0,0,1,1,0,0,1,1);return {loop:v.loop,alpha:x.getImageData(0,0,1,1).data[3]};});
   expect(state).toEqual({loop:true,alpha:0});
+});
+
+test('wrong answers scratch the head; new hints reveal eureka, then thinking continues', async({page})=>{
+  await stage(page,3);
+  await page.locator('[data-observe="0:1"]').click();
+  await transparent(page,'confused','thinking');
+  await page.locator('[data-hint="0"]').click();
+  await transparent(page,'eureka','thinking');
+  await expect(page.locator('.feedback')).toContainText('Վերադառնանք');
+  await page.setViewportSize({width:390,height:844});
+  await page.locator('[data-observe="0:0"]').click();
+  const rect=await page.locator('#next-observation').boundingBox();
+  expect(rect.y+rect.height).toBeLessThanOrEqual(844);
+  await page.locator('#next-observation').click();
+  await expect(page.locator('.lesson-track')).toHaveAttribute('aria-valuenow','3');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });

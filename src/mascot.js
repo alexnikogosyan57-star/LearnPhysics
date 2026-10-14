@@ -1,3 +1,11 @@
+import confusedVideo from "./assets/confused-transparent.webm";
+import confusedPoster from "./assets/confused-transparent-poster.png";
+import confusedIdle from "./assets/confused-transparent-idle.png";
+import confusedFallback from "./assets/confused-transparent-animated.webp";
+import eurekaVideo from "./assets/eureka-transparent.webm";
+import eurekaPoster from "./assets/eureka-transparent-poster.png";
+import eurekaIdle from "./assets/eureka-transparent-idle.png";
+import eurekaFallback from "./assets/eureka-transparent-animated.webp";
 import idle_primaryVideo from "./assets/idle-primary-transparent.webm";
 import idle_primaryPoster from "./assets/idle-primary-transparent-poster.png";
 import idle_primaryIdle from "./assets/idle-primary-transparent-idle.png";
@@ -32,6 +40,8 @@ import thinkingIdle from "./assets/thinking-transparent-idle.png";
 
 // Register additional clips only when real, corresponding assets are supplied.
 export const mascotAnimations = Object.freeze({
+  confused: {src:confusedVideo, poster:confusedPoster, idle:confusedIdle, alpha:true, imageFallback:confusedFallback, next:"thinking", duration:2.5},
+  eureka: {src:eurekaVideo, poster:eurekaPoster, idle:eurekaIdle, alpha:true, imageFallback:eurekaFallback, next:"thinking", duration:2},
   "point-left": { src: point_leftVideo, poster: point_leftPoster, idle: point_leftIdle, alpha: true, imageFallback: point_leftFallback, next: "idle", duration: 2.25 },
   "point-right": { src: point_rightVideo, poster: point_rightPoster, idle: point_rightIdle, alpha: true, imageFallback: point_rightFallback, next: "idle", duration: 2.5 },
   "success-answer": { src: success_answerVideo, poster: success_answerPoster, idle: success_answerIdle, alpha: true, imageFallback: success_answerFallback, next: "idle", duration: 2.125 },
