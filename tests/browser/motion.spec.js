@@ -19,9 +19,8 @@ test("thinking video and resting poster have actual transparent pixels", async (
     };
   });
   expect(pixels).toEqual({ corner: 0, body: 255 });
-  await expect(mascot).toHaveAttribute("data-phase", "idle", {
-    timeout: 12000,
-  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(mascot).toHaveAttribute("data-phase", "poster");
   expect(
     await mascot.locator("img").evaluate((img) => {
       const c = document.createElement("canvas");

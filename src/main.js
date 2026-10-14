@@ -402,6 +402,7 @@ function escape(v) {
   );
 }
 function render() {
+  const thinking = $('[data-mascot-state="thinking"][data-phase="playing"]');
   cleanupMascots();
   $("#app").innerHTML = shell(
     {
@@ -418,6 +419,14 @@ function render() {
       progress,
     }[page](),
   );
+  const replacement = $('[data-mascot-state="thinking"]');
+  if (thinking && replacement) {
+    // Preserve the live decoder and playback position during answer/hint renders.
+    thinking.dataset.mascotEvent = replacement.dataset.mascotEvent;
+    thinking.querySelector(".companion-caption").textContent =
+      replacement.querySelector(".companion-caption").textContent;
+    replacement.replaceWith(thinking);
+  }
   createIcons({ icons });
   bind();
   bindRedesign();

@@ -14,6 +14,7 @@ export const mascotAnimations = Object.freeze({
     poster: thinkingPoster,
     idle: thinkingIdle,
     alpha: true,
+    loop: true,
   },
 });
 const sessionKey = "physics-mascot-greeting-v1";
@@ -37,6 +38,7 @@ function rememberGreeting() {
 const startedEvents = new Set();
 function hasPlayed(state, eventKey) {
   if (state === "greeting") return hasGreeted();
+  if (mascotAnimations[state]?.loop) return false;
   const key = `physics-mascot:${state}:${eventKey}`;
   try {
     return startedEvents.has(key) || sessionStorage.getItem(key) === "played";
@@ -45,6 +47,7 @@ function hasPlayed(state, eventKey) {
   }
 }
 function rememberPlayback(state, eventKey) {
+  if (mascotAnimations[state]?.loop) return;
   if (state === "greeting") {
     rememberGreeting();
     return;
@@ -68,7 +71,7 @@ export function renderMascot(
     clip.src && hasPlayed(state, eventKey) ? clip.idle : clip.poster;
   const action =
     state === "greeting" ? "Դիտել ռոբոտի ողջույնը" : "Դիտել մտածող ռոբոտին";
-  return `<div class="companion video-companion" data-mascot-state="${state}" data-transparent="${!!clip.alpha}" data-mascot-event="${eventKey}"><div class="mascot-media"><img class="mascot-poster" src="${poster}" alt="Քո հետազոտական ընկերը՝ ռոբոտը" width="1080" height="1920">${clip.src ? `<video class="mascot-video" muted playsinline preload="none" poster="${poster}" width="1080" height="1920" aria-hidden="true" tabindex="-1" disablepictureinpicture disableremoteplayback></video>` : ""}</div><p class="companion-caption">${caption}</p><button class="text-button mascot-play" type="button" hidden>${action}</button><p class="mascot-status" role="status"></p></div>`;
+  return `<div class="companion video-companion" data-mascot-state="${state}" data-transparent="${!!clip.alpha}" data-mascot-event="${eventKey}"><div class="mascot-media" role="img" aria-label="Քո հետազոտական ընկերը՝ ռոբոտը"><img class="mascot-poster" src="${poster}" alt="Քո հետազոտական ընկերը՝ ռոբոտը" width="1080" height="1920">${clip.src ? `<video class="mascot-video" muted playsinline preload="none" width="1080" height="1920" aria-hidden="true" tabindex="-1" disablepictureinpicture disableremoteplayback></video>` : ""}</div><p class="companion-caption">${caption}</p><button class="text-button mascot-play" type="button" hidden>${action}</button><p class="mascot-status" role="status"></p></div>`;
 }
 
 export function mountMascots(root) {
@@ -103,7 +106,7 @@ function mountMascot(element) {
   rest.src = clip.idle;
   video.muted = true;
   video.defaultMuted = true;
-  video.loop = false;
+  video.loop = !!clip.loop;
 
   function fallback(message = "") {
     if (!alive()) return;
@@ -166,7 +169,7 @@ function mountMascot(element) {
         /* Regular media failure still uses the poster. */
       }
     });
-  listen(video, "ended", finish);
+  if (!clip.loop) listen(video, "ended", finish);
   listen(video, "error", () => fallback(unavailable));
   listen(trigger, "click", playAnimation);
   listen(motion, "change", () => {

@@ -2394,3 +2394,7 @@ dialog p {
 .video-companion[data-transparent="true"] .mascot-media {
   mask-image: none;
 }
+/* A transparent video must never reveal another robot image underneath it. */
+.video-companion[data-phase="playing"] .mascot-poster {
+  visibility: hidden;
+}
