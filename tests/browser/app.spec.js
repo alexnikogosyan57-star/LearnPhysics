@@ -32,13 +32,17 @@ test("full investigation, simulation, notebook and reload", async ({
   await expect(page.locator("#read-time")).toContainText("0");
   await page.locator("#next-stage").click();
   await page.locator('[data-observe="0:1"]').click();
+  await page.locator("#submit-observation").click();
   await expect(page.locator(".feedback").first()).toContainText("Վերադառնանք");
   await page.locator('[data-hint="0"]').click();
   await page.locator('[data-observe="0:0"]').click();
+  await page.locator("#submit-observation").click();
   await page.locator("#next-observation").click();
   await page.locator('[data-observe="1:1"]').click();
+  await page.locator("#submit-observation").click();
   await page.locator("#next-observation").click();
   await page.locator('[data-observe="2:2"]').click();
+  await page.locator("#submit-observation").click();
   await page.locator("#next-observation").click();
   await page.locator("#verify").fill("Կփոխեմ միայն ժամանակը։");
   await page.locator("#next-stage").click();
@@ -51,7 +55,7 @@ test("full investigation, simulation, notebook and reload", async ({
     await expect(page.locator(".feedback")).toContainText("Ճիշտ");
     await page.locator("#submit-quiz").click();
   }
-  await expect(page.locator(".story")).toContainText("3 / 3");
+  await expect(page.locator(".robot-dialogue")).toContainText("3 / 3");
   await page
     .locator("#conclusion")
     .fill(
@@ -189,8 +193,10 @@ test("existing journal and progress survive redesign; reduced motion and assets"
     ),
   );
   await page.reload();
-  await expect(page.locator(".notebook-excerpt")).toContainText("Իմ նախորդ");
-  await page.locator('[data-page="lesson"]').first().click();
+  await page.locator('[data-page="notebook"]').first().click();
+  await expect(page.locator(".note")).toContainText("Իմ նախորդ");
+  await page.locator(".brand").click();
+  await page.locator('.hero [data-page="lesson"]').click();
   await expect(page.locator(".evidence")).toContainText("10");
   await page.locator("#stage-select").selectOption("1");
   await expect(page.locator('[data-predict="1"]')).toHaveClass(/selected/);

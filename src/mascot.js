@@ -1,3 +1,7 @@
+import celebrationVideo from "./assets/celebration-transparent.webm";
+import celebrationPoster from "./assets/celebration-transparent-poster.png";
+import celebrationIdle from "./assets/celebration-transparent-idle.png";
+import celebrationFallback from "./assets/celebration-transparent-animated.webp";
 import confusedVideo from "./assets/confused-transparent.webm";
 import confusedPoster from "./assets/confused-transparent-poster.png";
 import confusedIdle from "./assets/confused-transparent-idle.png";
@@ -40,12 +44,13 @@ import thinkingIdle from "./assets/thinking-transparent-idle.png";
 
 // Register additional clips only when real, corresponding assets are supplied.
 export const mascotAnimations = Object.freeze({
+  celebration: {src:celebrationVideo, poster:celebrationPoster, idle:celebrationIdle, alpha:true, imageFallback:celebrationFallback, next:"idle", duration:3},
   confused: {src:confusedVideo, poster:confusedPoster, idle:confusedIdle, alpha:true, imageFallback:confusedFallback, next:"thinking", duration:2.5},
   eureka: {src:eurekaVideo, poster:eurekaPoster, idle:eurekaIdle, alpha:true, imageFallback:eurekaFallback, next:"thinking", duration:2},
   "point-left": { src: point_leftVideo, poster: point_leftPoster, idle: point_leftIdle, alpha: true, imageFallback: point_leftFallback, next: "idle", duration: 2.25 },
   "point-right": { src: point_rightVideo, poster: point_rightPoster, idle: point_rightIdle, alpha: true, imageFallback: point_rightFallback, next: "idle", duration: 2.5 },
   "success-answer": { src: success_answerVideo, poster: success_answerPoster, idle: success_answerIdle, alpha: true, imageFallback: success_answerFallback, next: "idle", duration: 2.125 },
-  "success-complete": { src: success_completeVideo, poster: success_completePoster, idle: success_completeIdle, alpha: true, imageFallback: success_completeFallback, next: "idle", duration: 2.75 },
+  "success-complete": { src: success_completeVideo, poster: success_completePoster, idle: success_completeIdle, alpha: true, imageFallback: success_completeFallback, next: "idle-secondary", duration: 2.75 },
   idle: { src: idle_primaryVideo, poster: idle_primaryPoster, idle: idle_primaryIdle, alpha: true, loop: true, imageFallback: idle_primaryFallback },
   "idle-secondary": { src: idle_secondaryVideo, poster: idle_secondaryPoster, idle: idle_secondaryIdle, alpha: true, loop: true, imageFallback: idle_secondaryFallback },
   greeting: {

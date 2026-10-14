@@ -61,12 +61,14 @@ test("thinking resumes after answer and hint reactions and persists into the nex
   const mascot = page.locator('[data-mascot-state="thinking"]');
   await expect(mascot).toHaveAttribute("data-phase", "playing");
   await page.locator('[data-observe="0:1"]').click();
+  await page.locator("#submit-observation").click();
   await expect(page.locator('[data-mascot-state="confused"]')).toHaveAttribute("data-phase", "playing");
   await page.locator('[data-hint="0"]').click();
   await expect(page.locator('[data-mascot-state="eureka"]')).toHaveAttribute("data-phase", "playing");
   await expect(mascot).toHaveAttribute("data-phase", "playing", {timeout:7000});
   await mascot.locator("video").evaluate((v) => (window.liveThinking = v));
   await page.locator('[data-observe="0:0"]').click();
+  await page.locator("#submit-observation").click();
   await page.locator("#next-observation").click();
   await expect(mascot).toHaveAttribute("data-phase", "playing");
   expect(
@@ -84,7 +86,7 @@ test("continuous thinking on mobile pauses for reduced motion and resumes when d
     await mascot
       .locator(".mascot-media")
       .evaluate((el) => el.getBoundingClientRect().width),
-  ).toBe(64);
+  ).toBe(78);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(mascot).toHaveAttribute("data-phase", "poster");
   await expect(mascot.locator("img")).toBeVisible();

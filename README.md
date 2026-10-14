@@ -125,3 +125,58 @@ answers. Both are truly transparent, music-free, finish on their own pose briefl
 then return to continuously thinking. Feedback remains supportive and explains
 reasoning. The other two success clips still mark later correct answers and the
 completed investigation.
+
+## Guided product redesign and verified electricity introductions
+
+Home is now a single welcome, current lesson and primary action. Detailed stats
+and notes live in their dedicated sections. `dialogue.js` is the common robot
+speaker component: the question and response belong to the robot, with student
+controls below. All choice-based observations now require deliberate submission.
+
+The first motion investigation is retained. Nine new short investigations use
+`electricity/journey.js`: pendulum, circuit fundamentals, Ohm's law, Daniell cell,
+series/parallel resistors, component explorer, LED project, DC power/energy and
+sensor control. Each has context, prediction, actual interaction, observation,
+evidence/formula, numerical transfer and saved reflection. These are introductory
+investigations, not claims to have completed every lesson in a full curriculum.
+The remaining mechanics/optics/magnetism/wave topics are explicitly planned with
+scientific questions and intended experiments, not empty functional buttons.
+
+`electricity/models.js` is independent of rendering. The circuit builder uses
+components, two terminals per component and wire edges. Union-find collapses
+ideal wires/closed switches; nodal analysis solves positive resistive loads with
+an ideal 9 V source. Floating loads carry no current; open paths, source shorts
+and unsupported/singular cases have explicit states. Lamp color depends on
+computed dissipated power. Clicking two terminals, dragging between terminals,
+keyboard activation and dragging components all affect this graph. The builder
+supports resistive DC circuits; semiconductor/time-dependent models remain in
+separate clearly specified experiments. No general SPICE capability is claimed.
+
+The Daniell exhibit uses ZnSO4/CuSO4, inert salt bridge, Zn oxidation/Cu reduction,
+standard reduction potentials -0.76/+0.34 V at 298 K and unit ion activities. The
+1.10 V value is standard open-circuit EMF. The external wire illustration includes
+an ideal resistive load; arrows show direction qualitatively, never literal drift
+speed. Ion balancing is distinguished from external electron conduction. The
+source reference is available in the optional model notes.
+
+The pendulum uses fixed-small-step RK4 for the nonlinear equation. Its displayed
+period uses elliptic-integral quadrature; the small-angle formula is labeled as
+an approximation. Dragging and keyboard alternatives choose the release angle.
+No friction is assumed. Pause/resume/reset use the same evolving physical state.
+
+LED/diode, RC, ideal switching transistor, grouped breadboard and sensor examples
+are restricted introductory models. LED protection is virtual, red LED Vf=2 V,
+20 mA nominal limit. The project does not encourage real mains or source shorts.
+
+### Consistent mascot framing
+
+`normalize-mascot-framing.py` must run LAST after original matting/loop scripts.
+It finds body anchors independently of raised hands/antennas/light bulbs and uses
+ONE constant uniform scale + translation per clip. The common body-height
+reference is 500 px, feet baseline 720 px and body center 216 px on a 432x768 alpha
+canvas. No proportions, colors or recorded gestures are changed. PNG and genuine
+animated WebP fallbacks use the same framing. `mascot-framing.json` records the
+transforms. Dialogue has a fixed speaker slot aligned to its top, so changing
+message length, thinking/Eureka/encouragement states or decoder format cannot
+move or resize the media rectangle. The uploaded dance is trimmed to 1.5–4.5s,
+background/audio removed, shown once at meaningful lesson completion, then idle.

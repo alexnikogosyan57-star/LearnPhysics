@@ -14,12 +14,13 @@ async function transparent(page, state, next = "idle") {
     const ctx=c.getContext('2d');ctx.drawImage(v,0,0);
     return {corner:ctx.getImageData(0,0,1,1).data[3], muted:v.muted, duration:v.duration};
   });
-  expect(alpha.corner).toBe(0);expect(alpha.muted).toBe(true);expect(alpha.duration).toBeLessThan(3);
+  expect(alpha.corner).toBe(0);expect(alpha.muted).toBe(true);expect(alpha.duration).toBeLessThanOrEqual(3);
   await expect(page.locator(`[data-mascot-state="${next}"]`)).toHaveAttribute('data-phase','playing',{timeout:7000});
 }
 test('both guidance clips and both success clips have real alpha and separate roles',async({page})=>{
   await stage(page,0);await transparent(page,'point-left');
-  await page.locator('#stage-select').selectOption('2');await transparent(page,'point-right');
+  await page.locator('[data-page="lab"]').first().click();await transparent(page,'point-right');
+  await page.locator('.brand').click();await page.locator('.hero [data-page="lesson"]').click();
   await page.locator('#stage-select').selectOption('5');
   await page.locator('[data-quiz="1"]').click();
   await page.locator('#submit-quiz').click();
@@ -27,7 +28,8 @@ test('both guidance clips and both success clips have real alpha and separate ro
   await page.locator('#submit-quiz').click();
   await page.locator('[data-quiz="0"]').click();await page.locator('#submit-quiz').click();
   await transparent(page,'success-answer');
-  await stage(page,5,{assessment:{score:3,created:Date.now()}});await transparent(page,'success-complete');
+  await stage(page,5,{assessment:{score:3,created:Date.now()}});await transparent(page,'celebration');
+  await page.locator('[data-page="progress"]').click();await transparent(page,'success-complete','idle-secondary');
 });
 test('sound requires activation, plays local effects, volume and mute persist',async({page})=>{
   await page.addInitScript(()=>{
@@ -80,12 +82,14 @@ test('both quiet poses genuinely loop without a permanent still after greeting',
 test('wrong answers scratch the head; new hints reveal eureka, then thinking continues', async({page})=>{
   await stage(page,3);
   await page.locator('[data-observe="0:1"]').click();
+  await page.locator("#submit-observation").click();
   await transparent(page,'confused','thinking');
   await page.locator('[data-hint="0"]').click();
   await transparent(page,'eureka','thinking');
   await expect(page.locator('.feedback')).toContainText('Վերադառնանք');
   await page.setViewportSize({width:390,height:844});
   await page.locator('[data-observe="0:0"]').click();
+  await page.locator("#submit-observation").click();
   const rect=await page.locator('#next-observation').boundingBox();
   expect(rect.y+rect.height).toBeLessThanOrEqual(844);
   await page.locator('#next-observation').click();

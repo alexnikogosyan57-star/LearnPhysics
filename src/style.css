@@ -2463,3 +2463,115 @@ dialog p {
 @media(max-width:600px) {
   .intro-layout .lesson-action-dock { border-top:1px solid #daddcf; padding:12px 20px max(12px,env(safe-area-inset-bottom)); margin:0; }
 }
+/* Original, focused learning system. One speaker, one response area. */
+:root { --olive:#347A47; --sage:#58A65C; --charcoal:#263238; }
+body { background:#FAF9F6; color:#263238; }
+.site-header { background:#fff; border-color:#E8E9E7; }
+.main-shell { max-width:1060px; }
+.button { background:#347A47; color:#fff; border-color:#347A47; border-bottom-color:#235731; border-radius:12px; }
+.button:hover { background:#2b693b; }
+.button.secondary { background:#fff; color:#347A47; border-color:#d9e3d9; border-bottom-color:#c3d4c3; }
+.button:disabled { background:#e0e5df; color:#697369; border-color:#d0d7ce; }
+.hero.guided-home { display:block; min-height:0; margin:54px auto 26px; padding:0; max-width:760px; background:none; }
+.home-welcome { display:grid; grid-template-columns:190px 1fr; align-items:center; gap:32px; }
+.home-welcome .video-companion { width:190px; max-width:190px; margin:0; }
+.welcome-dialogue h1 { font-size:34px; line-height:1.55; letter-spacing:0; margin:12px 0; }
+.welcome-dialogue p { max-width:450px; font-size:18px; line-height:1.85; color:#52625a; }
+.home-next { margin:22px 0 0 222px; }
+.home-next > span { color:#68747D; font-size:13px; }
+.home-next h2 { font-size:20px; line-height:1.7; margin:12px 0 22px; font-weight:500; }
+.home-next .button { min-width:240px; }
+.home-quiet-links { display:flex; justify-content:center; gap:38px; margin:40px auto 50px; }
+.focused-lesson { max-width:860px; margin:auto; }
+.lesson-context { margin:10px 0 14px; }
+.lesson-context h1 { font-size:17px; color:#52625a; }
+.lesson-top { margin-top:25px; }
+.lesson-top .stage-picker { font-size:0; margin:0; }
+.lesson-track { height:8px; background:#e2eade; margin-bottom:28px; }
+.lesson-track > span { background:#58A65C; }
+.guide-lesson.question-layout { display:block; max-width:860px; margin:0 auto 20px; }
+.guide-turn { display:grid; grid-template-columns:124px minmax(0,1fr); gap:28px; align-items:start; max-width:860px; margin:0 auto 24px; }
+.guide-turn > .video-companion { width:124px; max-width:124px; margin:0; align-self:start; }
+.guide-turn .mascot-media { width:124px; height:220.444px; aspect-ratio:9/16; }
+.guide-turn .companion-caption:empty,.guide-turn .mascot-status:empty { display:none; }
+.robot-dialogue { background:#fff; border-radius:14px; padding:24px 28px; min-height:180px; border:1px solid #E8E9E7; }
+.robot-speaker { color:#347A47; font-size:12px; font-weight:600; display:block; margin-bottom:10px; }
+.robot-dialogue .eyebrow { display:none; }
+.robot-dialogue h2,.focused-lesson .robot-dialogue h2 { font-size:25px; font-weight:500; line-height:1.65; margin:0 0 12px; }
+.robot-dialogue p { font-size:16px; line-height:1.85; color:#52625a; margin:0; }
+.robot-dialogue .feedback:not(:empty),.focused-lesson .robot-dialogue .feedback:not(:empty) { margin:16px 0 0; padding:12px 0 0; border:0; border-top:1px solid #e4ebdf; background:none; color:#347A47; font-size:15px; }
+.student-work.story { width:auto; max-width:708px; margin:0 0 0 152px; padding:0; }
+.focused-lesson .answer { background:#fff; border-color:#e0e7de; border-bottom-width:3px; border-radius:12px; }
+.focused-lesson .answer.selected { background:#E8F5E7; border-color:#58A65C; }
+.guide-lesson .student-work h2 { font-size:24px; }
+.lesson-action-dock { max-width:860px; border-color:#e1e6de; }
+.scene-wrap { background:#EEF4EB; border-color:#dfe7da; }
+.path-first { background:none; border:0; }
+.learning-journey { max-width:760px; margin:auto; }
+.topic-line { border-bottom:1px solid #E8E9E7; padding:22px 0; display:grid; grid-template-columns:52px 1fr auto; gap:18px; align-items:center; }
+.topic-number { width:44px; height:44px; border-radius:50%; background:#E8F5E7; color:#347A47; display:grid; place-items:center; font-size:14px; }
+.topic-line h2,.topic-line h3 { margin:0 0 6px; font-size:19px; line-height:1.7; }
+.topic-line p { margin:0; color:#68747D; font-size:14px; line-height:1.8; }
+.topic-preview { border-bottom:1px solid #E8E9E7; padding:18px 0; }
+.topic-preview summary { cursor:pointer; font-size:17px; line-height:1.7; }
+.topic-preview p { line-height:1.85; color:#52625a; }
+.topic-preview small { display:block; color:#68747D; }
+@media(max-width:600px) {
+  .main-shell { padding:0 20px; }
+  .hero.guided-home { margin-top:25px; }
+  .home-welcome { grid-template-columns:95px minmax(0,1fr); gap:18px; }
+  .home-welcome .video-companion { width:95px; max-width:95px; }
+  .welcome-dialogue h1 { font-size:24px; }
+  .welcome-dialogue p { font-size:15px; line-height:1.85; }
+  .welcome-dialogue .eyebrow { display:none; }
+  .home-next { margin:28px 0 0; text-align:center; }
+  .home-next .button { width:100%; }
+  .home-quiet-links { gap:20px; flex-wrap:wrap; margin:28px auto; }
+  .guide-turn { grid-template-columns:78px minmax(0,1fr); gap:12px; margin-bottom:18px; }
+  .guide-turn > .video-companion { width:78px; max-width:78px; display:block; order:0; }
+  .guide-turn .mascot-media { width:78px; height:138.667px; }
+  .robot-dialogue { padding:17px 16px; min-height:145px; border-radius:12px; }
+  .robot-dialogue h2,.focused-lesson .robot-dialogue h2 { font-size:19px; line-height:1.65; }
+  .robot-dialogue p { font-size:14px; }
+  .robot-speaker { font-size:11px; margin-bottom:8px; }
+  .student-work.story { margin:0; max-width:none; }
+  .lesson-action-dock { background:#FAF9F6; }
+  .topic-line { grid-template-columns:40px minmax(0,1fr); gap:14px; }
+  .topic-line > .button { grid-column:2; justify-self:start; }
+  .topic-line h2,.topic-line h3 { font-size:17px; }
+}
+.electric-experiment,.circuit-workbench { max-width:860px; margin:20px 0; }
+.electric-experiment svg,.circuit-workbench svg { width:100%; height:auto; background:#F1F7EE; border-radius:14px; }
+#circuit-canvas { touch-action:none; }
+#circuit-canvas [data-component] { cursor:grab; }
+#circuit-canvas [data-component]:active { cursor:grabbing; }
+#circuit-canvas [data-terminal] { cursor:crosshair; }
+#circuit-canvas :focus-visible { outline:3px solid #F5A447; outline-offset:4px; }
+.circuit-tools,.component-palette { display:flex; flex-wrap:wrap; gap:16px; align-items:center; margin:20px 0; }
+.experiment-instruction,.model-note { font-size:13px; line-height:1.85; color:#68747D; }
+.experiment-sliders { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; margin:25px 0; }
+.experiment-slider { display:grid; grid-template-columns:1fr auto; gap:10px; font-size:14px; }
+.experiment-slider input { grid-column:1/-1; width:100%; }
+.electric-reading { font-size:18px; line-height:1.8; margin:18px 0; }
+.project-assembly { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:20px 0; }
+.project-assembly label { padding:12px; background:#E8F5E7; border-radius:8px; }
+#electric-numeric { width:100%; min-height:54px; padding:14px; border:2px solid #d8e2d5; border-radius:10px; font:inherit; }
+.student-work:has(.electric-experiment),.student-work:has(.circuit-workbench) { max-width:none; margin-left:0; }
+@media(max-width:600px) {
+ .experiment-sliders { grid-template-columns:1fr; gap:20px; }
+ .project-assembly { grid-template-columns:1fr; }
+ .circuit-tools .button { width:100%; }
+}
+.main-shell { margin:0 auto; }
+.main-shell main.focused-lesson { max-width:900px; padding:30px 20px 70px; }
+.electric-experiment > p:not(.electric-reading):not(.model-note) { font-size:14px; line-height:1.85; color:#52625a; }
+@media(max-width:600px) {
+ .main-shell { padding:0; }
+ .main-shell main.focused-lesson { padding:24px 20px 115px; }
+ .pendulum-lab svg { width:100%; background:#F1F7EE; border-radius:14px; touch-action:none; }
+}
+.pendulum-lab svg { width:100%; background:#F1F7EE; border-radius:14px; }
+#pendulum-bob { cursor:grab; touch-action:none; }
+.skip-link { opacity:0; clip-path:inset(100%); pointer-events:none; }
+.skip-link:focus { opacity:1; clip-path:none; pointer-events:auto; }
+#electric-stage { font:inherit; font-size:13px; color:#52625a; background:transparent; border:0; border-bottom:1px solid #dce5d8; padding:10px 24px 10px 4px; min-height:42px; max-width:170px; }
