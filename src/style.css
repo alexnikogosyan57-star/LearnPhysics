@@ -2358,3 +2358,39 @@ dialog p {
     width: 64px;
   }
 }
+/* Motion is driven by view/answer events in motion.js, not every re-render. */
+.lesson-content,
+.saved {
+  animation: none;
+}
+.button .lucide,
+.text-button .lucide {
+  transition: transform 0.18s ease;
+}
+.button:hover .lucide:last-child,
+.text-button:hover .lucide:last-child {
+  transform: translateX(2px);
+}
+.icon-button {
+  transition:
+    background-color 0.18s ease,
+    transform 0.14s ease;
+}
+.icon-button:active {
+  transform: scale(0.96);
+}
+.nav-item {
+  transition:
+    color 0.18s ease,
+    border-color 0.18s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .button:hover .lucide:last-child,
+  .text-button:hover .lucide:last-child,
+  .icon-button:active {
+    transform: none;
+  }
+}
+.video-companion[data-transparent="true"] .mascot-media {
+  mask-image: none;
+}

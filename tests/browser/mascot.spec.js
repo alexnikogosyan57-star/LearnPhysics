@@ -13,6 +13,11 @@ for (const width of [1440, 390])
       "data-phase",
       "playing",
     );
+    await page
+      .locator(".hero")
+      .evaluate((el) =>
+        Promise.all(el.getAnimations().map((animation) => animation.finished)),
+      );
     const box = await media.boundingBox();
     const state = await video.evaluate((el) => ({
       width: el.videoWidth,
@@ -65,7 +70,9 @@ test("reduced motion shows only a poster without fetching the video", async ({
   page,
 }) => {
   const requests = [];
-  page.on("request", (request) => { if (request.resourceType() === "media") requests.push(request.url()); });
+  page.on("request", (request) => {
+    if (request.resourceType() === "media") requests.push(request.url());
+  });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await expect(page.locator(".mascot-poster")).toBeVisible();

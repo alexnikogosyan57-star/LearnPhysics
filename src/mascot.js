@@ -1,15 +1,20 @@
 import greetingVideo from "./assets/greeting.mp4";
 import greetingPoster from "./assets/greeting-poster.webp";
 import idlePoster from "./assets/greeting-idle.webp";
-import thinkingVideo from "./assets/thinking.mp4";
-import thinkingPoster from "./assets/thinking-poster.webp";
-import thinkingIdle from "./assets/thinking-idle.webp";
+import thinkingVideo from "./assets/thinking-transparent.webm";
+import thinkingPoster from "./assets/thinking-transparent-poster.png";
+import thinkingIdle from "./assets/thinking-transparent-idle.png";
 
 // Register additional clips only when real, corresponding assets are supplied.
 export const mascotAnimations = Object.freeze({
   idle: { poster: idlePoster },
   greeting: { src: greetingVideo, poster: greetingPoster, idle: idlePoster },
-  thinking: { src: thinkingVideo, poster: thinkingPoster, idle: thinkingIdle },
+  thinking: {
+    src: thinkingVideo,
+    poster: thinkingPoster,
+    idle: thinkingIdle,
+    alpha: true,
+  },
 });
 const sessionKey = "physics-mascot-greeting-v1";
 let greetingStarted = false;
@@ -63,7 +68,7 @@ export function renderMascot(
     clip.src && hasPlayed(state, eventKey) ? clip.idle : clip.poster;
   const action =
     state === "greeting" ? "Դիտել ռոբոտի ողջույնը" : "Դիտել մտածող ռոբոտին";
-  return `<div class="companion video-companion" data-mascot-state="${state}" data-mascot-event="${eventKey}"><div class="mascot-media"><img class="mascot-poster" src="${poster}" alt="Քո հետազոտական ընկերը՝ ռոբոտը" width="1080" height="1920">${clip.src ? `<video class="mascot-video" muted playsinline preload="none" poster="${poster}" width="1080" height="1920" aria-hidden="true" tabindex="-1" disablepictureinpicture disableremoteplayback></video>` : ""}</div><p class="companion-caption">${caption}</p><button class="text-button mascot-play" type="button" hidden>${action}</button><p class="mascot-status" role="status"></p></div>`;
+  return `<div class="companion video-companion" data-mascot-state="${state}" data-transparent="${!!clip.alpha}" data-mascot-event="${eventKey}"><div class="mascot-media"><img class="mascot-poster" src="${poster}" alt="Քո հետազոտական ընկերը՝ ռոբոտը" width="1080" height="1920">${clip.src ? `<video class="mascot-video" muted playsinline preload="none" poster="${poster}" width="1080" height="1920" aria-hidden="true" tabindex="-1" disablepictureinpicture disableremoteplayback></video>` : ""}</div><p class="companion-caption">${caption}</p><button class="text-button mascot-play" type="button" hidden>${action}</button><p class="mascot-status" role="status"></p></div>`;
 }
 
 export function mountMascots(root) {
@@ -89,7 +94,8 @@ function mountMascot(element) {
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
   const events = new AbortController();
   let disposed = false,
-    pending = false;
+    pending = false,
+    unsupportedAlpha = false;
   const listen = (node, name, handler) =>
     node.addEventListener(name, handler, { signal: events.signal });
   const alive = () => !disposed && element.isConnected;
@@ -125,7 +131,7 @@ function mountMascot(element) {
     if (!video.getAttribute("src")) video.src = clip.src;
     try {
       await video.play();
-      if (!alive() || motion.matches) {
+      if (!alive() || motion.matches || unsupportedAlpha) {
         video.pause();
         return;
       }
@@ -144,6 +150,22 @@ function mountMascot(element) {
       pending = false;
     }
   }
+  if (clip.alpha)
+    listen(video, "loadeddata", () => {
+      // A decoder without alpha support would show a black rectangle. Keep the PNG instead.
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 1;
+      const ctx = canvas.getContext("2d");
+      try {
+        ctx.drawImage(video, 0, 0, 1, 1, 0, 0, 1, 1);
+        if (ctx.getImageData(0, 0, 1, 1).data[3] !== 0) {
+          unsupportedAlpha = true;
+          fallback("Այս բրաուզերում ցուցադրվում է ռոբոտի անշարժ տարբերակը։");
+        }
+      } catch {
+        /* Regular media failure still uses the poster. */
+      }
+    });
   listen(video, "ended", finish);
   listen(video, "error", () => fallback(unavailable));
   listen(trigger, "click", playAnimation);

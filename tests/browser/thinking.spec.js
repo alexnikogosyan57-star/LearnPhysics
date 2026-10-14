@@ -36,7 +36,7 @@ test("thinking clip ends naturally, does not restart on prediction selection", a
       muted: v.muted,
       loop: v.loop,
     })),
-  ).toEqual({ width: 1080, height: 1920, muted: true, loop: false });
+  ).toEqual({ width: 432, height: 768, muted: true, loop: false });
   await page
     .locator(".lesson-content")
     .evaluate((el) =>
@@ -121,7 +121,7 @@ test("thinking reduced motion and failed media preserve the question", async ({
   const mascot = page.locator('[data-mascot-state="thinking"]');
   expect(await mascot.locator("video").getAttribute("src")).toBeNull();
   await expect(mascot.locator("img")).toBeVisible();
-  await page.route("**/thinking.mp4", (route) => route.abort());
+  await page.route("**/thinking-transparent.webm", (route) => route.abort());
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await expect(mascot.locator(".mascot-status")).toContainText("հասանելի չէ");
   await page.locator('[data-predict="1"]').click();

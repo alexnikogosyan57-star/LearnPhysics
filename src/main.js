@@ -63,7 +63,7 @@ const icons = {
   Plus,
   Menu,
 };
-import { distance, advance, point } from "./physics";
+import { distance, advance, point, wheelAngle } from "./physics";
 import {
   navigation,
   stages,
@@ -74,6 +74,12 @@ import {
 } from "./content";
 import { read, write } from "./storage";
 import { scene } from "./scene";
+import {
+  animate,
+  animateRender,
+  animateDisclosure,
+  animateSaved,
+} from "./motion";
 import { renderMascot, mountMascots } from "./mascot";
 let cleanupMascots = () => {};
 let data = read();
@@ -220,12 +226,23 @@ function bindRedesign() {
       expanded ? "Բացել բաժինները" : "Փակել բաժինները",
     );
     $("#main-nav").classList.toggle("mobile-open", !expanded);
+    if (!expanded)
+      animate(
+        $("#main-nav"),
+        [
+          { opacity: 0, transform: "translateY(-4px)" },
+          { opacity: 1, transform: "translateY(0)" },
+        ],
+        { duration: 180 },
+      );
   };
   $("#graph-details")?.addEventListener("toggle", (e) => {
     graphOpen = e.target.open;
+    animateDisclosure(e.target);
   });
   $("#runs-details")?.addEventListener("toggle", (e) => {
     runsOpen = e.target.open;
+    animateDisclosure(e.target);
   });
   $("#compare-run")?.addEventListener("change", (e) => {
     compareId = e.target.value;
@@ -405,6 +422,23 @@ function render() {
   bind();
   bindRedesign();
   cleanupMascots = mountMascots($("#app"));
+  animateRender($("#main-content"), {
+    view:
+      page === "lesson"
+        ? `${page}:${data.stage}:${data.stage === 3 ? observationIndex : data.stage === 5 ? quizIndex : 0}`
+        : page,
+    selection:
+      page === "lesson"
+        ? data.stage === 1
+          ? data.prediction
+          : data.stage === 3
+            ? data.answers[observationIndex]
+            : selected
+        : null,
+    feedback: $(".feedback")?.textContent || "",
+    hint,
+    runs: data.runs.length,
+  });
 }
 function stop() {
   running = false;
@@ -425,6 +459,12 @@ function updateSim() {
     "transform",
     `translate(${110 + (distance(speed, time) / 60) * 680} 270)`,
   );
+  const angle = matchMedia("(prefers-reduced-motion: reduce)").matches
+    ? 0
+    : wheelAngle(distance(speed, time));
+  document
+    .querySelectorAll("#robot-lab [data-wheel-rotor]")
+    .forEach((wheel) => wheel.setAttribute("transform", `rotate(${angle})`));
   $("#graph").innerHTML = graph();
   $("#graph").setAttribute(
     "aria-label",
@@ -638,6 +678,7 @@ function bind() {
     save();
     $("#note-status").textContent = "Գրառումը պահպանվել է հետազոտական տետրում։";
     $("#note-status").classList.add("saved");
+    animateSaved($("#note-status"));
     $("#save-lesson").disabled = true;
   });
   $("#new-note")?.addEventListener("click", () => {

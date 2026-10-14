@@ -20,7 +20,7 @@ npm run build
 npx playwright test
 ```
 
-The browser tests use the environment's `/usr/bin/chromium`. Fifteen browser tests cover the complete lesson with one observation at a time, pause/resume/reset, all three requested motion cases, live graph synchronization and selected comparisons, progressive hints, assessment, notebook editing/deletion, legacy data preservation, reload persistence, muted audio controls, reduced motion, missing assets, console errors, and layouts at 390, 768 and 1440 pixels. Physics tests cover the three requested SI reference cases and graph coordinates.
+The browser tests use the environment's `/usr/bin/chromium`. Eighteen browser tests cover the complete lesson with one observation at a time, pause/resume/reset, all three requested motion cases, live graph synchronization and selected comparisons, progressive hints, assessment, notebook editing/deletion, legacy data preservation, reload persistence, muted audio controls, reduced motion, missing assets, console errors, and layouts at 390, 768 and 1440 pixels. Physics tests cover the three requested SI reference cases and graph coordinates.
 
 ## Architecture
 
@@ -51,7 +51,7 @@ Build the GitHub Pages and offline versions:
 npm run export:standalone
 ```
 
-This writes the relative-path site and `dist/physics-app.html`, including both original MP4 clips, their poster frames and Armenian fonts as embedded assets. The single HTML file needs no separate asset files. Browser policy in this cloud environment blocks `file://` navigation, so the standalone artifact is tested over local HTTP with no external asset requests. Downloaded-file opening on a user's device depends on their browser policy.
+This writes the relative-path site and `dist/physics-app.html`, including the original greeting MP4, transparent thinking WebM, their poster frames and Armenian fonts as embedded assets. The single HTML file needs no separate asset files. Browser policy in this cloud environment blocks `file://` navigation, so the standalone artifact is tested over local HTTP with no external asset requests. Downloaded-file opening on a user's device depends on their browser policy.
 
 Publish the contents of `dist/` plus `.nojekyll` to the `gh-pages` branch. In the repository's Settings → Pages, choose Deploy from a branch → gh-pages → / (root). GitHub Pages activation is separate from pushing the branch. The expected site address is `https://alexnikogosyan57-star.github.io/LearnPhysics/`; public deployment is not confirmed by a local build.
 
@@ -64,3 +64,9 @@ The original MP4 is approximately 2 MB and remains byte-for-byte unchanged. No v
 ### Thinking state
 
 The provided thinking clip appears in prediction, guided observation, assessment and explicit hint sections. The registry uses the real thinking source rather than reusing the greeting. Playback is scoped to question/hint event identities, stays muted, ends on its own final frame and does not restart on each answer selection. A small companion remains separate from simulations and measurements. The source has a baked checkerboard, not a transparent background. Four thinking tests verify real decoding/end state, event-based replay prevention, hints, mobile sizing, reduced motion and media failure.
+
+### Transparent thinking animation and interface motion
+
+The thinking video is now a VP9 WebM with a real alpha channel, derived frame by frame from the original MP4. Transparent PNG first/final frames prevent the checkerboard from returning in idle or reduced-motion mode. Its 8-second timing and 24 fps motion remain unchanged; the prepared web asset is 432 × 768 for the small UI footprint. The original upload remains intact. If the browser decodes the video without alpha support, the controller retains the transparent still rather than displaying a black rectangle. `scripts/remove-thinking-background.py` documents the one-time derivation using ffmpeg, NumPy and SciPy; these tools are not needed to run the website or normal builds.
+
+`src/motion.js` uses short Web Animations API transitions for view entry, answer selection, feedback, expanded analysis, menu opening, saved notes and experiment completion. Re-rendering an answer does not replay the whole screen. Reduced motion disables transitions and cancels active animations. Wheel spokes rotate from the same traveled distance as the robot and freeze on pause; their incidental rotation is disabled for reduced motion. Three browser checks cover real video/poster alpha, event-driven transitions, wheel pause/reset and reduced motion.

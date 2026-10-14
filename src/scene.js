@@ -1,3 +1,4 @@
+import { wheelAngle } from "./physics";
 /** Orthographic corridor: 0–60 m maps linearly to x=110–790. */
 export function scene(id = "scene", fraction = 0) {
   const uid = (n) => `${n}-${id}`;
@@ -27,6 +28,7 @@ export function scene(id = "scene", fraction = 0) {
   <g id="robot-${id}" transform="translate(${110 + fraction * 680} 270)">
     <ellipse cy="18" rx="60" ry="16" fill="url(#${uid("shadow")})"/>
     <g><ellipse cx="-31" cy="5" rx="13" ry="17" fill="#353c2e"/><ellipse cx="30" cy="5" rx="13" ry="17" fill="#353c2e"/><ellipse cx="-31" cy="5" rx="8" ry="11" fill="#879576"/><ellipse cx="30" cy="5" rx="8" ry="11" fill="#879576"/><ellipse cx="-31" cy="5" rx="4" ry="6" fill="#bac5a8"/><ellipse cx="30" cy="5" rx="4" ry="6" fill="#bac5a8"/></g>
+    ${[-31, 30].map((x) => `<g transform="translate(${x} 5) scale(.7 1)"><g data-wheel-rotor transform="rotate(${typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : wheelAngle(fraction * 60)})"><path d="M-10 0h20M0-10v20" stroke="#c6cebb" stroke-width="1.8"/><circle r="3" fill="#6a7b59"/></g></g>`).join("")}
     <path d="M-40-56q0-18 18-20h47q20 2 21 22l-3 47q-2 13-15 13h-55q-16-1-17-15Z" fill="url(#${uid("side")})"/>
     <path d="M-44-52q0-21 20-22h39q21 0 23 22l-2 44q-1 12-15 14h-47q-15-2-16-16Z" fill="url(#${uid("body")})" stroke="#afbba0" stroke-width=".8"/>
     <path d="M-40-25q37 8 75 0" stroke="#cbd2bd" fill="none"/>

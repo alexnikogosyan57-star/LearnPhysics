@@ -29,7 +29,7 @@ def inline_css(match):
 def inline_js(match):
     js = (build / match.group(1)).read_text()
     # Vite emits local image URLs as quoted strings. Inline the mascot, too.
-    for path in [*(build / "assets").glob("*.webp"), *(build / "assets").glob("*.mp4")]:
+    for path in [*(build / "assets").glob("*.webp"), *(build / "assets").glob("*.mp4"), *(build / "assets").glob("*.webm"), *(build / "assets").glob("*.png")]:
         uri = data_uri(path)
         for prefix in ("./assets/", "/assets/"):
             js = js.replace('"' + prefix + path.name + '"', '"' + uri + '"')

@@ -10,3 +10,8 @@ export function point(speed, time, duration, maxDistance) {
     y: 170 - (distance(speed, time) / maxDistance) * 140,
   };
 }
+
+// Decorative wheel rotation follows traveled distance (nominal radius 0.15 m).
+export function wheelAngle(traveledDistance) {
+  return ((traveledDistance / 0.15) * 180) / Math.PI;
+}
