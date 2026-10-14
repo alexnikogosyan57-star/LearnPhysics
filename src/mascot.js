@@ -1,3 +1,27 @@
+import idle_primaryVideo from "./assets/idle-primary-transparent.webm";
+import idle_primaryPoster from "./assets/idle-primary-transparent-poster.png";
+import idle_primaryIdle from "./assets/idle-primary-transparent-idle.png";
+import idle_primaryFallback from "./assets/idle-primary-transparent-animated.webp";
+import idle_secondaryVideo from "./assets/idle-secondary-transparent.webm";
+import idle_secondaryPoster from "./assets/idle-secondary-transparent-poster.png";
+import idle_secondaryIdle from "./assets/idle-secondary-transparent-idle.png";
+import idle_secondaryFallback from "./assets/idle-secondary-transparent-animated.webp";
+import point_leftVideo from "./assets/point-left-transparent.webm";
+import point_leftPoster from "./assets/point-left-transparent-poster.png";
+import point_leftIdle from "./assets/point-left-transparent-idle.png";
+import point_leftFallback from "./assets/point-left-transparent-animated.webp";
+import point_rightVideo from "./assets/point-right-transparent.webm";
+import point_rightPoster from "./assets/point-right-transparent-poster.png";
+import point_rightIdle from "./assets/point-right-transparent-idle.png";
+import point_rightFallback from "./assets/point-right-transparent-animated.webp";
+import success_answerVideo from "./assets/success-answer-transparent.webm";
+import success_answerPoster from "./assets/success-answer-transparent-poster.png";
+import success_answerIdle from "./assets/success-answer-transparent-idle.png";
+import success_answerFallback from "./assets/success-answer-transparent-animated.webp";
+import success_completeVideo from "./assets/success-complete-transparent.webm";
+import success_completePoster from "./assets/success-complete-transparent-poster.png";
+import success_completeIdle from "./assets/success-complete-transparent-idle.png";
+import success_completeFallback from "./assets/success-complete-transparent-animated.webp";
 import greetingVideo from "./assets/greeting-transparent.webm";
 import greetingPoster from "./assets/greeting-transparent-poster.png";
 import idlePoster from "./assets/greeting-transparent-idle.png";
@@ -8,13 +32,20 @@ import thinkingIdle from "./assets/thinking-transparent-idle.png";
 
 // Register additional clips only when real, corresponding assets are supplied.
 export const mascotAnimations = Object.freeze({
-  idle: { poster: idlePoster },
+  "point-left": { src: point_leftVideo, poster: point_leftPoster, idle: point_leftIdle, alpha: true, imageFallback: point_leftFallback, next: "idle", duration: 2.25 },
+  "point-right": { src: point_rightVideo, poster: point_rightPoster, idle: point_rightIdle, alpha: true, imageFallback: point_rightFallback, next: "idle", duration: 2.5 },
+  "success-answer": { src: success_answerVideo, poster: success_answerPoster, idle: success_answerIdle, alpha: true, imageFallback: success_answerFallback, next: "idle", duration: 2.125 },
+  "success-complete": { src: success_completeVideo, poster: success_completePoster, idle: success_completeIdle, alpha: true, imageFallback: success_completeFallback, next: "idle", duration: 2.75 },
+  idle: { src: idle_primaryVideo, poster: idle_primaryPoster, idle: idle_primaryIdle, alpha: true, loop: true, imageFallback: idle_primaryFallback },
+  "idle-secondary": { src: idle_secondaryVideo, poster: idle_secondaryPoster, idle: idle_secondaryIdle, alpha: true, loop: true, imageFallback: idle_secondaryFallback },
   greeting: {
     src: greetingVideo,
     poster: greetingPoster,
     idle: idlePoster,
     alpha: true,
     imageFallback: greetingImageFallback,
+    next: "idle",
+    duration: 5.5,
   },
   thinking: {
     src: thinkingVideo,
@@ -25,6 +56,7 @@ export const mascotAnimations = Object.freeze({
   },
 });
 let greetingStarted = false;
+export function greetingHasStarted() { return greetingStarted; }
 function hasGreeted() {
   return greetingStarted;
 }
@@ -67,7 +99,7 @@ export function renderMascot(
   const poster =
     clip.src && hasPlayed(state, eventKey) ? clip.idle : clip.poster;
   const action =
-    state === "greeting" ? "Դիտել ռոբոտի ողջույնը" : "Դիտել մտածող ռոբոտին";
+    state === "greeting" ? "Դիտել ռոբոտի ողջույնը" : state === "thinking" ? "Դիտել մտածող ռոբոտին" : "Դիտել ռոբոտի շարժումը";
   return `<div class="companion video-companion" data-mascot-state="${state}" data-transparent="${!!clip.alpha}" data-mascot-event="${eventKey}"><div class="mascot-media" role="img" aria-label="Քո հետազոտական ընկերը՝ ռոբոտը"><img class="mascot-poster" src="${poster}" alt="Քո հետազոտական ընկերը՝ ռոբոտը" width="1080" height="1920">${clip.src ? `<video class="mascot-video" muted playsinline preload="none" width="1080" height="1920" aria-hidden="true" tabindex="-1" disablepictureinpicture disableremoteplayback></video>` : ""}</div><p class="companion-caption">${caption}</p><button class="text-button mascot-play" type="button" hidden>${action}</button><p class="mascot-status" role="status"></p></div>`;
 }
 
@@ -97,6 +129,7 @@ function mountMascot(element) {
     pending = false,
     unsupportedAlpha = false,
     imageFallbackStarted = false;
+  let followupCleanup = () => {}, handoffTimer, handedOff = false;
   const listen = (node, name, handler) =>
     node.addEventListener(name, handler, { signal: events.signal });
   const alive = () => !disposed && element.isConnected;
@@ -106,6 +139,23 @@ function mountMascot(element) {
   video.defaultMuted = true;
   video.loop = !!clip.loop;
 
+  function handoff() {
+    if (!alive() || motion.matches || handedOff || !clip.next) return;
+    handedOff = true;
+    video.pause();
+    events.abort();
+    const holder = document.createElement("div");
+    holder.innerHTML = renderMascot(clip.next, element.querySelector(".companion-caption").textContent, eventKey + ":presence");
+    const next = holder.firstElementChild;
+    element.innerHTML = next.innerHTML;
+    element.dataset.mascotState = clip.next;
+    element.dataset.mascotEvent = next.dataset.mascotEvent;
+    delete element.dataset.phase;
+    // One visible media layer; a brief fade softens changes of pose.
+    const media = element.querySelector(".mascot-media");
+    if (!motion.matches) media.animate([{opacity:0},{opacity:1}], {duration:280,easing:"ease-out"});
+    followupCleanup = mountMascot(element);
+  }
   function fallback(message = "") {
     if (!alive()) return;
     video.pause();
@@ -116,7 +166,10 @@ function mountMascot(element) {
       trigger.hidden = true;
       status.textContent = "";
       poster.onload = () => {
-        if (alive() && !motion.matches) rememberPlayback(state, eventKey);
+        if (alive() && !motion.matches) {
+          rememberPlayback(state, eventKey);
+          if (clip.next) handoffTimer = setTimeout(handoff, (clip.duration + .7) * 1000);
+        }
       };
       poster.onerror = () => {
         if (alive()) {
@@ -142,7 +195,10 @@ function mountMascot(element) {
     } catch {
       return;
     }
-    if (alive()) element.dataset.phase = "idle";
+    if (alive()) {
+      element.dataset.phase = "idle";
+      if (clip.next) handoffTimer = setTimeout(handoff, 700);
+    }
   }
   async function playAnimation() {
     if (!alive() || pending || motion.matches) return;
@@ -197,13 +253,17 @@ function mountMascot(element) {
       poster.src = alreadyPlayed() ? clip.idle : clip.poster;
     } else if (!alreadyPlayed()) playAnimation();
   });
-  if (alreadyPlayed()) {
+  if (alreadyPlayed() && clip.next && !motion.matches) {
+    handoff();
+  } else if (alreadyPlayed()) {
     poster.src = clip.idle;
     element.dataset.phase = "idle";
   } else if (motion.matches) fallback();
   else playAnimation();
   return () => {
     disposed = true;
+    clearTimeout(handoffTimer);
+    followupCleanup();
     events.abort();
     poster.onload = poster.onerror = null;
     video.pause();

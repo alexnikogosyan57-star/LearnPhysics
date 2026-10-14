@@ -11,6 +11,7 @@ import {
   NotebookPen,
   ChartNoAxesCombined,
   VolumeX,
+  Volume2,
   HardDrive,
   X,
   ArrowRight,
@@ -41,6 +42,7 @@ const icons = {
   NotebookPen,
   ChartNoAxesCombined,
   VolumeX,
+  Volume2,
   HardDrive,
   X,
   ArrowRight,
@@ -80,7 +82,9 @@ import {
   animateDisclosure,
   animateSaved,
 } from "./motion";
-import { renderMascot, mountMascots } from "./mascot";
+import { renderMascot, mountMascots, greetingHasStarted } from "./mascot";
+import { audioState, enableSound, muteSound, setVolume, playSound } from "./audio";
+let assessmentAttempt = Date.now();
 let cleanupMascots = () => {};
 let data = read();
 data.unlockedStage = Math.max(data.unlockedStage || 0, data.stage);
@@ -122,22 +126,22 @@ function go(p) {
 function companion(state = "greeting", text = "Եկ միասին պարզենք։") {
   return renderMascot(state, text);
 }
-function questionLayout(content, eventKey, caption) {
-  return `<div class="question-layout">${content}${renderMascot("thinking", caption, eventKey)}</div>`;
+function questionLayout(content, eventKey, caption, state = "thinking") {
+  return `<div class="question-layout">${content}${renderMascot(state, caption, eventKey)}</div>`;
 }
 function shell(body) {
   const active = page === "lesson" ? "path" : page;
-  return `<a class="skip-link" href="#main-content">Անցնել բովանդակությանը</a><header class="site-header"><div class="header-inner"><a class="brand" href="#home" aria-label="Ֆիզիկան շուրջդ է՝ գլխավոր էջ"><span class="brand-symbol">${icon("orbit")}</span><span>Ֆիզիկան <span class="brand-second">շուրջդ է</span></span></a><button id="nav-toggle" class="icon-button nav-toggle" aria-label="Բացել բաժինները" aria-expanded="false" aria-controls="main-nav">${icon("menu")}</button><nav id="main-nav" aria-label="Հիմնական բաժիններ">${navigation.map(([id, label, i]) => `<button data-page="${id}" class="nav-item ${active === id ? "active" : ""}" ${active === id ? 'aria-current="page"' : ""}>${icon(i)}<span>${label}</span></button>`).join("")}</nav><button id="sound" class="icon-button sound-button" aria-label="Ձայնի կարգավորումներ">${icon("volume-x")}</button></div></header><div class="main-shell"><main id="main-content" tabindex="-1">${body}</main><footer><span>Ֆիզիկան շուրջդ է <span class="footer-dot">·</span> 9-րդ դասարան</span><span>${icon("hard-drive")} Քո գրառումները պահվում են այս սարքում</span></footer><p id="storage-warning" role="status"></p></div><dialog id="audio-dialog" aria-labelledby="audio-title"><button class="dialog-close icon-button" id="close-audio" aria-label="Փակել">${icon("x")}</button><span class="eyebrow">Ձայնի կարգավորումներ</span><h2 id="audio-title">Սովորելու հանգիստ միջավայր</h2><p>Բնական ձայնագրություններ այս տարբերակում դեռ չկան։ Բոլոր փորձերը լիարժեք աշխատում են առանց ձայնի։</p><label class="volume-label">Ձայնի մակարդակ <input id="volume" type="range" min="0" max="100" value="${localStorage.getItem("physics-volume") ?? 40}" aria-label="Ձայնի մակարդակ"></label><button class="button secondary" id="mute">${icon("volume-x")} Անջատել ձայնը</button><p class="audio-note">Այս կարգավորումը պահվում է ապագա ձայնային տարբերակի համար։</p></dialog>`;
+  return `<a class="skip-link" href="#main-content">Անցնել բովանդակությանը</a><header class="site-header"><div class="header-inner"><a class="brand" href="#home" aria-label="Ֆիզիկան շուրջդ է՝ գլխավոր էջ"><span class="brand-symbol">${icon("orbit")}</span><span>Ֆիզիկան <span class="brand-second">շուրջդ է</span></span></a><button id="nav-toggle" class="icon-button nav-toggle" aria-label="Բացել բաժինները" aria-expanded="false" aria-controls="main-nav">${icon("menu")}</button><nav id="main-nav" aria-label="Հիմնական բաժիններ">${navigation.map(([id, label, i]) => `<button data-page="${id}" class="nav-item ${active === id ? "active" : ""}" ${active === id ? 'aria-current="page"' : ""}>${icon(i)}<span>${label}</span></button>`).join("")}</nav><button id="sound" class="icon-button sound-button" aria-label="Ձայնի կարգավորումներ">${icon(audioState().enabled ? "volume-2" : "volume-x")}</button></div></header><div class="main-shell"><main id="main-content" tabindex="-1">${body}</main><footer><span>Ֆիզիկան շուրջդ է <span class="footer-dot">·</span> 9-րդ դասարան</span><span>${icon("hard-drive")} Քո գրառումները պահվում են այս սարքում</span></footer><p id="storage-warning" role="status"></p></div><dialog id="audio-dialog" aria-labelledby="audio-title"><button class="dialog-close icon-button" id="close-audio" aria-label="Փակել">${icon("x")}</button><span class="eyebrow">Ձայնի կարգավորումներ</span><h2 id="audio-title">Սովորելու հանգիստ միջավայր</h2><p>Կարճ, մեղմ ձայնային էֆեկտներ՝ փորձը սկսելիս, ճիշտ պատասխանի ու պահպանված գրառման համար։ Երաժշտություն չկա։</p><label class="volume-label">Ձայնի մակարդակ <input id="volume" type="range" min="0" max="100" value="${audioState().volume}" aria-label="Ձայնի մակարդակ"></label><button class="button" id="enable-sound" type="button">Միացնել ձայնը</button><button class="button secondary" id="mute">${icon("volume-x")} Անջատել ձայնը</button><p class="audio-note"><span id="audio-status" role="status">${audioState().enabled ? "Ձայնը միացված է։" : "Ձայնն անջատված է։ Միացրու այն, երբ ցանկանաս։"}</span><br>Տեղային ձայնային էֆեկտներ՝ Kenney · CC0։</p></dialog>`;
 }
 function home() {
   const done = !!data.assessment;
-  return `<section class="hero"><div class="hero-copy"><span class="eyebrow">Փոքր հարցերից՝ մեծ բացահայտումներ</span><h1>Բարև՛, հետազոտող։<br><span>Սկսենք մի «ինչո՞ւ»-ից։</span></h1><p>Այսօր պարզելու ենք՝ ինչպես են արագությունն ու ժամանակը փոխում ռոբոտի անցած ճանապարհը։</p><button class="button" data-page="lesson">${done ? "Վերադառնալ հետազոտությանը" : data.stage ? "Շարունակել հետազոտությունը" : "Սկսել հետազոտությունը"} ${icon("arrow-right")}</button><span class="hero-meta">${icon("clock-3")} 15–20 րոպե · քո տեմպով</span></div>${companion("greeting", "Բարև՛։ Եկ միասին փորձենք։")}</section><section class="current-lesson"><div class="lesson-kicker"><span class="lesson-number">01</span><span>Քո ընթացիկ հետազոտությունը</span><span class="lesson-duration">${done ? "Ավարտված" : `Քայլ ${data.stage + 1} / 6`}</span></div><div class="lesson-focus"><div><h2>Փոքր ռոբոտի մեծ ճանապարհը</h2><p>Կանխատեսիր, փորձիր և բացահայտիր շարժման կապը։</p></div><span class="current-stage">${icon(done ? "circle-check" : "circle-dot")}${done ? "Հետազոտությունն ավարտված է" : stages[data.stage]}</span></div><div class="stage-progress" role="img" aria-label="Դասի ${data.stage + 1}-րդ քայլ՝ 6 քայլից">${stages.map((s, i) => `<span class="${i <= data.stage ? "filled" : ""}"></span>`).join("")}</div></section><div class="home-support"><section class="journal-preview"><span class="support-icon">${icon("notebook-pen")}</span><h3>Հետազոտողի տետր</h3>${data.notes.length ? `<p class="notebook-excerpt">«${escape(data.notes.at(-1).conclusion || data.notes.at(-1).observation || "Իմ առաջին դիտարկումը")}»</p>` : "<p>Լավ հարցը մի կորցրու։ Քո կանխատեսումներն ու բացահայտումները կմնան այստեղ։</p>"}<button class="text-button" data-page="notebook">${data.notes.length ? "Կարդալ վերջին գրառումը" : "Բացել տետրը"} ${icon("arrow-up-right")}</button></section><section class="experiment-preview"><span class="support-icon">${icon("flask-conical")}</span><h3>Իսկ եթե երկու անգամ արա՞գ</h3><p>Փոխիր միայն արագությունը։ Նույն ժամանակում ռոբոտն ավելի հեռու կհասնի՞։</p><button class="text-button" data-page="lab">Փորձել լաբորատորիայում ${icon("arrow-up-right")}</button></section></div>`;
+  return `<section class="hero"><div class="hero-copy"><span class="eyebrow">Փոքր հարցերից՝ մեծ բացահայտումներ</span><h1>Բարև՛, հետազոտող։<br><span>Սկսենք մի «ինչո՞ւ»-ից։</span></h1><p>Այսօր պարզելու ենք՝ ինչպես են արագությունն ու ժամանակը փոխում ռոբոտի անցած ճանապարհը։</p><button class="button" data-page="lesson">${done ? "Վերադառնալ հետազոտությանը" : data.stage ? "Շարունակել հետազոտությունը" : "Սկսել հետազոտությունը"} ${icon("arrow-right")}</button><span class="hero-meta">${icon("clock-3")} 15–20 րոպե · քո տեմպով</span></div>${companion(greetingHasStarted() ? "idle" : "greeting", "Բարև՛։ Եկ միասին փորձենք։")}</section><section class="current-lesson"><div class="lesson-kicker"><span class="lesson-number">01</span><span>Քո ընթացիկ հետազոտությունը</span><span class="lesson-duration">${done ? "Ավարտված" : `Քայլ ${data.stage + 1} / 6`}</span></div><div class="lesson-focus"><div><h2>Փոքր ռոբոտի մեծ ճանապարհը</h2><p>Կանխատեսիր, փորձիր և բացահայտիր շարժման կապը։</p></div><span class="current-stage">${icon(done ? "circle-check" : "circle-dot")}${done ? "Հետազոտությունն ավարտված է" : stages[data.stage]}</span></div><div class="stage-progress" role="img" aria-label="Դասի ${data.stage + 1}-րդ քայլ՝ 6 քայլից">${stages.map((s, i) => `<span class="${i <= data.stage ? "filled" : ""}"></span>`).join("")}</div></section><div class="home-support"><section class="journal-preview"><span class="support-icon">${icon("notebook-pen")}</span><h3>Հետազոտողի տետր</h3>${data.notes.length ? `<p class="notebook-excerpt">«${escape(data.notes.at(-1).conclusion || data.notes.at(-1).observation || "Իմ առաջին դիտարկումը")}»</p>` : "<p>Լավ հարցը մի կորցրու։ Քո կանխատեսումներն ու բացահայտումները կմնան այստեղ։</p>"}<button class="text-button" data-page="notebook">${data.notes.length ? "Կարդալ վերջին գրառումը" : "Բացել տետրը"} ${icon("arrow-up-right")}</button></section><section class="experiment-preview"><span class="support-icon">${icon("flask-conical")}</span><h3>Իսկ եթե երկու անգամ արա՞գ</h3><p>Փոխիր միայն արագությունը։ Նույն ժամանակում ռոբոտն ավելի հեռու կհասնի՞։</p><button class="text-button" data-page="lab">Փորձել լաբորատորիայում ${icon("arrow-up-right")}</button></section></div>`;
 }
 function sim() {
   const latest = data.runs.at(-1);
   const comparison =
     data.runs.find((r) => r.id === compareId) || data.runs.at(-2) || latest;
-  return `<section class="sim-panel" aria-label="Շարժման փորձ"><div class="scene-wrap"><div class="scene-heading"><span>${icon("flask-conical")} Հավասարաչափ շարժում</span><span class="status" id="sim-status" role="status">${time === duration ? "Փորձն ավարտված է" : running ? "Շարժվում է" : time ? "Դադարեցված" : "Պատրաստ է փորձին"}</span></div>${scene("lab", distance(speed, time) / 60)}<div class="readouts" aria-label="Փորձի կենդանի չափումներ"><div><span>Անցած ժամանակ</span><strong id="read-time">${num(time)} <small>վ</small></strong></div><div><span>Անցած ճանապարհ</span><strong id="read-distance">${num(distance(speed, time))} <small>մ</small></strong></div><div><span>Արագություն</span><strong id="read-speed">${num(speed)} <small>մ/վ</small></strong></div></div></div><div class="sim-controls"><div class="slider-field"><label for="speed">Արագություն <strong id="speed-label">${num(speed)} մ/վ</strong></label><input id="speed" type="range" min="1" max="6" step=".5" value="${speed}"><div class="range-extents"><span>1 մ/վ</span><span>6 մ/վ</span></div></div><div class="slider-field"><label for="duration">Տևողություն <strong id="duration-label">${duration} վ</strong></label><input id="duration" type="range" min="2" max="10" step="1" value="${duration}"><div class="range-extents"><span>2 վ</span><span>10 վ</span></div></div><div class="sim-actions"><button class="button" id="run">${icon(running ? "pause" : "play")} ${running ? "Դադարեցնել" : time && time < duration ? "Շարունակել" : "Սկսել փորձը"}</button><button class="icon-button reset-button" id="reset" aria-label="Փորձը սկսել սկզբից" title="Փորձը սկսել սկզբից">${icon("rotate-ccw")}</button></div></div><p class="control-note">Կարգավորումը փոխելիս ընթացիկ փորձը սկսվում է սկզբից։ Ավարտված փորձերը պահպանվում են։</p></section><div class="experiment-analysis"><details id="graph-details" ${graphOpen ? "open" : ""}><summary>${icon("chart-no-axes-combined")} Դիտել շարժման գրաֆիկը ${icon("chevron-down")}</summary><div class="graph-wrap"><div class="graph-header"><div><h3>Ճանապարհը՝ ժամանակից կախված</h3><p>Ավելի կտրուկ գիծ՝ ավելի մեծ արագություն։</p></div>${
+  return `<section class="sim-panel" aria-label="Շարժման փորձ"><div class="scene-wrap"><div class="scene-heading"><span>${icon("flask-conical")} Հավասարաչափ շարժում</span><span class="status" id="sim-status" role="status">${time === duration ? "Փորձն ավարտված է" : running ? "Շարժվում է" : time ? "Դադարեցված" : "Պատրաստ է փորձին"}</span></div>${scene("lab", distance(speed, time) / 60)}<div class="readouts" aria-label="Փորձի կենդանի չափումներ"><div><span>Անցած ժամանակ</span><strong id="read-time">${num(time)} <small>վ</small></strong></div><div><span>Անցած ճանապարհ</span><strong id="read-distance">${num(distance(speed, time))} <small>մ</small></strong></div><div><span>Արագություն</span><strong id="read-speed">${num(speed)} <small>մ/վ</small></strong></div></div></div><div class="sim-controls"><div class="slider-field"><label for="speed">Արագություն <strong id="speed-label">${num(speed)} մ/վ</strong></label><input id="speed" type="range" min="1" max="6" step=".5" value="${speed}"><div class="range-extents"><span>1 մ/վ</span><span>6 մ/վ</span></div></div><div class="slider-field"><label for="duration">Տևողություն <strong id="duration-label">${duration} վ</strong></label><input id="duration" type="range" min="2" max="10" step="1" value="${duration}"><div class="range-extents"><span>2 վ</span><span>10 վ</span></div></div><div class="pointing-actions">${renderMascot("point-right", "Պատրա՞ստ ես փորձել։", "motion:run")}<div class="sim-actions"><button class="button" id="run">${icon(running ? "pause" : "play")} ${running ? "Դադարեցնել" : time && time < duration ? "Շարունակել" : "Սկսել փորձը"}</button><button class="icon-button reset-button" id="reset" aria-label="Փորձը սկսել սկզբից" title="Փորձը սկսել սկզբից">${icon("rotate-ccw")}</button></div></div></div><p class="control-note">Կարգավորումը փոխելիս ընթացիկ փորձը սկսվում է սկզբից։ Ավարտված փորձերը պահպանվում են։</p></section><div class="experiment-analysis"><details id="graph-details" ${graphOpen ? "open" : ""}><summary>${icon("chart-no-axes-combined")} Դիտել շարժման գրաֆիկը ${icon("chevron-down")}</summary><div class="graph-wrap"><div class="graph-header"><div><h3>Ճանապարհը՝ ժամանակից կախված</h3><p>Ավելի կտրուկ գիծ՝ ավելի մեծ արագություն։</p></div>${
     data.runs.length
       ? `<label class="compare-select">Համեմատել փորձի հետ<select id="compare-run"><option value="none" ${compareId === "none" ? "selected" : ""}>Միայն ընթացիկը</option>${data.runs
           .slice(-6)
@@ -215,7 +219,7 @@ function lesson() {
     )
     .join(
       "",
-    )}</select></label></div>${heading("Հետազոտություն 01", "Փոքր ռոբոտի մեծ ճանապարհը", s === 2 ? "Փոխիր արագությունը։ Նույն ժամանակում որքա՞ն հեռու կհասնի ռոբոտը։" : "Կանխատեսիր։ Փորձիր։ Գտիր քո բացատրությունը։")}<section class="lesson-content">${s === 0 ? `<div class="intro-layout"><div class="story"><span class="eyebrow">Սկսենք մի իրավիճակից</span><h2>Առաքումը սպասում է միջանցքի վերջում։</h2><p>Ռոբոտը փաթեթ է տանում։ Նա կարող է շարժվել տարբեր արագություններով։ Իսկ եթե նրան ավելի արագ շարժվելու հրահանգ տա՞ս։</p><button id="next-stage" class="button">Անել կանխատեսում ${icon("arrow-right")}</button></div>${companion("thinking", "Ի՞նչ ես կարծում՝ ավելի արագ նշանակում է ավելի հեռո՞ւ։")}</div>${scene("intro")}` : s === 1 ? questionLayout(`<div class="story"><span class="eyebrow">Նախ մտածիր, հետո փորձիր</span><h2>Իսկ եթե ռոբոտը երկու անգամ արագ շարժվի՞։</h2><p>Շարժման ժամանակը նույնն է մնում։ Ի՞նչ կլինի անցած ճանապարհի հետ։</p>${prediction.map((o, i) => `<button class="answer ${data.prediction === i ? "selected" : ""}" data-predict="${i}"><span>${String.fromCharCode(1329 + i)}</span>${o}${data.prediction === i ? icon("check") : ""}</button>`).join("")}${data.prediction !== null ? '<p class="feedback" role="status">Կանխատեսումը գրանցված է։ Հիմա ստուգենք այն փորձով։</p><button id="next-stage" class="button">Ստուգել լաբորատորիայում ' + icon("arrow-right") + "</button>" : ""}</div>`, "motion:prediction", "Նախ մտածիր, հետո ընտրիր։") : s === 2 ? `${sim()}<div class="stage-bottom"><div><span class="eyebrow">Քո հաջորդ քայլը</span><p>Համեմատիր 2 մ/վ և 4 մ/վ արագությունները նույն՝ 5 վ տևողությամբ։</p></div><button id="next-stage" class="button secondary" ${!data.runs.length ? "disabled" : ""}>Գրանցել դիտարկումը ${icon("arrow-right")}</button></div>` : s === 3 ? observation() : s === 4 ? explanation() : application()}</section>`;
+    )}</select></label></div>${heading("Հետազոտություն 01", "Փոքր ռոբոտի մեծ ճանապարհը", s === 2 ? "Փոխիր արագությունը։ Նույն ժամանակում որքա՞ն հեռու կհասնի ռոբոտը։" : "Կանխատեսիր։ Փորձիր։ Գտիր քո բացատրությունը։")}<section class="lesson-content">${s === 0 ? `<div class="intro-layout"><div class="story"><span class="eyebrow">Սկսենք մի իրավիճակից</span><h2>Առաքումը սպասում է միջանցքի վերջում։</h2><p>Ռոբոտը փաթեթ է տանում։ Նա կարող է շարժվել տարբեր արագություններով։ Իսկ եթե նրան ավելի արագ շարժվելու հրահանգ տա՞ս։</p><button id="next-stage" class="button">Անել կանխատեսում ${icon("arrow-right")}</button></div>${renderMascot("point-left", "Սկսիր քո կանխատեսումից։", "motion:begin")}</div>${scene("intro")}` : s === 1 ? questionLayout(`<div class="story"><span class="eyebrow">Նախ մտածիր, հետո փորձիր</span><h2>Իսկ եթե ռոբոտը երկու անգամ արագ շարժվի՞։</h2><p>Շարժման ժամանակը նույնն է մնում։ Ի՞նչ կլինի անցած ճանապարհի հետ։</p>${prediction.map((o, i) => `<button class="answer ${data.prediction === i ? "selected" : ""}" data-predict="${i}"><span>${String.fromCharCode(1329 + i)}</span>${o}${data.prediction === i ? icon("check") : ""}</button>`).join("")}${data.prediction !== null ? '<p class="feedback" role="status">Կանխատեսումը գրանցված է։ Հիմա ստուգենք այն փորձով։</p><button id="next-stage" class="button">Ստուգել լաբորատորիայում ' + icon("arrow-right") + "</button>" : ""}</div>`, "motion:prediction", "Նախ մտածիր, հետո ընտրիր։") : s === 2 ? `${sim()}<div class="stage-bottom"><div><span class="eyebrow">Քո հաջորդ քայլը</span><p>Համեմատիր 2 մ/վ և 4 մ/վ արագությունները նույն՝ 5 վ տևողությամբ։</p></div><button id="next-stage" class="button secondary" ${!data.runs.length ? "disabled" : ""}>Գրանցել դիտարկումը ${icon("arrow-right")}</button></div>` : s === 3 ? observation() : s === 4 ? explanation() : application()}</section>`;
 }
 function bindRedesign() {
   $("#nav-toggle").onclick = () => {
@@ -306,16 +310,17 @@ function path() {
 }
 function explanation() {
   const r = data.runs.at(-1) || { speed: 2, duration: 5, distance: 10 };
-  return `<div class="story"><span class="eyebrow">ՔՈ ՓՈՐՁԻ ԱՊԱՑՈՒՅՑԸ</span><h2>Երեք մեծություն։ Մի պարզ կապ։</h2><p>Հաստատուն արագությամբ շարժվելիս անցած ճանապարհը գտնում ենք արագությունը բազմապատկելով ժամանակով։</p><div class="formula"><div><strong>s</strong><span>ճանապարհ, մ</span></div><b>=</b><div><strong>v</strong><span>արագություն, մ/վ</span></div><b>×</b><div><strong>t</strong><span>ժամանակ, վ</span></div></div><div class="evidence"><span>ՔՈ ՎԵՐՋԻՆ ՓՈՐՁԸ</span><h3>${num(r.speed)} մ/վ × ${r.duration} վ = ${num(r.distance)} մ</h3><p>Ամեն վայրկյան՝ ${num(r.speed)} մետր։ ${r.duration} վայրկյանում՝ ${num(r.distance)} մետր։</p></div><details><summary>Ավելի մանրամասն՝ միջին արագության մասին</summary><p>Միջին արագությունը ամբողջ անցած ճանապարհի և ամբողջ ժամանակի հարաբերությունն է՝ v<sub>միջ</sub> = s / t։ Հավասարաչափ շարժման դեպքում այն հավասար է հաստատուն արագությանը։ Եթե ճանապարհին կանգնես, կանգառի ժամանակն էլ պետք է հաշվել։</p></details><button id="next-stage" class="button">Փորձել նոր իրավիճակում ${icon("arrow-right")}</button></div>`;
+  return `<div class="question-layout"><div class="story"><span class="eyebrow">ՔՈ ՓՈՐՁԻ ԱՊԱՑՈՒՅՑԸ</span><h2>Երեք մեծություն։ Մի պարզ կապ։</h2><p>Հաստատուն արագությամբ շարժվելիս անցած ճանապարհը գտնում ենք արագությունը բազմապատկելով ժամանակով։</p><div class="formula"><div><strong>s</strong><span>ճանապարհ, մ</span></div><b>=</b><div><strong>v</strong><span>արագություն, մ/վ</span></div><b>×</b><div><strong>t</strong><span>ժամանակ, վ</span></div></div><div class="evidence"><span>ՔՈ ՎԵՐՋԻՆ ՓՈՐՁԸ</span><h3>${num(r.speed)} մ/վ × ${r.duration} վ = ${num(r.distance)} մ</h3><p>Ամեն վայրկյան՝ ${num(r.speed)} մետր։ ${r.duration} վայրկյանում՝ ${num(r.distance)} մետր։</p></div><details><summary>Ավելի մանրամասն՝ միջին արագության մասին</summary><p>Միջին արագությունը ամբողջ անցած ճանապարհի և ամբողջ ժամանակի հարաբերությունն է՝ v<sub>միջ</sub> = s / t։ Հավասարաչափ շարժման դեպքում այն հավասար է հաստատուն արագությանը։ Եթե ճանապարհին կանգնես, կանգառի ժամանակն էլ պետք է հաշվել։</p></details><button id="next-stage" class="button">Փորձել նոր իրավիճակում ${icon("arrow-right")}</button></div>${renderMascot("thinking", "Կապը բացատրի՛ր քո փորձի թվերով։", "motion:explanation")}</div>`;
 }
 function application() {
   if (data.assessment)
-    return `<div class="story"><span class="eyebrow">ՀԵՏԱԶՈՏՈՒԹՅՈՒՆԸ ԱՎԱՐՏՎԱԾ Է</span><h2>Դու արդեն մտածում ես որպես հետազոտող։</h2><p>Առաջին փորձից ճիշտ պատասխաններ՝ ${data.assessment.score} / 3։ Դու կանխատեսեցիր, փորձ կատարեցիր և բացատրեցիր կապը։ ${data.assessment.score < 3 ? "Վերանայիր ժամանակի և ճանապարհի կապը՝ նոր փորձով։" : "Այժմ կարող ես կապը կիրառել նոր իրավիճակներում։"}</p><div class="evidence"><h3>Ի՞նչ ցույց տվեցիր</h3><p>Հաստատուն արագությամբ՝ s = v × t։ Միջին արագությունը գտնելու համար հաշվում ենք ամբողջ ժամանակը։</p></div><label class="field-label" for="conclusion">Քո վերջնական եզրակացությունը</label><textarea id="conclusion" placeholder="Այս փորձից հասկացա, որ…">${escape(data.conclusion || "")}</textarea><button class="button" id="save-lesson">Պահպանել տետրում ${icon("notebook-pen")}</button><button class="text-button" id="retry-quiz">Կրկին ստուգել գիտելիքը</button><p id="note-status" role="status"></p></div>`;
+    return `<div class="question-layout success-layout"><div class="story"><span class="eyebrow">ՀԵՏԱԶՈՏՈՒԹՅՈՒՆԸ ԱՎԱՐՏՎԱԾ Է</span><h2>Դու արդեն մտածում ես որպես հետազոտող։</h2><p>Առաջին փորձից ճիշտ պատասխաններ՝ ${data.assessment.score} / 3։ Դու կանխատեսեցիր, փորձ կատարեցիր և բացատրեցիր կապը։ ${data.assessment.score < 3 ? "Վերանայիր ժամանակի և ճանապարհի կապը՝ նոր փորձով։" : "Այժմ կարող ես կապը կիրառել նոր իրավիճակներում։"}</p><div class="evidence"><h3>Ի՞նչ ցույց տվեցիր</h3><p>Հաստատուն արագությամբ՝ s = v × t։ Միջին արագությունը գտնելու համար հաշվում ենք ամբողջ ժամանակը։</p></div><label class="field-label" for="conclusion">Քո վերջնական եզրակացությունը</label><textarea id="conclusion" placeholder="Այս փորձից հասկացա, որ…">${escape(data.conclusion || "")}</textarea><button class="button" id="save-lesson">Պահպանել տետրում ${icon("notebook-pen")}</button><button class="text-button" id="retry-quiz">Կրկին ստուգել գիտելիքը</button><p id="note-status" role="status"></p></div>${renderMascot("success-complete", "Քո բացահայտումները պահպանիր տետրում։", `motion:complete:${data.assessment.created}`)}</div>`;
   const q = assessment[quizIndex];
   return questionLayout(
     `<div class="story"><span class="eyebrow">ԿԻՐԱՌԻՐ ԻՆՔՆՈՒՐՈՒՅՆ · ${quizIndex + 1} / 3</span><h2>${quizIndex === 0 ? "Ռոբոտից՝ հեծանիվ։ Նույն կապը։" : "Մտածիր ամբողջ իրավիճակի մասին։"}</h2><p>${q.q}</p>${q.options.map((o, i) => `<button class="answer ${selected === i ? "selected" : ""}" data-quiz="${i}">${o}</button>`).join("")}<p class="feedback" role="status">${feedback}</p>${feedback && !feedback.startsWith("Ճիշտ") && hint < 2 ? '<button class="text-button" id="quiz-hint">' + icon("lightbulb") + " Հաջորդ հուշումը</button>" : ""}<button class="button" id="submit-quiz" ${selected === null ? "disabled" : ""}>${feedback.startsWith("Ճիշտ") ? "Հաջորդը" : "Ստուգել պատասխանը"} ${icon("arrow-right")}</button></div>`,
-    `motion:assessment:${quizIndex}:hint:${hint}`,
-    "Մի շտապիր։ Ի՞նչ է ասում իրավիճակը։",
+    `motion:assessment:${assessmentAttempt}:${quizIndex}:hint:${hint}`,
+    feedback.startsWith("Ճիշտ") ? "Դու ճիշտ կիրառեցիր կապը։" : "Մի շտապիր։ Ի՞նչ է ասում իրավիճակը։",
+    feedback.startsWith("Ճիշտ") ? "success-answer" : "thinking",
   );
 }
 function notebook() {
@@ -380,7 +385,7 @@ function progress() {
       "Իմ առաջընթացը",
       "Կարևոր է ոչ թե արագ ավարտել, այլ հասկանալ։",
     ) +
-    `<div class="progress-stats"><div><strong>${data.assessment ? 1 : 0}</strong><span>Ավարտված հետազոտություն</span></div><div><strong>${data.runs.length}</strong><span>Կատարված փորձ</span></div><div><strong>${data.notes.length}</strong><span>Գրառում տետրում</span></div></div><section class="note"><h2>Շարժում և արագություն</h2>${questions.map((q, i) => `<div class="concept">${icon(data.answers[i] === q.correct ? "circle-check" : "circle-dashed")}<span>${["Արագության և ճանապարհի կապը", "Ժամանակի և ճանապարհի կապը", "Հաստատուն արագություն"][i]}</span><small>${data.answers[i] === q.correct ? "Ցույց ես տվել" : "Դեռ ուսումնասիրելու ենք"}</small></div>`).join("")}<p>${data.assessment ? `Գիտելիքի ստուգում՝ ${data.assessment.score} / 3 ճիշտ պատասխան առաջին փորձից։` : "Գիտելիքի ստուգումը դեռ չի կատարվել։"}</p>${data.assessment?.score < 3 ? '<p class="feedback">Լրացուցիչ փորձիր կանգառով շարժման միջին արագության հարցը։</p>' : ""}<button class="button" data-page="lesson">Վերադառնալ հետազոտությանը ${icon("arrow-right")}</button></section><section class="runs"><h3>Վերջին փորձերը</h3>${
+    `<div class="presence-overview">${renderMascot("idle-secondary", "Ամեն փորձից՝ մի նոր բացահայտում։", "motion:progress")}<div class="progress-stats"><div><strong>${data.assessment ? 1 : 0}</strong><span>Ավարտված հետազոտություն</span></div><div><strong>${data.runs.length}</strong><span>Կատարված փորձ</span></div><div><strong>${data.notes.length}</strong><span>Գրառում տետրում</span></div></div></div><section class="note"><h2>Շարժում և արագություն</h2>${questions.map((q, i) => `<div class="concept">${icon(data.answers[i] === q.correct ? "circle-check" : "circle-dashed")}<span>${["Արագության և ճանապարհի կապը", "Ժամանակի և ճանապարհի կապը", "Հաստատուն արագություն"][i]}</span><small>${data.answers[i] === q.correct ? "Ցույց ես տվել" : "Դեռ ուսումնասիրելու ենք"}</small></div>`).join("")}<p>${data.assessment ? `Գիտելիքի ստուգում՝ ${data.assessment.score} / 3 ճիշտ պատասխան առաջին փորձից։` : "Գիտելիքի ստուգումը դեռ չի կատարվել։"}</p>${data.assessment?.score < 3 ? '<p class="feedback">Լրացուցիչ փորձիր կանգառով շարժման միջին արագության հարցը։</p>' : ""}<button class="button" data-page="lesson">Վերադառնալ հետազոտությանը ${icon("arrow-right")}</button></section><section class="runs"><h3>Վերջին փորձերը</h3>${
       data.runs
         .slice(-4)
         .reverse()
@@ -402,7 +407,7 @@ function escape(v) {
   );
 }
 function render() {
-  const thinking = $('[data-mascot-state="thinking"][data-phase="playing"]');
+  const liveLoops = [...document.querySelectorAll('[data-phase="playing"]')].filter(el => ["thinking", "idle", "idle-secondary"].includes(el.dataset.mascotState));
   cleanupMascots();
   $("#app").innerHTML = shell(
     {
@@ -419,13 +424,12 @@ function render() {
       progress,
     }[page](),
   );
-  const replacement = $('[data-mascot-state="thinking"]');
-  if (thinking && replacement) {
-    // Preserve the live decoder and playback position during answer/hint renders.
-    thinking.dataset.mascotEvent = replacement.dataset.mascotEvent;
-    thinking.querySelector(".companion-caption").textContent =
-      replacement.querySelector(".companion-caption").textContent;
-    replacement.replaceWith(thinking);
+  for (const current of liveLoops) {
+    const replacement = $(`[data-mascot-state="${current.dataset.mascotState}"]`);
+    if (replacement) {
+      current.querySelector(".companion-caption").textContent = replacement.querySelector(".companion-caption").textContent;
+      replacement.replaceWith(current);
+    }
   }
   createIcons({ icons });
   bind();
@@ -505,6 +509,7 @@ function tick(now) {
   last = now;
   if (time >= duration) {
     stop();
+    playSound("complete");
     data.runs.push({
       id: crypto.randomUUID(),
       speed,
@@ -529,13 +534,19 @@ function bind() {
   };
   $("#sound").onclick = () => $("#audio-dialog").showModal();
   $("#close-audio").onclick = () => $("#audio-dialog").close();
-  $("#volume").oninput = (e) =>
-    localStorage.setItem("physics-volume", e.target.value);
-  $("#mute").onclick = () => {
-    $("#volume").value = 0;
-    localStorage.setItem("physics-volume", "0");
+  const syncAudio = () => {
+    const state = audioState();
+    $("#volume").value = state.volume;
+    $("#audio-status").textContent = state.enabled ? "Ձայնը միացված է։" : "Ձայնն անջատված է։";
+    $("#sound").innerHTML = icon(state.enabled ? "volume-2" : "volume-x");
+    $("#enable-sound").disabled = state.enabled;
+    createIcons({ icons, root: $("#sound") });
   };
+  $("#volume").oninput = (e) => { setVolume(e.target.value); syncAudio(); };
+  $("#enable-sound").onclick = () => { enableSound(); syncAudio(); };
+  $("#mute").onclick = () => { muteSound(); syncAudio(); };
   $("#run")?.addEventListener("click", () => {
+    playSound("control");
     if (running) {
       stop();
       updateSim();
@@ -558,6 +569,7 @@ function bind() {
         (key === "speed" ? " մ/վ" : " վ");
     });
   $("#next-stage")?.addEventListener("click", () => {
+    playSound("control");
     if ($("#verify")) data.verification = $("#verify").value;
     data.stage = Math.min(5, data.stage + 1);
     observationIndex = 0;
@@ -645,6 +657,7 @@ function bind() {
     }
     if (quizAnswers[quizIndex] === undefined)
       quizAnswers[quizIndex] = selected === q.correct;
+    if (selected === q.correct) playSound("complete");
     if (selected === q.correct)
       feedback =
         "Ճիշտ է։ " +
@@ -664,6 +677,7 @@ function bind() {
     render();
   });
   $("#retry-quiz")?.addEventListener("click", () => {
+    assessmentAttempt = Date.now();
     data.assessment = null;
     quizIndex = 0;
     quizAnswers = [];
@@ -687,6 +701,7 @@ function bind() {
     save();
     $("#note-status").textContent = "Գրառումը պահպանվել է հետազոտական տետրում։";
     $("#note-status").classList.add("saved");
+    playSound("complete");
     animateSaved($("#note-status"));
     $("#save-lesson").disabled = true;
   });
@@ -732,3 +747,10 @@ function bind() {
   });
 }
 render();
+
+window.addEventListener("physics-audio-error", () => {
+  if ($("#audio-status")) $("#audio-status").textContent = "Ձայնը չհաջողվեց նվագարկել։ Կարող ես կրկին միացնել այն։";
+  $("#sound").innerHTML = icon("volume-x");
+  createIcons({ icons, root: $("#sound") });
+  if ($("#enable-sound")) $("#enable-sound").disabled = false;
+});

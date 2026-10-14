@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 for (const width of [1440, 390])
-  test(`transparent greeting plays on entry and rests at ${width}px`, async ({
+  test(`transparent greeting plays on entry then stays present at ${width}px`, async ({
     page,
   }) => {
     const errors = [];
@@ -51,26 +51,24 @@ for (const width of [1440, 390])
       fit: "contain",
     });
     expect(Math.abs(box.width / box.height - 9 / 16)).toBeLessThan(0.002);
-    await expect(page.locator(".video-companion")).toHaveAttribute(
-      "data-phase",
-      "idle",
-      { timeout: 10000 },
-    );
-    expect(await video.evaluate((el) => el.ended)).toBe(true);
+    await expect(page.locator(".video-companion")).toHaveAttribute("data-mascot-state", "idle", {timeout:10000});
+    await expect(page.locator(".video-companion")).toHaveAttribute("data-phase", "playing");
+    expect(await video.evaluate((el) => el.loop && !el.paused)).toBe(true);
     expect(await media.boundingBox()).toEqual(box);
     expect(
       await page
         .locator(".mascot-poster")
         .evaluate((el) => el.complete && el.naturalWidth > 0),
     ).toBe(true);
-    await expect(page.locator(".mascot-poster")).toBeVisible();
+    await expect(page.locator(".mascot-poster")).not.toBeVisible();
     await page.locator('.hero [data-page="lesson"]').click();
     await page.locator(".brand").click();
     await expect(page.locator(".video-companion")).toHaveAttribute(
       "data-phase",
-      "idle",
+      "playing",
     );
-    expect(await page.locator(".mascot-video").getAttribute("src")).toBeNull();
+    await expect(page.locator(".video-companion")).toHaveAttribute("data-mascot-state", "idle");
+    expect(await page.locator(".mascot-video").getAttribute("src")).not.toBeNull();
     await page.reload();
     await expect(page.locator(".video-companion")).toHaveAttribute(
       "data-phase",

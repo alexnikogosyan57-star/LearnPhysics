@@ -57,7 +57,7 @@ Publish the contents of `dist/` plus `.nojekyll` to the `gh-pages` branch. In th
 
 ## Animated companion
 
-`src/mascot.js` is a reusable asset registry, renderer and playback controller. Real application navigation mounts and disposes it. Greeting playback is remembered only in page memory: opening or reloading the page greets again, while returning from a section during that visit does not replay it. Reduced motion displays a still without requesting the video. An autoplay rejection exposes a keyboard-accessible text action, while media failure keeps the still visible. An ended clip transitions only after the final still has decoded. The fixed 9:16 media footprint prevents layout shifts.
+`src/mascot.js` is a reusable asset registry, renderer and playback controller. Real application navigation mounts and disposes it. Greeting playback is remembered only in page memory: opening or reloading the page greets again, while returning from a section during that visit does not replay it. Reduced motion displays a still without requesting the video. An autoplay rejection exposes a keyboard-accessible text action, while media failure keeps the still visible. An ended clip transitions only after the final still has decoded. The fixed 9:16 media footprint prevents layout shifts. Later neutral footage supplies continuous presence after short gestures (see below).
 
 The original MP4 is approximately 2 MB and remains byte-for-byte unchanged. No video player controls, looping, audible playback, picture-in-picture or other unprovided emotional animations are introduced. Five additional browser tests verify desktop/mobile decoding, one-time playback, ending and layout stability, same-session revisits/reload, reduced motion, blocked autoplay and network failure.
 
@@ -82,3 +82,30 @@ To reproduce the prepared assets, run `python3 scripts/remove-thinking-backgroun
 The greeting is a real-alpha 432 × 768 WebM, derived from the original footage with its inactive first 0.5 seconds trimmed. It plays for 5.5 seconds without audio and holds the final transparent pose. The home section has no beige backdrop wash. A once-playing transparent animated WebP of the same 132 frames is used when video/alpha decoding fails, so compatible browsers can still show the greeting. Reduced motion keeps a transparent still. The static poster and native video poster do not sit underneath moving frames.
 
 `scripts/prepare-greeting-animation.py` is one-time asset tooling using rembg's checksum-verified official U2Net model, OpenCV and ffmpeg. For reproduction, install `rembg[cpu]==2.0.85` and OpenCV into a tooling environment and run the script. No model or Python dependency is needed in the deployed app. The source robot pixels are retained; segmentation changes only alpha, with small-gap protection for the ivory forehead plate. Browser checks verify page-entry/reload playback, no replay on ordinary in-page navigation, transparent corners, body opacity and a genuinely moving image fallback.
+
+### Guidance, success and optional sound
+
+The two supplied pointing clips have distinct placements: point-left points
+from the right of the introductory prediction action; point-right sits left of
+the experiment start/pause controls. Supplied success-answer plays after correct
+assessment responses, while success-complete appears on the finished lesson.
+Thinking remains continuous in questions/hints and accompanies the explanation.
+Home keeps the existing wave followed by idle. Gestures do not cover controls,
+readings or graph axes; reduced motion uses the matching transparent PNG.
+
+`src/audio.js` provides two local, unmodified Kenney CC0 tactile effects. Explicit
+activation is required on each page load, even when a preference was saved.
+Start/pause and stage changes use a short control effect; experiment completion,
+correct assessment answers and lesson journal saves use a subdued completion
+effect. Sliders and ordinary navigation are silent. Volume/mute persist; hidden
+tabs and mute stop playback. No video soundtrack, music, synthesized oscillator
+or external media request. Exact source revision and licensing accompany assets.
+
+The two later neutral videos now provide real quiet presence: primary after the
+home greeting and short instruction/success gestures, secondary in progress.
+They breathe/blink/tilt from the supplied footage, with six-second eased loops,
+not an infinite static final picture. A 0.7-second final-pose hold followed by a
+short fade eases the handoff without stacking an image under the moving video.
+Generate them with `prepare-guidance-animations.py idle-primary idle-secondary`,
+then `smooth-idle-loops.py` using the same one-time Python tooling. Their actual
+animated WebP alternatives loop too. Accessibility stills remain intentional.

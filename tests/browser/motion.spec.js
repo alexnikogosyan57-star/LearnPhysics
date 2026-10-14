@@ -62,7 +62,7 @@ test("transitions respond to selection, disclosures, and actual wheel travel", a
   ).toBe(0);
   await page.locator("#next-stage").click();
   await page.locator("#graph-details summary").click();
-  expect(await page.evaluate(() => window.graphTransitions)).toBeGreaterThan(0);
+  await expect.poll(() => page.evaluate(() => window.graphTransitions)).toBeGreaterThan(0);
   await page.locator("#run").click();
   await page.waitForTimeout(300);
   await page.locator("#run").click();

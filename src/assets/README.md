@@ -29,3 +29,34 @@ The final WebM now uses source frames 58–138 (2.42–5.75 s), trimming the sta
 ## Transparent greeting
 
 The deployed greeting uses `greeting-transparent.webm`, a 432 × 768 real-alpha export of original source seconds 0.5–6.0. It preserves the same robot and wave. First/final transparent PNGs and `greeting-transparent-animated.webp` (132 frames, one playback) are generated from that stream. The latter is a real fallback for browsers/media paths that cannot display alpha video. The old original MP4 and opaque posters stay in source history but are no longer bundled. The prepared model, tools and weights are not part of the website runtime.
+
+## Four guidance and encouragement clips (October 14)
+
+Original supplied MP4s are preserved as point-left.mp4, point-right.mp4,
+success-answer.mp4 and success-complete.mp4. `prepare-guidance-animations.py`
+selects meaningful intervals: 0.75–3.00s, 1.00–3.50s, 1.05–3.175s and
+0.75–3.50s respectively. The second pointing clip's introductory wave is removed.
+Standing introductions and returns to rest are excluded from encouragement clips.
+
+U2Net semantic matting removes white studio and baked checkerboard backgrounds.
+The actual supplied robot RGB pixels are preserved; a narrowly bounded forehead
+mask repair preserves the pale head plate. Outputs are 432×768 alpha VP9 WebM,
+matching initial/final transparent PNGs, and genuine 216×384 animated WebP
+fallbacks for browsers unable to decode alpha WebM. Every prepared clip is audio
+free (`-an`); videos remain muted at runtime. Non-looping gestures end on their
+matching final pose without cutting to an unrelated image. Reduced motion uses
+transparent stills. See audio/README.md for separate licensed optional effects.
+
+## Quiet presence clips
+
+User-supplied idle-primary.mp4 (white studio) and idle-secondary.mp4 (baked
+checkerboard) remain untouched. The same semantic matting script selects
+0.75–3.50s, discarding the leading static hold. `smooth-idle-loops.py` uses those
+actual adjacent frames with cosine timing to produce six-second loops with eased
+turnarounds and no pause at the loop boundary. It verifies the boundary change
+is below the median adjacent-frame change. Both WebM and infinite animated WebP
+fallbacks retain real alpha and have no audio.
+
+Primary quiet presence follows the home greeting and short guidance/success
+clips after a 0.7-second hold. The secondary quiet presence accompanies progress.
+Reduced-motion and unavailable-media modes intentionally keep transparent stills.

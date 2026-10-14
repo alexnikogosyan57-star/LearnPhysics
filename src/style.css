@@ -2402,3 +2402,25 @@ dialog p {
 .hero:has(.video-companion) {
   background: none;
 }
+/* Guidance gestures sit beside their target, never over the simulation. */
+.pointing-actions { display:flex; align-items:center; gap:12px; }
+.pointing-actions .video-companion { width:58px; flex:0 0 58px; margin:0; }
+.pointing-actions .companion-caption { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.pointing-actions .mascot-status { font-size:10px; }
+.pointing-actions .sim-actions { flex:1; }
+.success-layout > .video-companion { align-self:center; }
+#enable-sound { margin:8px 12px 8px 0; }
+@media(max-width:600px) {
+  .pointing-actions { width:100%; justify-content:center; }
+  .pointing-actions .sim-actions { flex:0 1 auto; }
+}
+.presence-overview { display:grid; grid-template-columns:110px minmax(0,1fr); gap:30px; align-items:center; margin:28px 0; }
+.presence-overview .video-companion { width:110px; margin:0; }
+.presence-overview .companion-caption { font-size:11px; line-height:1.8; }
+.presence-overview .progress-stats { margin:0; }
+@media(max-width:600px) {
+  .presence-overview { grid-template-columns:64px minmax(0,1fr); gap:15px; }
+  .presence-overview .video-companion { width:64px; }
+  .presence-overview .companion-caption { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+  .presence-overview .progress-stats { gap:12px; }
+}
