@@ -9,7 +9,7 @@ from scipy import ndimage
 
 root = Path(__file__).resolve().parents[1]
 source = root / 'src/assets/thinking.mp4'
-output = root / 'src/assets/thinking-transparent.webm'
+output = root / 'src/assets/thinking-transparent-base.webm'
 width, height, fps = 432, 768, 24
 reader = subprocess.Popen(['ffmpeg','-hide_banner','-loglevel','error','-i',str(source),'-vf',f'scale={width}:{height}','-f','rawvideo','-pix_fmt','rgb24','pipe:1'],stdout=subprocess.PIPE)
 writer = subprocess.Popen(['ffmpeg','-y','-hide_banner','-loglevel','error','-f','rawvideo','-pix_fmt','rgba','-s',f'{width}x{height}','-r',str(fps),'-i','pipe:0','-an','-c:v','libvpx-vp9','-pix_fmt','yuva420p','-auto-alt-ref','0','-b:v','0','-crf','24','-cpu-used','4','-row-mt','1',str(output)],stdin=subprocess.PIPE)

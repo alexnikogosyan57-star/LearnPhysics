@@ -1,6 +1,7 @@
-import greetingVideo from "./assets/greeting.mp4";
-import greetingPoster from "./assets/greeting-poster.webp";
-import idlePoster from "./assets/greeting-idle.webp";
+import greetingVideo from "./assets/greeting-transparent.webm";
+import greetingPoster from "./assets/greeting-transparent-poster.png";
+import idlePoster from "./assets/greeting-transparent-idle.png";
+import greetingImageFallback from "./assets/greeting-transparent-animated.webp";
 import thinkingVideo from "./assets/thinking-transparent.webm";
 import thinkingPoster from "./assets/thinking-transparent-poster.png";
 import thinkingIdle from "./assets/thinking-transparent-idle.png";
@@ -8,7 +9,13 @@ import thinkingIdle from "./assets/thinking-transparent-idle.png";
 // Register additional clips only when real, corresponding assets are supplied.
 export const mascotAnimations = Object.freeze({
   idle: { poster: idlePoster },
-  greeting: { src: greetingVideo, poster: greetingPoster, idle: idlePoster },
+  greeting: {
+    src: greetingVideo,
+    poster: greetingPoster,
+    idle: idlePoster,
+    alpha: true,
+    imageFallback: greetingImageFallback,
+  },
   thinking: {
     src: thinkingVideo,
     poster: thinkingPoster,
@@ -17,22 +24,12 @@ export const mascotAnimations = Object.freeze({
     loop: true,
   },
 });
-const sessionKey = "physics-mascot-greeting-v1";
 let greetingStarted = false;
 function hasGreeted() {
-  try {
-    return greetingStarted || sessionStorage.getItem(sessionKey) === "played";
-  } catch {
-    return greetingStarted;
-  }
+  return greetingStarted;
 }
 function rememberGreeting() {
   greetingStarted = true;
-  try {
-    sessionStorage.setItem(sessionKey, "played");
-  } catch {
-    /* Memory fallback. */
-  }
 }
 
 const startedEvents = new Set();
@@ -98,7 +95,8 @@ function mountMascot(element) {
   const events = new AbortController();
   let disposed = false,
     pending = false,
-    unsupportedAlpha = false;
+    unsupportedAlpha = false,
+    imageFallbackStarted = false;
   const listen = (node, name, handler) =>
     node.addEventListener(name, handler, { signal: events.signal });
   const alive = () => !disposed && element.isConnected;
@@ -111,6 +109,26 @@ function mountMascot(element) {
   function fallback(message = "") {
     if (!alive()) return;
     video.pause();
+    if (message && clip.imageFallback && !motion.matches) {
+      if (imageFallbackStarted) return;
+      imageFallbackStarted = true;
+      element.dataset.phase = "image-playing";
+      trigger.hidden = true;
+      status.textContent = "";
+      poster.onload = () => {
+        if (alive() && !motion.matches) rememberPlayback(state, eventKey);
+      };
+      poster.onerror = () => {
+        if (alive()) {
+          poster.onerror = null;
+          poster.src = clip.poster;
+          element.dataset.phase = "poster";
+          status.textContent = unavailable;
+        }
+      };
+      poster.src = clip.imageFallback;
+      return;
+    }
     element.dataset.phase = "poster";
     trigger.hidden = true;
     status.textContent = message;
@@ -142,6 +160,7 @@ function mountMascot(element) {
       element.dataset.phase = "playing";
     } catch (error) {
       if (!alive()) return;
+      if (imageFallbackStarted) return;
       element.dataset.phase = "poster";
       if (error.name === "NotAllowedError") {
         trigger.hidden = false;
@@ -186,6 +205,7 @@ function mountMascot(element) {
   return () => {
     disposed = true;
     events.abort();
+    poster.onload = poster.onerror = null;
     video.pause();
   };
 }

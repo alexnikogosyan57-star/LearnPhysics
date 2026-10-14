@@ -35,6 +35,14 @@ test("thinking video and resting poster have actual transparent pixels", async (
 test("transitions respond to selection, disclosures, and actual wheel travel", async ({
   page,
 }) => {
+  await page.addInitScript(() => {
+    window.graphTransitions = 0;
+    const original = Element.prototype.animate;
+    Element.prototype.animate = function (frames, options) {
+      if (this.classList.contains("graph-wrap")) window.graphTransitions++;
+      return original.call(this, frames, options);
+    };
+  });
   await page.goto("/");
   await page.locator('.hero [data-page="lesson"]').click();
   await page.locator("#next-stage").click();
@@ -54,11 +62,7 @@ test("transitions respond to selection, disclosures, and actual wheel travel", a
   ).toBe(0);
   await page.locator("#next-stage").click();
   await page.locator("#graph-details summary").click();
-  expect(
-    await page
-      .locator(".graph-wrap")
-      .evaluate((el) => el.getAnimations().length),
-  ).toBeGreaterThan(0);
+  expect(await page.evaluate(() => window.graphTransitions)).toBeGreaterThan(0);
   await page.locator("#run").click();
   await page.waitForTimeout(300);
   await page.locator("#run").click();

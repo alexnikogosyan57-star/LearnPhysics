@@ -2398,3 +2398,7 @@ dialog p {
 .video-companion[data-phase="playing"] .mascot-poster {
   visibility: hidden;
 }
+/* Both robot clips now have real alpha; no studio-backdrop wash is needed. */
+.hero:has(.video-companion) {
+  background: none;
+}

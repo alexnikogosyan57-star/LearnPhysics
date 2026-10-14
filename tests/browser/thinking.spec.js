@@ -102,7 +102,11 @@ test("continuous thinking on mobile pauses for reduced motion and resumes when d
 test("failed thinking media leaves a usable transparent fallback", async ({
   page,
 }) => {
-  await page.route("**/thinking-transparent.webm", (route) => route.abort());
+  await page.route("**/thinking-transparent.webm*", (route) =>
+    route.request().resourceType() === "media"
+      ? route.abort()
+      : route.continue(),
+  );
   await stage(page, 1);
   const mascot = page.locator('[data-mascot-state="thinking"]');
   await expect(mascot.locator(".mascot-status")).toContainText("հասանելի չէ");

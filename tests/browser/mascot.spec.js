@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 for (const width of [1440, 390])
-  test(`exact greeting plays once and rests at ${width}px`, async ({
+  test(`transparent greeting plays on entry and rests at ${width}px`, async ({
     page,
   }) => {
     const errors = [];
@@ -28,9 +28,22 @@ for (const width of [1440, 390])
       inline: el.playsInline,
       fit: getComputedStyle(el).objectFit,
     }));
+    const alpha = await video.evaluate((v) => {
+      const c = document.createElement("canvas");
+      c.width = v.videoWidth;
+      c.height = v.videoHeight;
+      const x = c.getContext("2d");
+      x.drawImage(v, 0, 0);
+      return {
+        corner: x.getImageData(0, 0, 1, 1).data[3],
+        face: x.getImageData(216, 260, 1, 1).data[3],
+      };
+    });
+    expect(alpha).toEqual({ corner: 0, face: 255 });
+    await expect(page.locator(".mascot-poster")).not.toBeVisible();
     expect(state).toEqual({
-      width: 1080,
-      height: 1920,
+      width: 432,
+      height: 768,
       muted: true,
       loop: false,
       controls: false,
@@ -61,9 +74,11 @@ for (const width of [1440, 390])
     await page.reload();
     await expect(page.locator(".video-companion")).toHaveAttribute(
       "data-phase",
-      "idle",
+      "playing",
     );
-    expect(await page.locator(".mascot-video").getAttribute("src")).toBeNull();
+    expect(
+      await page.locator(".mascot-video").getAttribute("src"),
+    ).not.toBeNull();
     expect(errors).toEqual([]);
   });
 test("reduced motion shows only a poster without fetching the video", async ({
@@ -77,7 +92,9 @@ test("reduced motion shows only a poster without fetching the video", async ({
   await page.goto("/");
   await expect(page.locator(".mascot-poster")).toBeVisible();
   expect(await page.locator(".mascot-video").getAttribute("src")).toBeNull();
-  expect(requests.some((url) => url.includes("greeting.mp4"))).toBe(false);
+  expect(
+    requests.some((url) => url.includes("greeting-transparent.webm")),
+  ).toBe(false);
   await expect(page.locator(".mascot-play")).not.toBeVisible();
   expect(
     await page
@@ -111,14 +128,33 @@ test("blocked autoplay offers a keyboard-accessible greeting action", async ({
   );
   await expect(page.locator(".mascot-play")).not.toBeVisible();
 });
-test("failed video retains poster and leaves lesson usable", async ({
+test("failed video uses the real animated image fallback and leaves lesson usable", async ({
   page,
 }) => {
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.route("**/greeting.mp4", (route) => route.abort());
+  await page.route("**/greeting-transparent.webm*", (route) =>
+    route.request().resourceType() === "media"
+      ? route.abort()
+      : route.continue(),
+  );
   await page.goto("/");
-  await expect(page.locator(".mascot-status")).toContainText("հասանելի չէ");
+  await expect(page.locator(".video-companion")).toHaveAttribute(
+    "data-phase",
+    "image-playing",
+  );
+  await expect(page.locator(".mascot-poster")).toHaveAttribute(
+    "src",
+    /greeting-transparent-animated/,
+  );
+  await page
+    .locator(".hero")
+    .evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+  await page.waitForTimeout(200);
+  const before = await page.locator(".mascot-media").screenshot();
+  await page.waitForTimeout(1600);
+  const after = await page.locator(".mascot-media").screenshot();
+  expect(before.equals(after)).toBe(false);
   await expect(page.locator(".mascot-poster")).toBeVisible();
   await page.locator('.hero [data-page="lesson"]').click();
   await expect(page.locator("#next-stage")).toBeEnabled();

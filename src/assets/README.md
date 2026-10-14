@@ -6,7 +6,7 @@ The original source filename is `Robot_waving_hello_animation_1080p_202610132141
 
 `greeting-poster.webp` and `greeting-idle.webp` are proportional, 432 × 768 exports of the first and final video frames. They preserve the same robot. CSS uses `object-fit: contain`, a 9:16 media area, and feathers only the background margins against a matching warm section backdrop. This is visual compositing, not asset transparency.
 
-`src/mascot.js` registers the supplied greeting and thinking videos, each with real first/final frames, plus static idle. Unprovided states resolve to idle. It plays the greeting once per tab session, handles rejected autoplay with an accessible text action, retains the final resting frame, respects reduced motion, and releases listeners and playback on navigation.
+`src/mascot.js` registers the supplied greeting and thinking videos, each with real first/final frames, plus static idle. Unprovided states resolve to idle. It plays the greeting once per page visit (fresh reloads greet again), handles rejected autoplay with an accessible text action, retains the final resting frame, respects reduced motion, and releases listeners and playback on navigation.
 
 `mascot.webp` is a retained legacy illustration from the previous redesign and is no longer imported or included in the application build. There are no invented success, encouragement or curious video assets.
 
@@ -21,3 +21,11 @@ Thinking playback loops continuously while its section is visible. The live vide
 The original `thinking.mp4` is preserved. The application uses `thinking-transparent.webm` (VP9, real alpha, 432 × 768, 24 fps, 8 seconds) plus `thinking-transparent-poster.png` and `thinking-transparent-idle.png`. A deterministic video-processing pass removes bright neutral checkerboard components while protecting the warm shell, dark face/joints and small eye highlights, then softens only the silhouette edge. No generative robot replacement is used. All 192 frames are processed; PNG posters are exported directly from that output. The original opaque thinking posters are retained as source history but no longer bundled.
 
 The browser checks decoded video alpha before revealing it. Decoders without transparency support show the transparent PNG instead. Video and resting-poster corner alpha are independently verified in Chromium. The original greeting clip retains its beige studio background; the requested checkerboard removal targets the thinking clip.
+
+## Active loop edit
+
+The final WebM now uses source frames 58–138 (2.42–5.75 s), trimming the standing introduction and the inactive tail. A cosine-timed forward/backward loop produces 192 frames at 24 fps, with eased reversals and near-matching first/final frames. Adjacent-frame interpolation preserves premultiplied alpha. Prepared posters are exported from the edited loop so loading does not start with the discarded standing pose. Run the background-removal script first, then `scripts/smooth-thinking-loop.py`; the original upload remains unmodified. The intermediate base WebM is ignored.
+
+## Transparent greeting
+
+The deployed greeting uses `greeting-transparent.webm`, a 432 × 768 real-alpha export of original source seconds 0.5–6.0. It preserves the same robot and wave. First/final transparent PNGs and `greeting-transparent-animated.webp` (132 frames, one playback) are generated from that stream. The latter is a real fallback for browsers/media paths that cannot display alpha video. The old original MP4 and opaque posters stay in source history but are no longer bundled. The prepared model, tools and weights are not part of the website runtime.
