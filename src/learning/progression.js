@@ -1,3 +1,4 @@
+import {starRating} from '../ui/components.js';
 // Stable IDs and best-ever results are independent of the displayed lesson order.
 export const starsFor = (earned, possible) => {
  if (!(possible > 0) || earned < 0 || earned > possible) throw new RangeError('Invalid assessment points');
@@ -36,4 +37,4 @@ export function nextLesson(data,id,topics) {
  const next=topic.lessons[topic.lessons.findIndex(l=>l.id===id)+1];
  return next&&canOpen(data,next.id,topics)?next:null;
 }
-export const starsMarkup=(stars)=>`<div class="earned-stars" aria-label="${stars} աստղ՝ 3-ից">${[1,2,3].map(n=>`<span class="${n<=stars?'earned':''}" aria-hidden="true">★</span>`).join('')}</div>`;
+export const starsMarkup=starRating;

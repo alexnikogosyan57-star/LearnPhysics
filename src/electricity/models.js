@@ -1,3 +1,4 @@
+import {wireEnds,isFreeEnd} from './connectivity.js';
 // Ideal DC models: voltages in V, resistance in ohms, current in A.
 export const ohm = (voltage,resistance) => resistance > 0 ? voltage/resistance : null;
 export function network(voltage,r1,r2,parallel=false) {
@@ -36,15 +37,18 @@ function solve(a,b) {
   }
   return b;
 }
-export function solveCircuit(components,wires) {
- const empty=status=>({status,current:0,lamps:{},branchCurrents:{},nodeVoltages:{},meters:{}});
+export function solveCircuit(components,wires,junctions=[]) {
+ const empty=status=>({status,current:0,lamps:{},branchCurrents:{},nodeVoltages:{},meters:{},powers:{},voltageDrops:{}});
+ if(!Array.isArray(components)||!Array.isArray(wires)||!Array.isArray(junctions)||components.some(c=>!c||typeof c.id!=='string'||!c.id||c.id.includes(':'))||new Set(components.map(c=>c.id)).size!==components.length||new Set(junctions.map(j=>j.id)).size!==junctions.length)return empty('invalid');
  const sources=components.filter(c=>c.type==='battery');if(!sources.length)return empty('no-source');
  if(sources.length!==1||components.some(c=>!['battery','switch','lamp','resistor','ammeter','voltmeter'].includes(c.type)))return empty('unsupported');
- const battery=sources[0],voltage=battery.voltage??9;if(!Number.isFinite(voltage))return empty('unsupported');
+ const battery=sources[0],voltage=battery.voltage??9;if(!Number.isFinite(voltage)||voltage<0)return empty('unsupported');
  const parents=new Map();for(const c of components)for(const port of ['a','b'])parents.set(`${c.id}:${port}`,`${c.id}:${port}`);
+ for(const j of junctions)parents.set('j:'+j.id,'j:'+j.id);
+ if(wires.some(w=>{const ends=wireEnds(w);return ends.length!==2||ends.some(e=>typeof e==='string'?!parents.has(e):!isFreeEnd(e));}))return empty('invalid');
  const root=x=>{const p=parents.get(x);if(p===undefined)return null;if(p!==x)parents.set(x,root(p));return parents.get(x);};
  const union=(a,b)=>{const x=root(a),y=root(b);if(x&&y&&x!==y)parents.set(x,y);};
- for(const [a,b] of wires)union(a,b);
+ for(const w of wires){const [a,b]=wireEnds(w);if(typeof a==='string'&&typeof b==='string')union(a,b);}
  for(const c of components)if(c.type==='switch'&&c.closed)union(c.id+':a',c.id+':b');
  const hi=root(battery.id+':a'),lo=root(battery.id+':b');if(hi===lo)return empty('short');
  const loads=components.filter(c=>['lamp','resistor'].includes(c.type)).map(c=>({id:c.id,a:root(c.id+':a'),b:root(c.id+':b'),r:c.resistance??20}));
@@ -62,11 +66,13 @@ export function solveCircuit(components,wires) {
   if(index.has(b))matrix[i][index.get(b)]-=g;else if(potentials.has(b))rhs[i]+=g*potentials.get(b);
  }
  activeAmps.forEach((c,j)=>{const k=unknown.length+j;for(const [node,sign] of [[c.a,1],[c.b,-1]]){if(index.has(node)){matrix[index.get(node)][k]+=sign;matrix[k][index.get(node)]+=sign;}else if(potentials.has(node))rhs[k]-=sign*potentials.get(node);}});
- const solution=solve(matrix,rhs);if(!solution)return empty('unsupported');unknown.forEach((n,i)=>potentials.set(n,solution[i]));
- const lamps={},branchCurrents={},meters={};let current=0;
- for(const c of loads){const i=potentials.has(c.a)&&potentials.has(c.b)?(potentials.get(c.a)-potentials.get(c.b))/c.r:0;lamps[c.id]=Math.abs(i);branchCurrents[c.id]=i;if(c.a===hi)current+=i;if(c.b===hi)current-=i;}
+ const solution=solve(matrix,rhs);if(!solution||solution.some(v=>!Number.isFinite(v)))return empty('unsupported');unknown.forEach((n,i)=>potentials.set(n,solution[i]));
+ const lamps={},branchCurrents={},meters={},powers={},voltageDrops={};let current=0;
+ for(const c of loads){const i=potentials.has(c.a)&&potentials.has(c.b)?(potentials.get(c.a)-potentials.get(c.b))/c.r:0;lamps[c.id]=Math.abs(i);branchCurrents[c.id]=i;voltageDrops[c.id]=i*c.r;powers[c.id]=i*i*c.r;if(c.a===hi)current+=i;if(c.b===hi)current-=i;}
  activeAmps.forEach((c,j)=>{const i=solution[unknown.length+j];meters[c.id]=i;if(c.a===hi)current+=i;if(c.b===hi)current-=i;});
  for(const c of components)if(c.type==='voltmeter'){const a=potentials.get(root(c.id+':a')),b=potentials.get(root(c.id+':b'));meters[c.id]=a===undefined||b===undefined?null:a-b;}
  const nodeVoltages={};for(const key of parents.keys())nodeVoltages[key]=potentials.get(root(key))??null;
- return {status:Math.abs(current)>1e-8?'closed':'open',current:Math.max(0,current),lamps,branchCurrents,nodeVoltages,meters};
+ if(!Number.isFinite(current)||Object.values(powers).some(v=>!Number.isFinite(v)))return empty('unsupported');
+ const path=new Set([hi]);changed=true;while(changed){changed=false;for(const c of [...loads,...amps])if(path.has(c.a)||path.has(c.b))for(const n of [c.a,c.b])if(!path.has(n)){path.add(n);changed=true;}}
+ return {status:path.has(lo)?'closed':'open',current:Math.max(0,current),lamps,branchCurrents,nodeVoltages,meters,powers,voltageDrops};
 }

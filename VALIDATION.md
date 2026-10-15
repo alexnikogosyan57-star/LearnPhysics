@@ -1,3 +1,11 @@
+# Latest desktop and circuit verification
+
+Current redesign: **25 Node tests passed; 95 browser tests passed in one full run, followed by six focused final checks**, including a new real-touch wire-end case. The registry now contains 96 browser cases; this is not a claim of a single 96-case run. Both production and standalone artifacts were independently exercised over HTTP, at the six requested sizes, with connected/open/disconnected lamp behavior and reload persistence. No external asset requests or runtime errors were observed.
+
+See [the current diagnosis, changed-file map, complete verification and remaining model limits](docs/desktop-and-circuit-redesign.md). No new lesson was added in this redesign. There is no separate repository lint/typecheck script.
+
+The report below records the preceding curriculum expansion, and its historical test counts are retained for context.
+
 # Verification of the electricity learning expansion
 
 The application was exercised in Chromium using `/usr/bin/chromium`, with real browser state, pointer/keyboard controls and local persistence. Tests do not assert textbook alignment.

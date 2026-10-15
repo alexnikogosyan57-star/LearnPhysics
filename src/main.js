@@ -3,6 +3,8 @@ import "@fontsource/noto-sans-armenian/400.css";
 import "@fontsource/noto-sans-armenian/500.css";
 import "@fontsource/noto-sans-armenian/600.css";
 import "./style.css";
+import "./ui/academy.css";
+import "@fontsource/noto-sans-armenian/700.css";
 import {
   createIcons,
   Orbit,
@@ -90,7 +92,7 @@ import { renderMascot, mountMascots, updateMascotLayout, greetingHasStarted } fr
 import { audioState, enableSound, muteSound, setVolume, playSound } from "./audio";
 import {topics} from './learning/topics';
 import {initializeProgress,canOpen,recordResult,nextLesson,starsMarkup,starsFor} from './learning/progression';
-import {topicView,pathView,masteryProgress} from './learning/views';
+import {topicView,pathView,masteryProgress,pathContextView} from './learning/views';
 import {foundations} from './learning/foundations-content';
 let assessmentAttempt = Date.now();
 let cleanupMascots = () => {};
@@ -154,7 +156,7 @@ function questionLayout(content, eventKey, caption, state = "thinking") {
 }
 function shell(body) {
   const active = ["lesson", "electric"].includes(page) ? "path" : page;
-  return `<a class="skip-link" href="#main-content">Անցնել բովանդակությանը</a><header class="site-header"><div class="header-inner"><a class="brand" href="#home" aria-label="Ֆիզիկան շուրջդ է՝ գլխավոր էջ"><span class="brand-symbol">${icon("orbit")}</span><span>Ֆիզիկան <span class="brand-second">շուրջդ է</span></span></a><button id="nav-toggle" class="icon-button nav-toggle" aria-label="Բացել բաժինները" aria-expanded="false" aria-controls="main-nav">${icon("menu")}</button><nav id="main-nav" aria-label="Հիմնական բաժիններ">${navigation.map(([id, label, i]) => `<button data-page="${id}" class="nav-item ${active === id ? "active" : ""}" ${active === id ? 'aria-current="page"' : ""}>${icon(i)}<span>${label}</span></button>`).join("")}</nav><button id="sound" class="icon-button sound-button" aria-label="Ձայնի կարգավորումներ">${icon(audioState().enabled ? "volume-2" : "volume-x")}</button></div></header><div class="main-shell"><main id="main-content" tabindex="-1">${body}</main><footer><span>Ֆիզիկան շուրջդ է <span class="footer-dot">·</span> 9-րդ դասարան</span><span>${icon("hard-drive")} Քո գրառումները պահվում են այս սարքում</span></footer><p id="storage-warning" role="status"></p></div><dialog id="audio-dialog" aria-labelledby="audio-title"><button class="dialog-close icon-button" id="close-audio" aria-label="Փակել">${icon("x")}</button><span class="eyebrow">Ձայնի կարգավորումներ</span><h2 id="audio-title">Սովորելու հանգիստ միջավայր</h2><p>Կարճ, մեղմ ձայնային էֆեկտներ՝ փորձը սկսելիս, ճիշտ պատասխանի ու պահպանված գրառման համար։ Երաժշտություն չկա։</p><label class="volume-label">Ձայնի մակարդակ <input id="volume" type="range" min="0" max="100" value="${audioState().volume}" aria-label="Ձայնի մակարդակ"></label><button class="button" id="enable-sound" type="button">Միացնել ձայնը</button><button class="button secondary" id="mute">${icon("volume-x")} Անջատել ձայնը</button><p class="audio-note"><span id="audio-status" role="status">${audioState().enabled ? "Ձայնը միացված է։" : "Ձայնն անջատված է։ Միացրու այն, երբ ցանկանաս։"}</span><br>Տեղային ձայնային էֆեկտներ՝ Kenney · CC0։</p></dialog>`;
+  return `<a class="skip-link" href="#main-content">Անցնել բովանդակությանը</a><header class="site-header" data-screen="${page}"><div class="header-inner"><a class="brand" href="#home" aria-label="Ֆիզիկան շուրջդ է՝ գլխավոր էջ"><span class="brand-symbol">${icon("orbit")}</span><span>Ֆիզիկան <span class="brand-second">շուրջդ է</span></span></a><button id="nav-toggle" class="icon-button nav-toggle" aria-label="Բացել բաժինները" aria-expanded="false" aria-controls="main-nav">${icon("menu")}</button><nav id="main-nav" aria-label="Հիմնական բաժիններ">${navigation.map(([id, label, i]) => `<button data-page="${id}" class="nav-item ${active === id ? "active" : ""}" ${active === id ? 'aria-current="page"' : ""}>${icon(i)}<span>${id==='home'?'Ուսում':label}</span></button>`).join("")}</nav><button id="sound" class="icon-button sound-button" aria-label="Ձայնի կարգավորումներ">${icon(audioState().enabled ? "volume-2" : "volume-x")}</button></div></header><div class="main-shell" data-screen="${page}"><div class="page-layout ${page==='path'&&data.learning.selectedTopic?'with-context':''}"><main id="main-content" tabindex="-1">${body}</main>${page==='path'&&data.learning.selectedTopic?pathContextView(data):''}</div><footer><span>Ֆիզիկան շուրջդ է <span class="footer-dot">·</span> 9-րդ դասարան</span><span>${icon("hard-drive")} Քո գրառումները պահվում են այս սարքում</span></footer><p id="storage-warning" role="status"></p></div><dialog id="audio-dialog" aria-labelledby="audio-title"><button class="dialog-close icon-button" id="close-audio" aria-label="Փակել">${icon("x")}</button><span class="eyebrow">Ձայնի կարգավորումներ</span><h2 id="audio-title">Սովորելու հանգիստ միջավայր</h2><p>Կարճ, մեղմ ձայնային էֆեկտներ՝ փորձը սկսելիս, ճիշտ պատասխանի ու պահպանված գրառման համար։ Երաժշտություն չկա։</p><label class="volume-label">Ձայնի մակարդակ <input id="volume" type="range" min="0" max="100" value="${audioState().volume}" aria-label="Ձայնի մակարդակ"></label><button class="button" id="enable-sound" type="button">Միացնել ձայնը</button><button class="button secondary" id="mute">${icon("volume-x")} Անջատել ձայնը</button><p class="audio-note"><span id="audio-status" role="status">${audioState().enabled ? "Ձայնը միացված է։" : "Ձայնն անջատված է։ Միացրու այն, երբ ցանկանաս։"}</span><br>Տեղային ձայնային էֆեկտներ՝ Kenney · CC0։</p></dialog>`;
 }
 function home() {
   const current = [...investigations,...foundations,...electricLessons].find(l => l.id === data.currentLesson);
@@ -452,10 +454,12 @@ function render() {
       dock.className = "lesson-action-dock";
       action.replaceWith(dock);
       dock.append(action);
-      content.append(dock);
+      const experimentControls=content.querySelector('.science-controls,.circuit-tools,.sim-controls');
+      if(experimentControls)experimentControls.after(dock);else content.append(dock);
     }
     $("#main-content").classList.add("focused-lesson");
   }
+  if($(".learning-summary"))$("#main-content").classList.add("completion-screen");
   createIcons({ icons });
   bind();
   bindRedesign();

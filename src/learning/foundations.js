@@ -72,7 +72,7 @@ export function createFoundations(getData,save,render) {
  root.querySelector('.model-note').textContent=`${e.target.value} Վ իդեալական աղբյուր․ լամպը՝ 20 Օմ բեռ։`;
  bindWorkbench();save();
  });
- root.querySelector('#measure-electric').onclick=()=>{const r=solveCircuit(s.circuit.components,s.circuit.wires);if(!['open','closed'].includes(r.status))return;
+ root.querySelector('#measure-electric').onclick=()=>{const r=solveCircuit(s.circuit.components,s.circuit.wires,s.circuit.junctions);if(!['open','closed'].includes(r.status))return;
  const reading=`${s.material?{copper:'Պղինձ',plastic:'Պլաստիկ',wood:'Չոր փայտ'}[s.material]+' · ':''}${r.status==='open'?'Բաց':'Փակ'} շղթա · ${s.circuit.components.find(c=>c.type==='battery')?.voltage} Վ · ${Number(r.current.toFixed(3))} Ա`;
  s.experiments.push({reading,created:Date.now(),circuit:structuredClone(s.circuit),material:s.material||null,current:r.current});playSound('complete');repaint();};
  }

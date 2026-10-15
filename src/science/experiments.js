@@ -71,12 +71,14 @@ export function evaluate(kind,p,t=0,robot={x:1,y:2,angle:0,distance:0}) {
 }
 export function readingText(result){return result.readings.map(x=>`${x.label}՝ ${format(x.value)} ${x.unit}`).join(' · ');}
 
-export function meterCircuit(p) {
+export function meterTopology(p) {
  const components=[{id:'source',type:'battery',voltage:p.voltage},{id:'load',type:'resistor',resistance:p.resistance},{id:'amp',type:'ammeter'},{id:'volt',type:'voltmeter'}],wires=[];
  const aa=p.reverseA?'b':'a',ab=p.reverseA?'a':'b',va=p.reverseV?'b':'a',vb=p.reverseV?'a':'b';
  if(p.ammeter==='series')wires.push(['source:a','amp:'+aa],['amp:'+ab,'load:a']);
  else if(p.ammeter==='parallel')wires.push(['source:a','load:a'],['source:a','amp:'+aa],['source:b','amp:'+ab]);
  if(p.voltmeter==='series')wires.push(['load:b','volt:'+va],['volt:'+vb,'source:b']);
  else {wires.push(['load:b','source:b']);if(p.voltmeter==='parallel')wires.push(['load:a','volt:'+va],['load:b','volt:'+vb]);}
- return solveCircuit(components,wires);
+ return {components,wires};
 }
+
+export function meterCircuit(p){const t=meterTopology(p);return solveCircuit(t.components,t.wires);}
