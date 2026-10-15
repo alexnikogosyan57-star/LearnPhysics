@@ -1,3 +1,4 @@
+import {chargeDiagram} from './charge-lab.js';
 import {componentDefs,componentArt} from '../electricity/art.js';
 import {beaker,electrode,saltBridge} from '../electricity/lab-art.js';
 import {terminalPoint,wireRoute,meterWireRoute} from '../electricity/geometry.js';
@@ -11,10 +12,7 @@ const target=(id,x,y,label)=>`<circle data-direct="${id}" cx="${x}" cy="${y}" r=
 export function sceneMarkup(kind,p,r){
  let body='';
  if(kind==='symbols'){const pictures={battery:'<path d="M415 120V240M435 145V215M370 180H415M435 180H485"/>',lamp:'<circle cx="425" cy="180" r="35"/><path d="M400 155l50 50m-50 0 50-50M370 180H390M460 180H485"/>',switch:'<path d="M370 180H400l50-30M450 180H485"/><circle cx="400" cy="180" r="4"/><circle cx="450" cy="180" r="4"/>',resistor:'<path d="M370 180H395m60 0h30"/><rect x="395" y="162" width="60" height="36"/>'};body=`${componentDefs('symbol')}<g transform="translate(190 180)">${componentArt({type:r.part,voltage:9},'symbol')}</g><g fill="none" stroke="#637d71" stroke-width="4">${pictures[r.part]}</g>${text(190,290,'Տարրի պատկերը')}${text(425,290,'Պայմանական նշանը')}`;}
- if(kind==='charges'){
- const x1=320+(p.x1??-.7)*150,y1=180-(p.y1??0)*150,x2=320+(p.x2??.7)*150,y2=180-(p.y2??0)*150;
- body=`<path d="M${x1} ${y1}L${x2} ${y2}" stroke="#c4d1c1" stroke-dasharray="5 7"/>${[[x1,y1,p.q1,'charge1'],[x2,y2,p.q2,'charge2']].map(([x,y,q,id])=>`<circle cx="${x}" cy="${y}" r="30" fill="${q>0?'#e7bda1':q<0?'#aecddb':'#dce2d5'}" stroke="#98ad9b" stroke-width="2"/>${text(x,y+6,q>0?'+':q<0?'−':'0')}${target(id,x,y,'Քաշիր լիցքավորված մարմինը')}`).join('')}${r.force>0?[[x1,y1,-1],[x2,y2,1]].map(([x,y,sign])=>{const length=45,dx=sign*r.fx/r.force*length,dy=-sign*r.fy/r.force*length;return `<path d="M${x} ${y+50}l${dx} ${dy}" stroke="#bc8960" stroke-width="3" marker-end="url(#science-force-head)"/>`;}).join(''):''}${r.force>0?text(320,306,'Սլաքները՝ ուժի ուղղությունը'):''}${text(320,335,r.force===0?'Փոխազդեցության ուժը զրո է':r.attract?'Տարալիցք մարմինները ձգում են իրար':'Նույնանուն լիցքերը վանում են իրար')}`;
- }
+ if(kind==='charges')body=chargeDiagram(p,r);
  if(kind==='field'){
  let arrows='';for(let x=-1.5;x<=1.6;x+=.3)for(let y=-.8;y<=.8;y+=.3){if(x*x+y*y<.08)continue;const f=M.electricField({...p,x,y});if(!f.magnitude)continue;const angle=Math.atan2(-f.ey,f.ex);arrows+=`<g transform="translate(${320+x*155} ${180-y*155}) rotate(${angle*180/Math.PI})"><path d="M-8 0H8m-5-4 5 4-5 4" stroke="#9db8a5" stroke-width="2" fill="none"/></g>`;}
  const x=320+(p.x??.7)*155,y=180-(p.y??.4)*155;body=arrows+`<circle cx="320" cy="180" r="29" fill="${p.charge>=0?'#e6b99c':'#b4cedc'}"/>${text(320,187,p.charge>0?'+':p.charge<0?'−':'0')}<circle cx="${x}" cy="${y}" r="19" fill="#f0dc9e" stroke="#b7a06b"/>${text(x,y+6,p.test>0?'+':p.test<0?'−':'0')}${target('probe',x,y,'Քաշիր փորձնական լիցքը')}${text(320,335,'Սլաքները դաշտի ուղղությունն են՝ դրական փորձնական լիցքի համար')}`;

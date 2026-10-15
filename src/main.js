@@ -1,3 +1,4 @@
+import {resetLessonAttempt,lessonCompleted,requestExitDialog} from "./learning/session.js";
 import {captureFocus,restoreFocus} from "./ui/focus.js";
 import {investigations} from './science/content';
 import "@fontsource/noto-sans-armenian/400.css";
@@ -99,11 +100,14 @@ let assessmentAttempt = Date.now();
 let cleanupMascots = () => {};
 let cleanupExperiments = () => {};
 let data = read();
+const navigationType=performance.getEntriesByType('navigation')[0]?.type;
+if(data.lessonSession && navigationType!=='reload')resetLessonAttempt(data,data.lessonSession.id);
 initializeProgress(data, topics);
+data.learning.selectedTopic ||= topics.find(t=>t.lessons.some(l=>l.id===data.currentLesson))?.id || 'electricity';
 write(data);
 const journey = createJourney(() => data, save, render);
 data.unlockedStage = Math.max(data.unlockedStage || 0, data.stage);
-let page = "home",
+let page = "path",
   speed = 2,
   duration = 5,
   time = 0,
@@ -129,19 +133,39 @@ function save() {
     $("#storage-warning").textContent =
       "Պահպանման համար բրաուզերի հիշողությունն անհասանելի է։";
 }
-function openModule(id) {
+function activeLesson(){return page==='lesson'?'motion':page==='electric'?data.currentLesson:null;}
+function finishLessonSession(){
+ const id=activeLesson();if(!id)return;
+ stop();cleanupExperiments();cleanupExperiments=()=>{};
+ resetLessonAttempt(data,id);
+ speed=2;duration=5;time=0;quizIndex=0;quizAnswers=[];assessmentAttempt=Date.now();save();
+}
+function requestLessonExit(action){
+ const id=activeLesson();if(!id){action();return;}
+ if($('#lesson-exit-dialog'))return;
+ const leave=()=>{finishLessonSession();action();};
+ if(lessonCompleted(data,id))leave();else requestExitDialog(leave);
+}
+function openModule(id,approved=false) {
+ if(activeLesson()&&!approved){
+  if(activeLesson()===id)return true;
+  requestLessonExit(()=>openModule(id,true));return false;
+ }
  const topic=topics.find(t=>t.lessons.some(l=>l.id===id));
- if(!canOpen(data,id,topics)){if(topic)data.learning.selectedTopic=topic.id;save();go('path');return false;}
+ if(!canOpen(data,id,topics)){if(topic)data.learning.selectedTopic=topic.id;save();go('path',true);return false;}
  data.learning.selectedTopic=topic.id;save();
- if(id==='motion')go('lesson');else if(journey.open(id))go('electric');
+ if(id==='motion')go('lesson',true);else if(journey.open(id))go('electric',true);
+ data.lessonSession={id,started:Date.now()};save();
  history.replaceState(null,'',`#lesson/${id}`);return true;
 }
-function go(p) {
+function go(p,approved=false) {
+  const target=p==='lab'?'lesson':p;
+  if(activeLesson()&&!approved && target!==page){requestLessonExit(()=>go(p,true));return;}
   stop();
   observationIndex = 0;
   observationSelection = null;
   page = p === "lab" ? "lesson" : p;
-  if (p === "lesson") { data.currentLesson = "motion"; save(); }
+  if (p === "lesson") { data.currentLesson = "motion"; data.lessonSession={id:"motion",started:Date.now()}; save(); }
   selected = null;
   hint = 0;
   feedback = "";
@@ -399,10 +423,13 @@ function noteForm() {
       "",
     )}<button class="button" type="submit">Պահպանել</button><button class="text-button" id="cancel-note" type="button">Չեղարկել</button></form>`;
 }
-function totalExperiments(){const ids=new Set([...Object.keys(data.electricLessons||{}),...Object.keys(data.investigations||{})]);return data.runs.length+[...ids].reduce((sum,id)=>sum+(data.investigations?.[id]?.runs.length??data.electricLessons?.[id]?.experiments?.length??0),0);}
+function totalExperiments(){const ids=new Set([...Object.keys(data.electricLessons||{}),...Object.keys(data.investigations||{})]);return (data.lessonAttemptArchives||[]).reduce((n,a)=>n+(a.record.runs?.length||a.record.experiments?.length||0),0)+data.runs.length+[...ids].reduce((sum,id)=>sum+(data.investigations?.[id]?.runs.length??data.electricLessons?.[id]?.experiments?.length??0),0);}
 function progress() {
+  const archivedMotion=[...(data.lessonAttemptArchives||[])].reverse().find(a=>a.lessonId==='motion'&&a.record.assessment)?.record;
+  const motionResult=data.assessment || archivedMotion?.assessment;
+  const motionAnswers=Object.keys(data.answers||{}).length?data.answers:archivedMotion?.answers||{};
   const correct = questions.filter(
-    (q, i) => data.answers[i] === q.correct,
+    (q, i) => motionAnswers[i] === q.correct,
   ).length;
   return (
     heading(
@@ -410,7 +437,7 @@ function progress() {
       "Իմ առաջընթացը",
       "Կարևոր է ոչ թե արագ ավարտել, այլ հասկանալ։",
     ) +
-    masteryProgress(data) + `<div class="presence-overview">${renderMascot(data.assessment ? "success-complete" : "idle-secondary", "Ամեն փորձից՝ մի նոր բացահայտում։", `motion:progress:${data.assessment?.created || "first"}`)}<div class="progress-stats"><div><strong>${(data.assessment ? 1 : 0) + new Set([...Object.entries(data.electricLessons||{}),...Object.entries(data.investigations||{})].filter(([,x])=>x.completed).map(([id])=>id)).size}</strong><span>Ավարտված հետազոտություն</span></div><div><strong>${totalExperiments()}</strong><span>Կատարված փորձ</span></div><div><strong>${data.notes.length}</strong><span>Գրառում տետրում</span></div></div></div><section class="note"><h2>Շարժում և արագություն</h2>${questions.map((q, i) => `<div class="concept">${icon(data.answers[i] === q.correct ? "circle-check" : "circle-dashed")}<span>${["Արագության և ճանապարհի կապը", "Ժամանակի և ճանապարհի կապը", "Հաստատուն արագություն"][i]}</span><small>${data.answers[i] === q.correct ? "Ցույց ես տվել" : "Դեռ ուսումնասիրելու ենք"}</small></div>`).join("")}<p>${data.assessment ? `Գիտելիքի ստուգում՝ ${data.assessment.score} / 3 ճիշտ պատասխան առաջին փորձից։` : "Գիտելիքի ստուգումը դեռ չի կատարվել։"}</p>${data.assessment?.score < 3 ? '<p class="feedback">Լրացուցիչ փորձիր կանգառով շարժման միջին արագության հարցը։</p>' : ""}<button class="button" data-page="lesson">Վերադառնալ հետազոտությանը ${icon("arrow-right")}</button></section><section class="electric-progress"><h2>Նոր հետազոտությունները</h2>${electricLessons.map(l=>{const record=data.electricLessons?.[l.id];if(!record)return "";return `<div class="recent-run"><span>${l.title}</span><span>${record.completed?"Ավարտված է":`Քայլ ${record.stage+1} / 6`} · ${(record.experiments || []).length} գրանցված փորձ</span><button class="text-button" data-module="${l.id}">Շարունակել</button></div>`;}).join("") || "<p>Ընտրիր մի նոր հարց ուսուցման ճանապարհից։</p>"}</section><section class="runs"><h3>Վերջին փորձերը</h3>${
+    masteryProgress(data) + `<div class="presence-overview">${renderMascot(motionResult ? "success-complete" : "idle-secondary", "Ամեն փորձից՝ մի նոր բացահայտում։", `motion:progress:${motionResult?.created || "first"}`)}<div class="progress-stats"><div><strong>${Object.values(data.learning.lessons).filter(x=>x.attempts?.length).length}</strong><span>Ավարտված հետազոտություն</span></div><div><strong>${totalExperiments()}</strong><span>Կատարված փորձ</span></div><div><strong>${data.notes.length}</strong><span>Գրառում տետրում</span></div></div></div><section class="note"><h2>Շարժում և արագություն</h2>${questions.map((q, i) => `<div class="concept">${icon(motionAnswers[i] === q.correct ? "circle-check" : "circle-dashed")}<span>${["Արագության և ճանապարհի կապը", "Ժամանակի և ճանապարհի կապը", "Հաստատուն արագություն"][i]}</span><small>${motionAnswers[i] === q.correct ? "Ցույց ես տվել" : "Դեռ ուսումնասիրելու ենք"}</small></div>`).join("")}<p>${motionResult ? `Գիտելիքի ստուգում՝ ${motionResult.score} / 3 ճիշտ պատասխան առաջին փորձից։` : "Գիտելիքի ստուգումը դեռ չի կատարվել։"}</p>${motionResult?.score < 3 ? '<p class="feedback">Լրացուցիչ փորձիր կանգառով շարժման միջին արագության հարցը։</p>' : ""}<button class="button" data-page="lesson">Վերադառնալ հետազոտությանը ${icon("arrow-right")}</button></section><section class="electric-progress"><h2>Նոր հետազոտությունները</h2>${electricLessons.map(l=>{const record=data.electricLessons?.[l.id];if(!record)return "";return `<div class="recent-run"><span>${l.title}</span><span>${record.completed?"Ավարտված է":`Քայլ ${record.stage+1} / 6`} · ${(record.experiments || []).length} գրանցված փորձ</span><button class="text-button" data-module="${l.id}">Շարունակել</button></div>`;}).join("") || "<p>Ընտրիր մի նոր հարց ուսուցման ճանապարհից։</p>"}</section><section class="runs"><h3>Վերջին փորձերը</h3>${
       data.runs
         .slice(-4)
         .reverse()
@@ -802,8 +829,13 @@ function bind() {
 }
 const initialHash=location.hash;
 if(initialHash.startsWith('#lesson/'))openModule(decodeURIComponent(initialHash.slice(8)));
-else {if(['#path','#progress','#notebook'].includes(initialHash))page=initialHash.slice(1);render();}
-window.addEventListener('hashchange',()=>{const h=location.hash;if(h==='#main-content'){$('#main-content').focus();return;}if(h.startsWith('#lesson/'))openModule(decodeURIComponent(h.slice(8)));else go(['#path','#progress','#notebook'].includes(h)?h.slice(1):'home');});
+else {if(['#home','#path','#progress','#notebook'].includes(initialHash))page=initialHash.slice(1);render();if(!initialHash)history.replaceState(null,'','#path');}
+window.addEventListener('hashchange',()=>{const h=location.hash;if(activeLesson()&&h!=='#main-content')history.replaceState(null,'',`#lesson/${activeLesson()}`);if(h==='#main-content'){$('#main-content').focus();return;}if(h.startsWith('#lesson/'))openModule(decodeURIComponent(h.slice(8)));else go(['#path','#progress','#notebook'].includes(h)?h.slice(1):'home');});
+
+// Native confirmation is browser-controlled and requires a prior user interaction.
+window.addEventListener('beforeunload',event=>{const id=activeLesson();if(id&&!lessonCompleted(data,id)){event.preventDefault();event.returnValue='';}});
+window.addEventListener('pagehide',()=>{stop();cleanupExperiments();});
+window.addEventListener('pageshow',event=>{if(event.persisted&&activeLesson()){finishLessonSession();go('path',true);}});
 
 window.addEventListener("physics-audio-error", () => {
   if ($("#audio-status")) $("#audio-status").textContent = "Ձայնը չհաջողվեց նվագարկել։ Կարող ես կրկին միացնել այն։";

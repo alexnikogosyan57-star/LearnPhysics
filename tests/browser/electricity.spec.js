@@ -1,4 +1,6 @@
+import {prepareRegressionNavigation} from './navigation-helper.js';
 import {test,expect} from '@playwright/test';
+test.beforeEach(({page})=>prepareRegressionNavigation(page));
 async function open(page,id,stage=2){
  await page.goto('/');await page.evaluate(async({id,stage})=>{const data=JSON.parse(localStorage.getItem('physics-journal-v1')||'{}');data.electricLessons ||= {};data.electricLessons[id]={stage,experiments:[],attempts:[]};data.learning.unlocked.push(id);
  const {investigations}=await import('/src/science/content.js');const l=investigations.find(x=>x.id===id);if(l){const {initialExperiment}=await import('/src/science/lifecycle.js');data.investigations ||= {};data.investigations[id]={version:1,stage,unlockedStage:stage,runs:[],quiz:[],quizIndex:0,draft:{},prediction:{},experiment:{...initialExperiment(l.kind,l.initial),initial:{...l.initial},probeFocus:l.probeFocus,fixedComponent:l.fixedComponent}};}

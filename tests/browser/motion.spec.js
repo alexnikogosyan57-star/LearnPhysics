@@ -1,8 +1,11 @@
+import {prepareRegressionNavigation} from './navigation-helper.js';
 import { test, expect } from "@playwright/test";
+// Reload confirmations are accepted here; leave/stay behavior has dedicated session tests.
+test.beforeEach(({page})=>prepareRegressionNavigation(page));
 test("thinking video and resting poster have actual transparent pixels", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/#home");
   await page.goto('/#lesson/motion');
   await page.locator("#next-stage").click();
   const mascot = page.locator('[data-mascot-state="thinking"]');
@@ -43,7 +46,7 @@ test("transitions respond to selection, disclosures, and actual wheel travel", a
       return original.call(this, frames, options);
     };
   });
-  await page.goto("/");
+  await page.goto("/#home");
   await page.goto('/#lesson/motion');
   await page.locator("#next-stage").click();
   await page
@@ -78,7 +81,7 @@ test("reduced motion disables added transitions and wheel decoration", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/#home");
   await page.goto('/#lesson/motion');
   await page.locator("#next-stage").click();
   await page.locator('[data-predict="1"]').click();

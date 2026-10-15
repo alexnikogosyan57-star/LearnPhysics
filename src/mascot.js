@@ -131,6 +131,26 @@ export function mountMascots(root) {
     if (!element.isConnected) { dispose(); mounted.delete(element); }
   }};
 }
+// Hold exactly one rendered pose until the next decoder/image is ready.
+// A canvas keeps real alpha without exposing a second robot underneath it.
+function holdMascotFrame(current, incoming) {
+  const media=current.querySelector('.mascot-media');
+  const previous=media?.querySelector('.mascot-hold') ||
+    (current.dataset.phase==='playing'?media?.querySelector('video'):media?.querySelector('.mascot-poster'));
+  if(!previous)return;
+  const width=previous.videoWidth || previous.naturalWidth || previous.width;
+  const height=previous.videoHeight || previous.naturalHeight || previous.height;
+  if(!width || !height)return;
+  const frame=document.createElement('canvas');
+  frame.width=width;frame.height=height;frame.className='mascot-hold';frame.setAttribute('aria-hidden','true');
+  try{frame.getContext('2d').drawImage(previous,0,0,width,height);}catch{return;}
+  incoming.querySelector('.mascot-media').append(frame);
+  incoming.dataset.holding='true';
+}
+function releaseMascotFrame(element) {
+  delete element.dataset.holding;
+  element.querySelector('.mascot-hold')?.remove();
+}
 // Replace normal UI subtrees, but leave ancestors of a matching mascot attached.
 export function updateMascotLayout(current, incoming) {
   const isMatching = current.nodeType === 1 && incoming.nodeType === 1 && current.tagName === incoming.tagName;
@@ -140,6 +160,9 @@ export function updateMascotLayout(current, incoming) {
       current.querySelector('.companion-caption').textContent = incoming.querySelector('.companion-caption').textContent;
       return;
     }
+    holdMascotFrame(current,incoming);
+    current.replaceWith(incoming);
+    return;
   }
   if (!isMatching || !current.querySelector?.('[data-mascot-state]') || !incoming.querySelector?.('[data-mascot-state]')) {
     current.replaceWith(incoming); return;
@@ -173,7 +196,7 @@ function mountMascot(element) {
     pending = false,
     unsupportedAlpha = false,
     imageFallbackStarted = false;
-  let followupCleanup = () => {}, handoffTimer, handedOff = false;
+  let followupCleanup = () => {}, handoffTimer, handedOff = false, frameCallback;
   const listen = (node, name, handler) =>
     node.addEventListener(name, handler, { signal: events.signal });
   const alive = () => !disposed && element.isConnected;
@@ -191,18 +214,19 @@ function mountMascot(element) {
     const holder = document.createElement("div");
     holder.innerHTML = renderMascot(clip.next, element.querySelector(".companion-caption").textContent, eventKey + ":presence");
     const next = holder.firstElementChild;
-    element.innerHTML = next.innerHTML;
+    holdMascotFrame(element,next);
+    element.replaceChildren(...next.childNodes);
+    if(next.dataset.holding)element.dataset.holding='true';
     element.dataset.mascotState = clip.next;
     element.dataset.mascotEvent = next.dataset.mascotEvent;
     delete element.dataset.phase;
-    // One visible media layer; a brief fade softens changes of pose.
-    const media = element.querySelector(".mascot-media");
-    if (!motion.matches) media.animate([{opacity:0},{opacity:1}], {duration:280,easing:"ease-out"});
+    // The held frame is removed atomically when the next media can be shown.
     followupCleanup = mountMascot(element);
   }
   function fallback(message = "") {
     if (!alive()) return;
     video.pause();
+    if(frameCallback!=null)video.cancelVideoFrameCallback?.(frameCallback);
     if (message && clip.imageFallback && !motion.matches) {
       if (imageFallbackStarted) return;
       imageFallbackStarted = true;
@@ -211,6 +235,7 @@ function mountMascot(element) {
       status.textContent = "";
       poster.onload = () => {
         if (alive() && !motion.matches) {
+          releaseMascotFrame(element);
           rememberPlayback(state, eventKey);
           if (clip.next) handoffTimer = setTimeout(handoff, (clip.duration + .7) * 1000);
         }
@@ -227,6 +252,8 @@ function mountMascot(element) {
       return;
     }
     element.dataset.phase = "poster";
+    if(poster.complete && poster.naturalWidth)releaseMascotFrame(element);
+    else poster.addEventListener('load',()=>{if(alive())releaseMascotFrame(element);},{once:true,signal:events.signal});
     trigger.hidden = true;
     status.textContent = message;
   }
@@ -256,13 +283,22 @@ function mountMascot(element) {
         video.pause();
         return;
       }
-      rememberPlayback(state, eventKey);
-      element.dataset.phase = "playing";
+      const reveal=()=>{
+        if(!alive() || motion.matches || unsupportedAlpha || imageFallbackStarted)return;
+        rememberPlayback(state,eventKey);
+        element.dataset.phase='playing';
+        releaseMascotFrame(element);
+      };
+      // play() can resolve before the compositor presents the first video frame.
+      if(video.requestVideoFrameCallback)frameCallback=video.requestVideoFrameCallback(reveal);
+      else reveal();
     } catch (error) {
       if (!alive()) return;
       if (imageFallbackStarted) return;
       element.dataset.phase = "poster";
       if (error.name === "NotAllowedError") {
+        if(poster.complete && poster.naturalWidth)releaseMascotFrame(element);
+        else poster.addEventListener('load',()=>{if(alive())releaseMascotFrame(element);},{once:true,signal:events.signal});
         trigger.hidden = false;
         status.textContent = "Անիմացիան կարող ես դիտել կոճակով։";
       } else if (error.name !== "AbortError") {
@@ -302,6 +338,8 @@ function mountMascot(element) {
   } else if (alreadyPlayed()) {
     poster.src = clip.idle;
     element.dataset.phase = "idle";
+    if(poster.complete && poster.naturalWidth)releaseMascotFrame(element);
+    else poster.addEventListener('load',()=>{if(alive())releaseMascotFrame(element);},{once:true,signal:events.signal});
   } else if (motion.matches) fallback();
   else playAnimation();
   return () => {
@@ -310,6 +348,7 @@ function mountMascot(element) {
     followupCleanup();
     events.abort();
     poster.onload = poster.onerror = null;
+    if(frameCallback!=null)video.cancelVideoFrameCallback?.(frameCallback);
     video.pause();
   };
 }

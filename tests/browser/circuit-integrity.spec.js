@@ -1,6 +1,8 @@
+import {prepareRegressionNavigation} from './navigation-helper.js';
 import {test,expect} from '@playwright/test';
+test.beforeEach(({page})=>prepareRegressionNavigation(page));
 const defaultCircuit={components:[{id:'battery',type:'battery',x:100,y:170,voltage:9},{id:'switch',type:'switch',x:280,y:80,closed:true},{id:'lamp',type:'lamp',x:465,y:170,resistance:20}],wires:[['battery:a','switch:a'],['switch:b','lamp:a'],['lamp:b','battery:b']]};
-async function open(page,circuit=defaultCircuit){await page.addInitScript(circuit=>{if(!localStorage.getItem('physics-journal-v1'))localStorage.setItem('physics-journal-v1',JSON.stringify({runs:[],notes:[],currentLesson:'circuits',electricLessons:{circuits:{stage:2,schema:2,experiments:[],circuit}},learning:{version:2,lessons:{},unlocked:['circuits']}}));},circuit);await page.goto('/#lesson/circuits');}
+async function open(page,circuit=defaultCircuit){prepareRegressionNavigation(page);await page.addInitScript(circuit=>{if(!localStorage.getItem('physics-journal-v1'))localStorage.setItem('physics-journal-v1',JSON.stringify({runs:[],notes:[],currentLesson:'circuits',electricLessons:{circuits:{stage:2,schema:2,experiments:[],circuit}},learning:{version:2,lessons:{},unlocked:['circuits']}}));},circuit);await page.goto('/#lesson/circuits');}
 async function drag(page,from,to){await page.mouse.move(from.x,from.y);await page.mouse.down();await page.mouse.move(to.x,to.y,{steps:10});await page.mouse.up();}
 const center=b=>({x:b.x+b.width/2,y:b.y+b.height/2});
 test('disconnect a real wire endpoint: power vanishes, persists on reload, reconnect restores power',async({page})=>{

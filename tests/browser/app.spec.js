@@ -1,10 +1,11 @@
 import { test, expect } from "@playwright/test";
+test.beforeEach(({page})=>{page.on('dialog',d=>{if(d.type()==='beforeunload')return d.accept();if(page.listeners('dialog').length===1)return d.dismiss();});});
 test("full investigation, simulation, notebook and reload", async ({
   page,
 }) => {
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("/");
+  await page.goto("/#home");
   await expect(page.locator("h1")).toContainText("Բարև");
   await page.goto('/#lesson/motion');
   await page.locator("#next-stage").click();
@@ -86,7 +87,7 @@ test("full investigation, simulation, notebook and reload", async ({
 for (const width of [390, 768, 1440])
   test(`responsive ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
-    await page.goto("/");
+    await page.goto("/#home");
     await expect(page.locator("h1")).toBeVisible();
     expect(
       await page.evaluate(
@@ -114,7 +115,7 @@ for (const width of [390, 768, 1440])
   });
 
 test("duration changes, same-model graph and comparison", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/#home");
   await page.evaluate(()=>{const d=JSON.parse(localStorage.getItem('physics-journal-v1'));d.stage=2;d.unlockedStage=Math.max(2,d.unlockedStage||0);localStorage.setItem('physics-journal-v1',JSON.stringify(d));});await page.reload();await page.goto('/#lesson/motion');
   await page.locator("#duration").fill("10");
   await page.locator("#graph-details summary").click();
@@ -153,7 +154,7 @@ test("existing journal and progress survive redesign; reduced motion and assets"
     if (r.status() >= 400) failures.push(r.url());
   });
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/#home");
   await expect(page.locator(".companion img")).toBeVisible();
   expect(
     await page

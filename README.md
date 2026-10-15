@@ -26,6 +26,12 @@ The page surface is pure white. Desktop uses a stable navigation rail, a readabl
 
 The electrical workspace now supports stable wire records with exact terminal geometry, free wire-end disconnection/reconnection and explicit junction creation. It transparently reads old saved wire-pair arrays. Lamp power, instruments and visual contacts follow the same electrical graph. Block and AA battery appearances, bulb contacts, digital meters, LED/diode/capacitor, beakers/electrodes and breadboard artwork share the reference-driven SVG library. See [redesign diagnosis, file map, verification and model limits](docs/desktop-and-circuit-redesign.md).
 
+## Guided entry and charge investigation
+
+The default entry opens the selected learning path with a clear next action. Leaving an unfinished lesson asks for confirmation; confirmed exit and a later return start a fresh attempt while retaining permanent mastery, notebook entries and archived measurements. Browser-controlled tab/external-navigation confirmation respects native restrictions; ordinary confirmed refresh preserves the current attempt.
+
+The first charge investigation now requires both attraction and repulsion measurements before observation. It then isolates distance at fixed charges. Its responsive workspace includes real sign presets, distance controls, a pinned numerical comparison and a Coulomb-derived force-versus-distance graph. Robot pose changes retain the preceding transparent frame until the next media is ready, with no fade of the mascot. See the [implementation and limits](docs/guided-charge-redesign.md).
+
 ## Blueprint priority improvements
 
 Lesson rerenders retain keyboard focus; new stages focus the robot's question without interrupting mascot playback. Selected wire endpoints can be disconnected with Delete and reconnected through labelled terminal selectors, with no dragging required. The circuit robot offers four explicitly requested, state-aware hint levels. Hint state persists locally and resets when electrical evidence changes, while ordinary layout movement preserves it. Scoring and saved mastery are unchanged. See the [blueprint comparison and remaining gaps](docs/blueprint-gap-review.md).

@@ -22,10 +22,10 @@ export function animateRender(root, state) {
   for (const animation of active) animation.cancel();
   const viewChanged = !previous || previous.view !== state.view;
   if (viewChanged) {
-    const target =
-      root.querySelector(".lesson-content") ||
-      root.querySelector(".hero") ||
-      root;
+    // Animate teaching content, keeping the robot fully opaque and anchored.
+    const target = root.querySelector('[data-mascot-state]')
+      ? root.querySelector('.student-work') || root.querySelector('.robot-dialogue') || root.querySelector('.welcome-dialogue')
+      : root.querySelector('.lesson-content') || root.querySelector('.hero') || root;
     animate(
       target,
       [

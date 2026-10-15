@@ -1,6 +1,9 @@
+import {prepareRegressionNavigation} from './navigation-helper.js';
 import { test, expect } from "@playwright/test";
+// Reload confirmations are accepted here; leave/stay behavior has dedicated session tests.
+test.beforeEach(({page})=>prepareRegressionNavigation(page));
 async function stage(page, number) {
-  await page.goto("/");
+  await page.goto("/#home");
   await page.evaluate(
     (number) =>
       localStorage.setItem(

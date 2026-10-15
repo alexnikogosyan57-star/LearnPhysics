@@ -1,4 +1,21 @@
-# Latest blueprint priority verification — 2026-10-15
+# Latest guided-learning upgrade — 2026-10-15
+
+**30 Node checks passed.** All 111 registered browser cases have passing coverage across the broad run and targeted corrections; this is **not** a claim of one uninterrupted 111-pass run. The broad run produced 104 passes and seven failures: six desktop scenarios still expected the topic grid before choosing “all topics”, and a guidance scenario had not answered the new exit dialog. Updated scenarios deliberately choose Leave or Stay as appropriate, without bypassing production confirmation. The next 26-case run had 25 passes and exposed one actual regression: progress feedback was reading the cleared active motion attempt. Progress now reads the archived completed result when the active attempt is fresh. The final affected 18-case run passed, including guidance, original motion/notebook behavior, native/internal exit, and the full new charge investigation. The corrected six desktop cases passed in the 26-case run.
+
+## New behavior actually checked
+
+- A new visit opens the selected learning path with a working next-lesson action. Internal leave/stay, Escape focus return and hash navigation are exercised. Chromium's real native before-unload prompt is both dismissed and accepted. Leaving and returning starts a new attempt while retaining permanent results and notes. Confirmed ordinary refresh preserves the current attempt.
+- The entire first charge lesson is completed with both attraction and repulsion measurements, guided observation, progressive hints, a fixed-charge distance comparison, matching, written reasoning and the three weighted assessment questions. Three stars and an associated notebook entry are saved. Reopening after exit starts at the introduction while retaining those results.
+- Distance ×2 produces force ×0.25 from the independent SI model. Changed charges are explicitly identified as a second changed condition and do not satisfy the fixed-charge variation step. Zero reference force has no invented ratio. Presets, distance controls, pinning, direct keyboard movement, reset, units and graph axes are tested. Responsive checks cover 1440, 768 and 390 px; the desktop route suite also covers 1920, 1366 and 1024 px.
+- Cold and delayed-video loads are sampled frame by frame at desktop/mobile sizes. Once the robot is first visible, each sampled frame has exactly one drawable, fully opaque robot layer through stage changes, wrong-answer reaction and return to thinking. First presented frames replace held transparent frames atomically. Reduced motion, revisited reactions, alpha, video/image fallback, greeting, floor registration, loop continuity and sound controls retain passing coverage.
+
+`npm run export:standalone` succeeded. Both final production artifacts were served over HTTP and independently exercised for path entry, actual charge presets and quarter-force comparison, leave/stay, fresh reentry and 1440/768/390 px layouts. No page errors or external runtime requests were observed. Desktop and mobile screenshots were inspected for Armenian text and the new experiment layout. `git diff --check` passed. No repository lint/typecheck script exists.
+
+See [implementation, interaction policy and limitations](docs/guided-charge-redesign.md). Native close prompts remain browser-controlled and require user activation; mobile/forced application closure cannot always show them. This is not a complete WCAG audit, a manual screen-reader test, or a redesign of every physics simulation. GitHub publication and public Pages HTTP availability remain separate checks.
+
+---
+
+# Previous blueprint priority verification — 2026-10-15
 
 **27 Node tests passed.** The broad Chromium run executed all 101 registered browser cases: **100 passed and one was interrupted** when an application edit triggered a Vite page reload during the cell-assembly case. Its snapshot returned to the introduction because the fixture initializes storage on every load. After freezing application edits, **14 focused cases passed**, including that complete cell investigation, the five new accessibility cases, all four circuit-integrity cases, the full original motion/notebook flow, retained best mastery, reset/skip-link behavior and robot decoder continuity. This is coverage across a broad run and final focused reruns, not a claim that all 101 passed in one uninterrupted run.
 

@@ -135,3 +135,49 @@ summary{font-size:14px;line-height:1.8;cursor:pointer;min-height:44px;align-cont
 .wire-reconnect { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin-block: 16px; }
 .wire-reconnect .field-label { flex: 1 1 200px; }
 .circuit-guidance .text-button { margin-top: 12px; }
+#lesson-exit-dialog { max-width:480px; width:calc(100% - 36px); padding:30px; border:2px solid #dce3e7; border-radius:18px; color:#25342c; background:white; }
+#lesson-exit-dialog::backdrop { background:rgb(25 40 30 / .35); }
+#lesson-exit-dialog h2 { font-size:24px; margin:0 0 16px; }
+#lesson-exit-dialog p { color:#59625c; }
+.exit-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; }
+/* A focused, tactile workspace for the first charge investigation. */
+[data-science-kind="charges"] { max-width:960px; margin-inline:auto; }
+[data-science-kind="charges"] .science-stage { background:#fcfdfb; border:1px solid #dfe6dc; border-radius:18px; width:100%; }
+[data-science-kind="charges"] .science-readouts { background:#f3f6ef; border:1px solid #dfe6dc; border-radius:14px; padding:18px; margin-top:14px; }
+[data-science-kind="charges"] .science-readouts strong { font-variant-numeric:tabular-nums; color:#263d2e; }
+.charge-tools { margin-block:24px; }
+.charge-presets { display:flex; gap:10px; }
+.charge-preset { flex:1; min-height:66px; padding:10px; border:2px solid #dce4d9; border-bottom-width:4px; border-radius:12px; background:white; color:#334a39; font-size:20px; font-weight:700; }
+.charge-preset span { display:block; font-size:12px; font-weight:500; margin-top:4px; }
+.charge-preset[aria-pressed="true"] { background:#edf5e4; border-color:#69954a; }
+.charge-distance { display:block; margin:26px 0 4px; color:#344637; font-size:15px; }
+.charge-distance>span:first-child { display:flex; justify-content:space-between; gap:16px; }
+.charge-distance strong { white-space:nowrap; font-variant-numeric:tabular-nums; }
+.charge-distance input { display:block; width:100%; min-height:44px; margin:8px 0; }
+.charge-range { display:flex; justify-content:space-between; font-size:12px; color:#59675b; }
+.charge-shortcuts { display:flex; flex-wrap:wrap; gap:10px 24px; margin-block:8px 18px; }
+.charge-comparison { display:grid; grid-template-columns:1fr 24px 1fr; gap:16px; align-items:center; padding-block:20px; border-block:1px solid #dce4d9; }
+.charge-comparison span,.charge-comparison strong,.charge-comparison small { display:block; }
+.charge-comparison span { font-size:13px; color:#59675b; }
+.charge-comparison strong { font-size:28px; margin-block:8px; color:#263d2e; font-variant-numeric:tabular-nums; }
+.charge-comparison small { color:#59675b; line-height:1.8; font-size:12px; }
+.charge-conclusion,.charge-comparison-empty,.charge-checklist { color:#344f32; font-size:14px; line-height:1.9; }
+[data-science-kind="charges"] .science-parameters { display:grid; grid-template-columns:1fr 1fr; gap:24px; border-top:1px solid #dce4d9; padding-top:20px; }
+[data-science-kind="charges"] [data-direct]:focus-visible { stroke:#245c34; stroke-width:3; outline:none; }
+@media(max-width:600px){.charge-presets{gap:6px}.charge-preset{padding:9px 4px}.charge-preset span{font-size:11px}.charge-comparison{gap:10px;grid-template-columns:1fr 18px 1fr}.charge-comparison strong{font-size:22px}[data-science-kind="charges"] .science-parameters{grid-template-columns:1fr;gap:14px}.charge-distance>span:first-child{font-size:13px}}
+.charge-model-caption { font-size:12px; color:#59675b; line-height:1.8; padding:0 8px; }
+[data-science-kind="charges"] .science-readouts { grid-template-columns:repeat(2,minmax(0,1fr)); }
+@media(min-width:1200px){
+ [data-science-kind="charges"]{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,1fr);column-gap:28px;align-items:start;}
+ [data-science-kind="charges"] .science-visual{grid-column:1;grid-row:1;}
+ [data-science-kind="charges"] .science-readouts{grid-column:1;grid-row:2;margin-top:8px;}
+ [data-science-kind="charges"] .charge-tools{grid-column:2;grid-row:1 / span 2;margin:0;}
+ [data-science-kind="charges"] .science-parameters{grid-column:1 / -1;grid-row:3;margin-top:22px;}
+ [data-science-kind="charges"] .science-controls{grid-column:1 / -1;grid-row:4;}
+ [data-science-kind="charges"] .lesson-action-dock{grid-column:1 / -1;grid-row:5;}
+ [data-science-kind="charges"] .science-graph-details{grid-column:1 / -1;grid-row:6;}
+ [data-science-kind="charges"] .science-status:empty{display:none;}
+ .charge-shortcuts{gap:0 20px}.charge-shortcuts .text-button{font-size:12px;}
+ .charge-comparison{gap:8px;grid-template-columns:1fr 15px 1fr;}
+ .charge-comparison strong{font-size:22px;}
+}

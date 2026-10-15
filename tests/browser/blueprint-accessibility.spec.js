@@ -1,4 +1,7 @@
+import {prepareRegressionNavigation} from './navigation-helper.js';
 import {test,expect} from '@playwright/test';
+// Reload confirmations are accepted here; leave/stay behavior has dedicated session tests.
+test.beforeEach(({page})=>prepareRegressionNavigation(page));
 async function tabTo(page,selector){
  for(let i=0;i<100;i++){
   if(await page.locator(selector).evaluateAll(els=>els.includes(document.activeElement)))return;
@@ -16,9 +19,9 @@ test('a new student completes an entire investigation using only keyboard and re
  await page.keyboard.press('Tab');await expect(page.locator('.skip-link')).toBeFocused();
  await next(page);await expect(page.locator('.robot-dialogue h2')).toBeFocused();
  await activate(page,'[data-activity-choice="0"]');await expect(page.locator('[data-activity-choice="0"]')).toBeFocused();await next(page);
- await tabTo(page,'[data-science-param="q1"]');await page.keyboard.press('ArrowRight');await activate(page,'#science-record');await next(page);
+ await tabTo(page,'[data-science-param="q1"]');await page.keyboard.press('ArrowRight');await activate(page,'#science-record');await activate(page,'[data-charge-preset="positive"]');await activate(page,'#science-record');await next(page);
  await activate(page,'[data-activity-choice="0"]');await activate(page,'#investigation-check');await next(page);await next(page);
- await tabTo(page,'[data-science-param="q1"]');await page.keyboard.press('ArrowRight');await activate(page,'#science-record');await next(page);
+ await activate(page,'#charge-double');await activate(page,'#science-record');await next(page);
  await match(page);await activate(page,'#investigation-check');await next(page);
  await tabTo(page,'#investigation-reasoning');await page.keyboard.insertText('Փոխեցի լիցքը և համեմատեցի ուժի երկու չափումները։');await next(page);await next(page);
  await activate(page,'[data-activity-choice="0"]');await activate(page,'#investigation-assess');await next(page);

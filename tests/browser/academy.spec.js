@@ -1,4 +1,6 @@
+import {prepareRegressionNavigation} from './navigation-helper.js';
 import {test,expect} from '@playwright/test';
+test.beforeEach(({page})=>prepareRegressionNavigation(page));
 async function pick(page,n){await page.locator(`[data-foundation-answer="${n}"]`).click();}
 async function next(page){await page.locator('#foundation-next').click();}
 async function learn(page,id,answers){
@@ -15,15 +17,15 @@ async function learn(page,id,answers){
 }
 test('A–G: retained circuit access, best mastery, reload and locked URL',async({page})=>{
  await page.addInitScript(()=>{if(!localStorage.getItem('physics-journal-v1'))localStorage.setItem('physics-journal-v1',JSON.stringify({currentLesson:'circuits',runs:[],notes:[],learning:{version:1,selectedTopic:null,lessons:{},unlocked:['circuits']}}));});
- await page.goto('/');await page.locator('[data-page="path"]').first().click();await page.locator('[data-topic="electricity"]').click();
+ await page.goto('/');await page.locator('[data-page="path"]').first().click();await page.locator('[data-choose-topics]').first().click();await page.locator('[data-topic="electricity"]').click();
  await expect(page.locator('.unit-lesson [data-module="circuits"]')).toBeVisible();await expect(page.locator('[data-locked="open-closed"]')).toBeVisible();
  await learn(page,'circuits',[0,1,1]);await expect(page.locator('.earned-stars')).toHaveAttribute('aria-label','1 աստղ՝ 3-ից');await expect(page.locator('#foundation-retry')).toBeVisible();
  await page.goto('/#lesson/open-closed');await expect(page.locator('.unit-paths')).toBeVisible();
- await page.goto('/#lesson/circuits');await page.locator('#foundation-retry').click();
+ await page.goto('/#lesson/circuits');if(await page.locator('#foundation-retry').count())await page.locator('#foundation-retry').click();
  await learn(page,'circuits',[0,0,0]);await expect(page.locator('.earned-stars')).toHaveAttribute('aria-label','2 աստղ՝ 3-ից');await page.locator('[data-module="open-closed"]').click();await expect(page.locator('.lesson-context')).toContainText('Բաց և փակ');
  await learn(page,'open-closed',[0,0,0]);await expect(page.locator('[data-module="circuit-parts"]')).toBeVisible();
  // Restart an accessible completed lesson without deleting its best score.
- await page.goto('/#lesson/circuits');await page.locator('#foundation-retry').click();
+ await page.goto('/#lesson/circuits');if(await page.locator('#foundation-retry').count())await page.locator('#foundation-retry').click();
  await learn(page,'circuits',[1,0,1]);await expect(page.locator('.earned-stars')).toHaveAttribute('aria-label','0 աստղ՝ 3-ից');
  await page.reload();const d=await page.evaluate(()=>JSON.parse(localStorage.getItem('physics-journal-v1')));expect(d.learning.lessons.circuits.bestStars).toBe(2);expect(d.learning.unlocked).toContain('circuit-parts');expect(d.learning.unlocked).not.toContain('switch-types');
  await page.goto('/#lesson/switch-types');await expect(page.locator('.unit-paths')).toBeVisible();

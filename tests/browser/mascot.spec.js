@@ -1,4 +1,7 @@
+import {prepareRegressionNavigation} from './navigation-helper.js';
 import { test, expect } from "@playwright/test";
+// Reload confirmations are accepted here; leave/stay behavior has dedicated session tests.
+test.beforeEach(({page})=>prepareRegressionNavigation(page));
 for (const width of [1440, 390])
   test(`transparent greeting plays on entry then stays present at ${width}px`, async ({
     page,
@@ -6,7 +9,7 @@ for (const width of [1440, 390])
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/");
+    await page.goto("/#home");
     const video = page.locator(".mascot-video"),
       media = page.locator(".mascot-media");
     await expect(page.locator(".video-companion")).toHaveAttribute(
@@ -63,6 +66,7 @@ for (const width of [1440, 390])
     await expect(page.locator(".mascot-poster")).not.toBeVisible();
     await page.goto('/#lesson/motion');
     await page.locator(".brand").click();
+    if(await page.locator("#leave-lesson").count())await page.locator("#leave-lesson").click();
     await expect(page.locator(".video-companion")).toHaveAttribute(
       "data-phase",
       "playing",
@@ -87,7 +91,7 @@ test("reduced motion shows only a poster without fetching the video", async ({
     if (request.resourceType() === "media") requests.push(request.url());
   });
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/#home");
   await expect(page.locator(".mascot-poster")).toBeVisible();
   expect(await page.locator(".mascot-video").getAttribute("src")).toBeNull();
   expect(
@@ -112,7 +116,7 @@ test("blocked autoplay offers a keyboard-accessible greeting action", async ({
         : native.call(this);
     };
   });
-  await page.goto("/");
+  await page.goto("/#home");
   await expect(page.locator(".mascot-play")).toBeVisible();
   await expect(page.locator(".mascot-poster")).toBeVisible();
   await page.evaluate(() => {
@@ -136,7 +140,7 @@ test("failed video uses the real animated image fallback and leaves lesson usabl
       ? route.abort()
       : route.continue(),
   );
-  await page.goto("/");
+  await page.goto("/#home");
   await expect(page.locator(".video-companion")).toHaveAttribute(
     "data-phase",
     "image-playing",

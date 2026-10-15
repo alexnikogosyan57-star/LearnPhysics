@@ -37,7 +37,7 @@ export function evaluate(kind,p,t=0,robot={x:1,y:2,angle:0,distance:0}) {
  const R=(label,value,unit)=>({label,value,unit});
  switch(kind){
  case 'symbols':r={part:p.part||'battery'};readings=[{label:'Ուսումնասիրվող տարր',value:{battery:'Մարտկոց',lamp:'Լամպ',switch:'Անջատիչ',resistor:'Դիմադրիչ'}[r.part],unit:''}];break;
- case 'charges':r=M.electrostatic(p);readings=[R('Փոխազդեցության ուժ',r.force,'Ն'),R('Հեռավորություն',r.distance,'մ'),R('Ընդհանուր լիցք',r.total,'նԿլ')];break;
+ case 'charges':r=M.electrostatic(p);readings=[R('Փոխազդեցության ուժ',r.force*1e9,'նՆ'),R('Հեռավորություն',r.distance,'մ')];graph={x:'r (մ)',y:'F (նՆ)',maxT:3.5,values:Array.from({length:67},(_,i)=>{const distance=.2+i*.05;return [distance,M.electrostatic({...p,x1:-distance/2,x2:distance/2,y1:0,y2:0}).force*1e9];})};break;
  case 'atom':r=M.atom(p);readings=[R('Ատոմի լիցք',r.charge,'e'),R('Արտաքին պահոցի լիցք',r.reservoir,'e'),R('Միջուկի լիցք',p.protons,'e')];break;
  case 'transfer':r=M.transfer(p);readings=[R('Ա մարմնի լիցք',r.a,'e'),R('Բ մարմնի լիցք',r.b,'e'),R('Ընդհանուր լիցք',r.total,'e')];break;
  case 'field':r=M.electricField(p);readings=[R('Դաշտի լարվածություն',r.magnitude,'Ն/Կլ'),R('Ուժի շառավղային բաղադրիչ',r.force,'Ն')];break;

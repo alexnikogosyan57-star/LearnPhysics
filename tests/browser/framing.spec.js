@@ -1,7 +1,10 @@
+import {prepareRegressionNavigation} from './navigation-helper.js';
 import {test,expect} from '@playwright/test';
+// Reload confirmations are accepted here; leave/stay behavior has dedicated session tests.
+test.beforeEach(({page})=>prepareRegressionNavigation(page));
 test('thinking, wrong-answer and eureka share the same pixel floor and anchored slot',async({page})=>{
  for(const width of [390,1440]) {
-  await page.setViewportSize({width,height:950});await page.goto('/');
+  await page.setViewportSize({width,height:950});await page.goto('/#home');
   await page.evaluate(()=>localStorage.setItem('physics-journal-v1',JSON.stringify({stage:3,unlockedStage:5,runs:[],notes:[],answers:{}})));
   await page.evaluate(()=>sessionStorage.clear());await page.reload();await page.goto('/#lesson/motion');
   async function frame(state) {
