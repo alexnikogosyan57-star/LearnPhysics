@@ -44,7 +44,7 @@ import thinkingIdle from "./assets/thinking-transparent-idle.png";
 
 // Register additional clips only when real, corresponding assets are supplied.
 export const mascotAnimations = Object.freeze({
-  celebration: {src:celebrationVideo, poster:celebrationPoster, idle:celebrationIdle, alpha:true, imageFallback:celebrationFallback, next:"idle", duration:3},
+  celebration: {src:celebrationVideo, poster:celebrationPoster, idle:celebrationIdle, alpha:true, imageFallback:celebrationFallback, next:"idle", duration:1},
   confused: {src:confusedVideo, poster:confusedPoster, idle:confusedIdle, alpha:true, imageFallback:confusedFallback, next:"thinking", duration:2.5},
   eureka: {src:eurekaVideo, poster:eurekaPoster, idle:eurekaIdle, alpha:true, imageFallback:eurekaFallback, next:"thinking", duration:2},
   "point-left": { src: point_leftVideo, poster: point_leftPoster, idle: point_leftIdle, alpha: true, imageFallback: point_leftFallback, next: "idle", duration: 2.25 },
@@ -118,11 +118,40 @@ export function renderMascot(
   return `<div class="companion video-companion" data-mascot-state="${state}" data-transparent="${!!clip.alpha}" data-mascot-event="${eventKey}"><div class="mascot-media" role="img" aria-label="Քո հետազոտական ընկերը՝ ռոբոտը"><img class="mascot-poster" src="${poster}" alt="Քո հետազոտական ընկերը՝ ռոբոտը" width="1080" height="1920">${clip.src ? `<video class="mascot-video" muted playsinline preload="none" width="1080" height="1920" aria-hidden="true" tabindex="-1" disablepictureinpicture disableremoteplayback></video>` : ""}</div><p class="companion-caption">${caption}</p><button class="text-button mascot-play" type="button" hidden>${action}</button><p class="mascot-status" role="status"></p></div>`;
 }
 
+// Keep the active decoder and its listeners alive during answer/control updates.
+const mounted = new Map();
 export function mountMascots(root) {
-  const cleanups = [...root.querySelectorAll("[data-mascot-state]")].map(
-    mountMascot,
-  );
-  return () => cleanups.forEach((cleanup) => cleanup());
+  for (const [element, dispose] of mounted) {
+    if (!root.contains(element)) { dispose(); mounted.delete(element); }
+  }
+  for (const element of root.querySelectorAll('[data-mascot-state]')) {
+    if (!mounted.has(element)) mounted.set(element, mountMascot(element));
+  }
+  return () => { for (const [element, dispose] of mounted) {
+    if (!element.isConnected) { dispose(); mounted.delete(element); }
+  }};
+}
+// Replace normal UI subtrees, but leave ancestors of a matching mascot attached.
+export function updateMascotLayout(current, incoming) {
+  const isMatching = current.nodeType === 1 && incoming.nodeType === 1 && current.tagName === incoming.tagName;
+  if (isMatching && current.matches('[data-mascot-state]') && incoming.matches('[data-mascot-state]')) {
+    const state = current.dataset.mascotState;
+    if ((state === incoming.dataset.mascotState && (mascotAnimations[state]?.loop || current.dataset.mascotEvent === incoming.dataset.mascotEvent)) || (state === 'greeting' && current.dataset.phase === 'playing' && incoming.dataset.mascotEvent === current.dataset.mascotEvent)) {
+      current.querySelector('.companion-caption').textContent = incoming.querySelector('.companion-caption').textContent;
+      return;
+    }
+  }
+  if (!isMatching || !current.querySelector?.('[data-mascot-state]') || !incoming.querySelector?.('[data-mascot-state]')) {
+    current.replaceWith(incoming); return;
+  }
+  for (const attr of [...current.attributes]) if (!incoming.hasAttribute(attr.name)) current.removeAttribute(attr.name);
+  for (const attr of incoming.attributes) current.setAttribute(attr.name, attr.value);
+  const old = [...current.childNodes], next = [...incoming.childNodes];
+  for (let i=0;i<Math.max(old.length,next.length);i++) {
+    if (!next[i]) old[i].remove();
+    else if (!old[i]) current.append(next[i]);
+    else updateMascotLayout(old[i],next[i]);
+  }
 }
 function mountMascot(element) {
   const video = element.querySelector("video");

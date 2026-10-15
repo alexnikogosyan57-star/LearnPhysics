@@ -61,7 +61,7 @@ for (const width of [1440, 390])
         .evaluate((el) => el.complete && el.naturalWidth > 0),
     ).toBe(true);
     await expect(page.locator(".mascot-poster")).not.toBeVisible();
-    await page.locator('.hero [data-page="lesson"]').click();
+    await page.goto('/#lesson/motion');
     await page.locator(".brand").click();
     await expect(page.locator(".video-companion")).toHaveAttribute(
       "data-phase",
@@ -154,7 +154,7 @@ test("failed video uses the real animated image fallback and leaves lesson usabl
   const after = await page.locator(".mascot-media").screenshot();
   expect(before.equals(after)).toBe(false);
   await expect(page.locator(".mascot-poster")).toBeVisible();
-  await page.locator('.hero [data-page="lesson"]').click();
+  await page.goto('/#lesson/motion');
   await expect(page.locator("#next-stage")).toBeEnabled();
   expect(errors).toEqual([]);
 });

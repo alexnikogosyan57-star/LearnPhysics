@@ -1,9 +1,13 @@
+import {createFoundations} from '../learning/foundations';
+import {foundations} from '../learning/foundations-content';
+import {topics} from '../learning/topics';
+import {canOpen,recordResult,nextLesson,starsMarkup} from '../learning/progression';
 import {electricLessons} from './content';
 import {guidedContent} from '../dialogue';
 import {experimentView,bindExperiment,defaults} from './experiments';
 import {playSound} from '../audio';
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-export function createJourney(getData,save,render) {
+function createLegacyJourney(getData,save,render) {
  let id='circuits',selected=null,feedback='',hint=0,stateAnimation='thinking';
  const lesson=()=>electricLessons.find(x=>x.id===id);
  const state=()=>{const data=getData();data.electricLessons ||= {};return data.electricLessons[id] ||= {stage:0,parameters:defaults(lesson()),experiments:[],attempts:[],prediction:null};};
@@ -17,8 +21,10 @@ export function createJourney(getData,save,render) {
   if(s.stage===2)body=`<h2>Հիմա քո հերթն է փորձելու։</h2><p>${id==='circuits'?'Միացրու մարտկոցի, անջատիչի ու լամպի ելքերը փակ ճանապարհով։ Փակիր անջատիչը, հետո բացիր այն։':'Փոխիր մեկ պայման և գրանցիր չափումը։ Հետո փոխիր այն ու համեմատիր արդյունքները։'}</p>${experimentView(l,s)}${next('Քննարկել դիտարկումը',!s.experiments.length)}`;
   if(s.stage===3)body=`<h2>${l.observe}</h2><p>Հենվիր քո փորձի վրա։</p>${choices(l.observations)}<p class="feedback" role="status">${feedback}</p>${feedback.startsWith('Ճիշտ')?next('Բացահայտել կապը'):`<button class="button" id="electric-submit-observation" ${selected===null?'disabled':''}>Ստուգել դիտարկումը</button>${feedback?'<button class="text-button" id="electric-hint">Հուշում</button>':''}`}`;
   if(s.stage===4)body=`<h2>Եկ կապենք փորձն ու բացատրությունը։</h2><p>${l.explanation.split("։ ").slice(0,2).join("։ ")}</p><details><summary>Ավելի մանրամասն</summary><p>${l.explanation}</p></details><div class="evidence"><strong>${l.formula}</strong><p>Քո վերջին չափումը՝ ${escape(s.experiments.at(-1)?.reading)}</p></div>${next('Փորձել նոր իրավիճակում')}`;
-  if(s.stage===5)body=`<h2>${l.challenge}</h2><p>Մուտքագրիր քո հաշվարկած թիվը՝ ${l.unit||'նշված ձևով'}։</p><label class="field-label" for="electric-numeric">Իմ պատասխանը${l.unit?` (${l.unit})`:''}</label><input id="electric-numeric" type="text" inputmode="decimal" value="${escape(s.numeric||'')}" autocomplete="off"><p class="feedback" role="status">${feedback}</p><button id="electric-check" class="button">Ստուգել պատասխանը</button>${feedback?'<button class="text-button" id="electric-hint">Հաջորդ հուշումը</button>':''}`;
-  if(s.stage===6)body=`<h2>Դու փորձով բացահայտեցիր մի նոր կապ։</h2><p>${l.formula}։ Կանխատեսում արեցիր, փորձ կատարեցիր և կիրառեցիր արդյունքը։ Գրառումդ արդեն քո տետրում է։</p><label class="field-label" for="electric-reflection">Ի՞նչն էր քեզ համար նոր։</label><textarea id="electric-reflection">${escape(s.reflection||'')}</textarea><button class="button" id="electric-save-reflection">Պահպանել եզրակացությունը</button><button class="text-button" data-page="path">Ընտրել հաջորդ թեման</button><p id="electric-note-status" role="status"></p>`;
+  if(s.stage===5)body=`<h2>${l.challenge}</h2><p>Մուտքագրիր քո հաշվարկած թիվը՝ ${l.unit||'նշված ձևով'}։ Այս ներածական ստուգումը մեկ միավոր է․ առաջին ճիշտ պատասխանը տալիս է 3 աստղ, առաջին սխալը՝ 0։ Կրկնելիս լավագույն արդյունքը պահպանվում է։</p><label class="field-label" for="electric-numeric">Իմ պատասխանը${l.unit?` (${l.unit})`:''}</label><input id="electric-numeric" type="text" inputmode="decimal" value="${escape(s.numeric||'')}" autocomplete="off"><p class="feedback" role="status">${feedback}</p><button id="electric-check" class="button">Ստուգել պատասխանը</button>${feedback?'<button class="text-button" id="electric-hint">Հաջորդ հուշումը</button>':''}`;
+  if(s.stage===6){const a=s.lastResult,best=getData().learning.lessons[id]?.bestStars||0,following=nextLesson(getData(),id,topics),topic=topics.find(t=>t.lessons.some(x=>x.id===id)),final=topic.lessons.at(-1).id===id;
+  body=`<h2>${a?.stars>=2?'Դու փորձով բացահայտեցիր մի նոր կապ։':'Այս կապը ևս մեկ փորձով ամրապնդենք։'}</h2><p>Կիրառման առաջին պատասխանը՝ ${a?.earned??0} / 1 միավոր։ Լավագույն արդյունքը՝ ${best} աստղ։</p>${starsMarkup(a?.stars||0)}<div class="evidence"><strong>${l.formula}</strong><p>${l.explanation}</p></div>${a?.stars>=2&&following?`<button class="button" data-module="${following.id}">Անցնել հաջորդ դասին</button>`:a?.stars>=2?`${final?'<p>Թեման ավարտված է։</p>':'<p>Հաջորդ դասը նախապատրաստվում է։</p>'}<button class="button" data-choose-topics>Ընտրել հաջորդ թեման</button>`:'<button class="button" id="legacy-retry">Կրկնել դասը</button>'}${a?.stars>=2?'<button class="text-button" id="legacy-retry">Կրկնել դասը</button>':''}<button class="text-button" data-page="path">Վերադառնալ ուսումնական ուղի</button><details><summary>Իմ եզրակացությունը</summary><label class="field-label" for="electric-reflection">Ի՞նչն էր քեզ համար նոր։</label><textarea id="electric-reflection">${escape(s.reflection||'')}</textarea><button class="text-button" id="electric-save-reflection">Պահպանել եզրակացությունը</button><p id="electric-note-status" role="status"></p></details>`;
+  }
   const stepNames=["Իրավիճակ","Կանխատեսում","Փորձ","Դիտարկում","Բացատրություն","Կիրառում","Եզրակացություն"];
   s.unlockedStage=Math.max(s.unlockedStage||0,s.stage);
   const animation=s.stage===6?'celebration':s.stage===0?'idle':stateAnimation;
@@ -26,6 +32,7 @@ export function createJourney(getData,save,render) {
  }
  function bind(root) {
   const s=state(),l=lesson();
+  root.querySelector('#legacy-retry')?.addEventListener('click',()=>{s.stage=0;s.attempts=[];s.completed=null;s.numeric='';selected=null;feedback='';persist();render();});
   const rerender=()=>{persist();render();};
   root.querySelector("#electric-stage").onchange=e=>{s.stage=Number(e.target.value);selected=null;feedback="";hint=0;stateAnimation="thinking";persist();render();};
   root.querySelectorAll('[data-electric-answer]').forEach(button=>button.onclick=()=>{selected=Number(button.dataset.electricAnswer);feedback='';stateAnimation='thinking';render();});
@@ -39,7 +46,7 @@ export function createJourney(getData,save,render) {
   root.querySelector('#electric-check')?.addEventListener('click',()=>{
    const text=(s.numeric||'').trim().replace(',','.');const value=text===''?NaN:Number(text);const correct=Number.isFinite(value)&&Math.abs(value-l.answer)<=Math.max(1e-5,Math.abs(l.answer)*.005);
    s.attempts.push({stage:5,answer:text,correct,time:Date.now()});
-   if(correct){s.stage=6;s.completed=Date.now();playSound('complete');const data=getData();
+   if(correct){s.stage=6;s.completed=Date.now();playSound('complete');const data=getData();const first=s.attempts.find(x=>x.stage===5);s.lastResult=recordResult(data,id,first.correct?1:0,1,{application:first.correct},topics);
     if(!s.noteId){s.noteId=crypto.randomUUID();data.notes.push({id:s.noteId,created:Date.now(),lessonId:id,lessonTitle:l.title,experiments:s.experiments.map(x=>({...x,parameters:{...x.parameters}})),prediction:l.choices[s.prediction]||'',settings:s.experiments.map(x=>x.reading).join('; '),observation:l.observations[s.observation]||'',explanation:l.formula,conclusion:'Կիրառման խնդիրը լուծել եմ ինքնուրույն։'});}
     feedback='';
    }else{feedback='Փորձենք նորից։ Ստուգիր մեծությունների կապն ու միավորները։';stateAnimation='confused';}
@@ -51,4 +58,9 @@ export function createJourney(getData,save,render) {
   return ()=>{};
  }
  return {key(){return id+":"+state().stage;},open(moduleId){if(!electricLessons.some(x=>x.id===moduleId))return;id=moduleId;getData().currentLesson=id;persist();selected=null;feedback='';hint=0;stateAnimation='thinking';},view,bind};
+}
+
+export function createJourney(getData,save,render) {
+ const basic=createFoundations(getData,save,render),legacy=createLegacyJourney(getData,save,render);let active=basic;
+ return {open(id){if(!canOpen(getData(),id,topics))return false;active=foundations.some(l=>l.id===id)?basic:legacy;active.open(id);return true;},view:()=>active.view(),bind:root=>active.bind(root),key:()=>active.key()};
 }

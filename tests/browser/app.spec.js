@@ -6,7 +6,7 @@ test("full investigation, simulation, notebook and reload", async ({
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
   await expect(page.locator("h1")).toContainText("Բարև");
-  await page.locator('.hero [data-page="lesson"]').click();
+  await page.goto('/#lesson/motion');
   await page.locator("#next-stage").click();
   await page.locator('[data-predict="1"]').click();
   await page.locator("#next-stage").click();
@@ -98,7 +98,7 @@ for (const width of [390, 768, 1440])
       fullPage: true,
     });
     if (width < 501) await page.locator("#nav-toggle").click();
-    await page.locator('[data-page="lab"]').first().click();
+    await page.evaluate(()=>{const d=JSON.parse(localStorage.getItem('physics-journal-v1'));d.stage=2;d.unlockedStage=Math.max(2,d.unlockedStage||0);localStorage.setItem('physics-journal-v1',JSON.stringify(d));});await page.reload();await page.goto('/#lesson/motion');
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -115,7 +115,7 @@ for (const width of [390, 768, 1440])
 
 test("duration changes, same-model graph and comparison", async ({ page }) => {
   await page.goto("/");
-  await page.locator('[data-page="lab"]').first().click();
+  await page.evaluate(()=>{const d=JSON.parse(localStorage.getItem('physics-journal-v1'));d.stage=2;d.unlockedStage=Math.max(2,d.unlockedStage||0);localStorage.setItem('physics-journal-v1',JSON.stringify(d));});await page.reload();await page.goto('/#lesson/motion');
   await page.locator("#duration").fill("10");
   await page.locator("#graph-details summary").click();
   await page.locator("#run").click();
@@ -196,7 +196,7 @@ test("existing journal and progress survive redesign; reduced motion and assets"
   await page.locator('[data-page="notebook"]').first().click();
   await expect(page.locator(".note")).toContainText("Իմ նախորդ");
   await page.locator(".brand").click();
-  await page.locator('.hero [data-page="lesson"]').click();
+  await page.goto('/#lesson/motion');
   await expect(page.locator(".evidence")).toContainText("10");
   await page.locator("#stage-select").selectOption("1");
   await expect(page.locator('[data-predict="1"]')).toHaveClass(/selected/);

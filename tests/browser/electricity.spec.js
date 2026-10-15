@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 async function open(page,id,stage=2){
- await page.goto('/');await page.evaluate(({id,stage})=>{const data=JSON.parse(localStorage.getItem('physics-journal-v1')||'{}');data.electricLessons ||= {};data.electricLessons[id]={stage,experiments:[],attempts:[]};localStorage.setItem('physics-journal-v1',JSON.stringify(data));},{id,stage});
- await page.reload();await page.locator('.home-quiet-links [data-page="path"]').click();await page.locator(`[data-module="${id}"]`).click();
+ await page.goto('/');await page.evaluate(({id,stage})=>{const data=JSON.parse(localStorage.getItem('physics-journal-v1')||'{}');data.electricLessons ||= {};data.electricLessons[id]={stage,experiments:[],attempts:[]};data.learning.unlocked.push(id);localStorage.setItem('physics-journal-v1',JSON.stringify(data));},{id,stage});
+ await page.reload();await page.goto(`/#lesson/${id}`);
 }
 test('circuit terminals, real switch/current, dragging, keyboard, undo and reset',async({page})=>{
  await open(page,'circuits');const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -20,7 +20,7 @@ test('Ohm guided lesson completes, deliberately submits, saves notebook and relo
  await page.locator('[data-electric-param="voltage"]').fill('12');await page.locator('[data-electric-param="resistance"]').fill('6');await expect(page.locator('#electric-reading')).toContainText('2 Ա');
  await page.locator('#measure-electric').click();await page.locator('#electric-next').click();await page.locator('[data-electric-answer="0"]').click();await expect(page.locator('.feedback')).toBeEmpty();await page.locator('#electric-submit-observation').click();await expect(page.locator('.feedback')).toContainText('Եկ նորից');await page.locator('[data-electric-answer="1"]').click();await page.locator('#electric-submit-observation').click();await page.locator('#electric-next').click();await page.locator('#electric-next').click();
  await page.locator('#electric-numeric').fill('1');await page.locator('#electric-check').click();await expect(page.locator('.feedback')).toContainText('Փորձենք');await page.locator('#electric-hint').click();await expect(page.locator('.feedback')).toContainText('հուշում');
- await page.locator('#electric-numeric').fill('2');await page.locator('#electric-check').click();await expect(page.locator('#electric-reflection')).toBeVisible();await page.locator('#electric-reflection').fill('Լարումը բաժանում եմ դիմադրության վրա։');await page.locator('#electric-save-reflection').click();
+ await page.locator('#electric-numeric').fill('2');await page.locator('#electric-check').click();await page.locator('details:has(#electric-reflection) summary').click();await expect(page.locator('#electric-reflection')).toBeVisible();await page.locator('#electric-reflection').fill('Լարումը բաժանում եմ դիմադրության վրա։');await page.locator('#electric-save-reflection').click();
  await page.reload();await page.locator('[data-page="notebook"]').first().click();await expect(page.locator('.note')).toContainText('Լարում, հոսանքի ուժ և դիմադրություն');await expect(page.locator('.note')).toContainText('Լարումը բաժանում');
 });
 test('galvanic, parallel, RC, LED project and sensors use real settings',async({page})=>{

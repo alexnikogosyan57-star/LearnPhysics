@@ -3,7 +3,7 @@ test("thinking video and resting poster have actual transparent pixels", async (
   page,
 }) => {
   await page.goto("/");
-  await page.locator('.hero [data-page="lesson"]').click();
+  await page.goto('/#lesson/motion');
   await page.locator("#next-stage").click();
   const mascot = page.locator('[data-mascot-state="thinking"]');
   await expect(mascot).toHaveAttribute("data-phase", "playing");
@@ -44,7 +44,7 @@ test("transitions respond to selection, disclosures, and actual wheel travel", a
     };
   });
   await page.goto("/");
-  await page.locator('.hero [data-page="lesson"]').click();
+  await page.goto('/#lesson/motion');
   await page.locator("#next-stage").click();
   await page
     .locator(".lesson-content")
@@ -79,7 +79,7 @@ test("reduced motion disables added transitions and wheel decoration", async ({
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await page.locator('.hero [data-page="lesson"]').click();
+  await page.goto('/#lesson/motion');
   await page.locator("#next-stage").click();
   await page.locator('[data-predict="1"]').click();
   expect(

@@ -2575,3 +2575,72 @@ body { background:#FAF9F6; color:#263238; }
 .skip-link { opacity:0; clip-path:inset(100%); pointer-events:none; }
 .skip-link:focus { opacity:1; clip-path:none; pointer-events:auto; }
 #electric-stage { font:inherit; font-size:13px; color:#52625a; background:transparent; border:0; border-bottom:1px solid #dce5d8; padding:10px 24px 10px 4px; min-height:42px; max-width:170px; }
+/* A calm, illustrated topic map and one clear learning focus. */
+.topic-heading {text-align:center;max-width:660px;margin:42px auto 36px}
+.topic-heading h1 {font-size:34px;line-height:1.5;margin:12px 0}
+.topic-heading p,.path-heading p {color:#68747d;line-height:1.85}
+.topic-options {max-width:930px;margin:auto;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.topic-option {font:inherit;text-align:left;display:flex;align-items:center;gap:20px;background:#fff;border:1px solid #e1e7df;border-bottom:3px solid #d9e1d5;border-radius:18px;padding:24px;cursor:pointer;min-height:180px;color:#263238;transition:border-color .18s,transform .18s}
+.topic-option:hover {border-color:#73a779;transform:translateY(-2px)}
+.topic-option:active {transform:translateY(1px)}
+.topic-option-content {display:grid;gap:9px;min-width:0}
+.topic-option strong {font-size:17px;line-height:1.6}
+.topic-option-content>span {font-size:13px;line-height:1.85;color:#68747d}
+.topic-option small {font-size:11px;line-height:1.7;color:#347a47}
+.topic-art {width:120px;flex:0 0 120px}
+.topic-art svg {width:100%;height:auto}
+.featured-topic {grid-column:1/-1;background:#eff6ea;min-height:180px;justify-content:center;gap:50px;border-color:#c6d8bd}
+.featured-topic .topic-art {flex-basis:180px;width:180px}
+.featured-topic .topic-option-content {max-width:410px}
+.featured-topic strong {font-size:22px}
+.roadmap-disclaimer {font-size:12px;line-height:1.9;color:#68747d;max-width:650px;text-align:center;margin:32px auto}
+.path-heading {text-align:center;max-width:650px;margin:22px auto 30px}
+.path-heading h1 {font-size:29px;line-height:1.65}
+.path-heading>.text-button {display:block;margin-bottom:15px}
+.path-topic-art {width:160px;margin:auto}
+.path-topic-art svg {width:100%}
+.vertical-path {position:relative;width:100%;max-width:440px;margin:36px auto 60px;padding:10px 10px}
+.vertical-path:before {content:'';position:absolute;left:50%;width:3px;top:45px;bottom:85px;background:#e3eade}
+.path-stop {position:relative;display:flex;flex-direction:column;align-items:center;margin:0 auto 38px;width:250px;max-width:100%;text-align:center}
+.path-stop.left {transform:translateX(-58px)}
+.path-stop.right {transform:translateX(58px)}
+.lesson-node {width:86px;height:82px;border-radius:50%;background:#77ad64;border:4px solid #eff6e9;border-bottom:8px solid #4e8545;box-shadow:0 0 0 6px #faf9f6;font:inherit;color:#fff;font-size:28px;cursor:pointer;position:relative;transition:transform .18s}
+.lesson-node:hover {transform:translateY(-3px)}
+.lesson-node:active {transform:translateY(2px)}
+.path-stop.available .lesson-node {outline:2px dashed #9cbb80;outline-offset:10px}
+.path-stop.completed .lesson-node {background:#488652;border-bottom-color:#2e633a}
+.path-stop.needs-practice .lesson-node {background:#d8a962;border-bottom-color:#b08143}
+.path-stop.locked .lesson-node {background:#e3e8e1;border-bottom-color:#ccd4c8;color:#89958a;cursor:help}
+.path-label {background:#faf9f6;padding:17px 8px 3px;max-width:245px}
+.path-label strong {display:block;font-size:16px;line-height:1.7}
+.path-label small {display:block;font-size:12px;color:#68747d;line-height:1.85;margin-top:7px}
+.earned-stars {display:flex;justify-content:center;gap:9px;color:#dce3d7;font-size:31px;line-height:1.3;margin:14px 0}
+.earned-stars .earned {color:#c6973e}
+.path-label .earned-stars {font-size:22px;margin:6px 0}
+.path-message {position:sticky;bottom:20px;max-width:620px;margin:0 auto;padding:0;background:#fff4d9;border-radius:12px;font-size:14px;line-height:1.9}
+.path-message:not(:empty) {padding:20px;border:1px solid #dec98e}
+.mastery-progress {max-width:850px;margin:25px auto 40px}
+.mastery-progress>p {color:#68747d;line-height:1.85}
+.mastery-row {display:flex;align-items:center;gap:20px;border-bottom:1px solid #e1e7dc;padding:20px 0}
+.mastery-row>div:first-child {flex:1}
+.mastery-row strong,.mastery-row small {display:block;line-height:1.7}
+.mastery-row small {font-size:12px;color:#68747d;margin-top:6px}
+.mastery-row .earned-stars {font-size:22px}
+.rubric {display:grid;grid-template-columns:1fr 1fr;gap:12px;background:#f0f5e9;border-radius:12px;padding:18px;margin:22px 0;line-height:1.7;font-size:14px}
+.learning-summary {padding:20px 0;border-top:1px solid #e0e6dc;margin:20px 0}
+.assessment-review {font-size:14px;color:#52625a;line-height:1.85}
+.measurement-journal {margin:22px 0;line-height:1.85;font-size:14px}
+#foundation-stage {font:inherit;font-size:12px;background:transparent;border:0;padding:10px;max-width:180px}
+.circuit-workbench svg {border:1px solid #e0e6db;background:#f7f8f1;border-radius:16px}
+.circuit-workbench .model-note {margin-top:20px}
+#circuit-status {padding:12px 16px;background:#eff4e7;border-radius:10px;line-height:1.8;font-size:14px}
+#source-voltage {width:100%;margin-top:14px}
+@media(max-width:700px){
+ .topic-heading {margin:24px 0 26px;padding:0 10px}.topic-heading h1{font-size:25px}
+ .topic-options {grid-template-columns:1fr;gap:12px}.topic-option{padding:20px;gap:14px;min-height:154px}.topic-art{width:100px;flex-basis:100px}
+ .featured-topic{gap:15px}.featured-topic .topic-art{width:110px;flex-basis:110px}.featured-topic strong{font-size:18px}
+ .topic-option strong{font-size:16px}.path-heading h1{font-size:24px}.path-stop.left{transform:translateX(-35px)}.path-stop.right{transform:translateX(35px)}
+ .mastery-row{gap:12px;flex-wrap:wrap}.mastery-row>div:first-child{flex-basis:60%}.mastery-row .earned-stars{font-size:20px}.path-heading>.text-button{margin-left:0}
+ #foundation-stage{max-width:150px}.lesson-top {gap:8px;flex-wrap:wrap}
+}
+@media(prefers-reduced-motion:reduce){.topic-option,.lesson-node{transition:none}.topic-option:hover,.lesson-node:hover{transform:none}}

@@ -1,9 +1,8 @@
 export const navigation = [
-  ["home", "Գլխավոր", "house"],
-  ["path", "Ուսումնական ուղի", "route"],
-  ["lab", "Լաբորատորիա", "flask-conical"],
-  ["notebook", "Հետազոտողի տետր", "notebook-pen"],
-  ["progress", "Առաջընթաց", "chart-no-axes-combined"],
+ ["home", "Գլխավոր", "house"],
+ ["path", "Թեմաներ", "route"],
+ ["progress", "Իմ առաջընթացը", "chart-no-axes-combined"],
+ ["notebook", "Հետազոտողի տետր", "notebook-pen"],
 ];
 export const stages = [
   "Իրավիճակ",

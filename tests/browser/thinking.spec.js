@@ -17,7 +17,7 @@ async function stage(page, number) {
     number,
   );
   await page.reload();
-  await page.locator('.hero [data-page="lesson"]').click();
+  await page.goto('/#lesson/motion');
 }
 test("thinking loops past its duration with no poster underneath and no restart on selection", async ({
   page,

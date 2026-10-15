@@ -3,7 +3,7 @@ async function stage(page, number, extra={}) {
   await page.goto('/');
   await page.evaluate(({number,extra}) => localStorage.setItem('physics-journal-v1', JSON.stringify({stage:number, unlockedStage:5, runs:[], notes:[], answers:{}, prediction:null, ...extra})), {number,extra});
   await page.reload();
-  await page.locator('.hero [data-page="lesson"]').click();
+  await page.goto('/#lesson/motion');
 }
 async function transparent(page, state, next = "idle") {
   const wrapper = page.locator(`[data-mascot-state="${state}"]`);
@@ -19,8 +19,8 @@ async function transparent(page, state, next = "idle") {
 }
 test('both guidance clips and both success clips have real alpha and separate roles',async({page})=>{
   await stage(page,0);await transparent(page,'point-left');
-  await page.locator('[data-page="lab"]').first().click();await transparent(page,'point-right');
-  await page.locator('.brand').click();await page.locator('.hero [data-page="lesson"]').click();
+  await page.evaluate(()=>{const d=JSON.parse(localStorage.getItem('physics-journal-v1'));d.stage=2;d.unlockedStage=Math.max(2,d.unlockedStage||0);localStorage.setItem('physics-journal-v1',JSON.stringify(d));});await page.reload();await page.goto('/#lesson/motion');await transparent(page,'point-right');
+  await page.locator('.brand').click();await page.goto('/#lesson/motion');
   await page.locator('#stage-select').selectOption('5');
   await page.locator('[data-quiz="1"]').click();
   await page.locator('#submit-quiz').click();
@@ -40,7 +40,7 @@ test('sound requires activation, plays local effects, volume and mute persist',a
       return play.call(this);
     };
   });
-  await page.goto('/');await page.locator('[data-page="lab"]').first().click();
+  await page.goto('/');await page.evaluate(()=>{const d=JSON.parse(localStorage.getItem('physics-journal-v1'));d.stage=2;d.unlockedStage=Math.max(2,d.unlockedStage||0);localStorage.setItem('physics-journal-v1',JSON.stringify(d));});await page.reload();await page.goto('/#lesson/motion');
   await page.locator('#run').click();await page.locator('#run').click();
   expect(await page.evaluate(()=>window.audioPlays.length)).toBe(0);
   await page.locator('#sound').click();await page.locator('#enable-sound').click();
