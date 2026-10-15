@@ -1,3 +1,5 @@
+import {createInvestigationEngine} from '../learning/investigation-engine';
+import {investigations} from '../science/content';
 import {createFoundations} from '../learning/foundations';
 import {foundations} from '../learning/foundations-content';
 import {topics} from '../learning/topics';
@@ -61,6 +63,6 @@ function createLegacyJourney(getData,save,render) {
 }
 
 export function createJourney(getData,save,render) {
- const basic=createFoundations(getData,save,render),legacy=createLegacyJourney(getData,save,render);let active=basic;
- return {open(id){if(!canOpen(getData(),id,topics))return false;active=foundations.some(l=>l.id===id)?basic:legacy;active.open(id);return true;},view:()=>active.view(),bind:root=>active.bind(root),key:()=>active.key()};
+ const basic=createFoundations(getData,save,render),legacy=createLegacyJourney(getData,save,render),science=createInvestigationEngine(getData,save,render);let active=basic;
+ return {open(id){if(!canOpen(getData(),id,topics))return false;active=foundations.some(l=>l.id===id)?basic:investigations.some(l=>l.id===id)?science:legacy;active.open(id);return true;},view:()=>active.view(),bind:root=>active.bind(root),key:()=>active.key()};
 }

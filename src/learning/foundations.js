@@ -9,7 +9,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const stepNames=['Իրավիճակ','Կանխատեսում','Առաջին փորձ','Դիտարկում','Բացատրություն','Երկրորդ փորձ','Համեմատում','Ստուգման չափանիշներ','Գիտելիքի ստուգում','Արդյունք'];
 function startingCircuit(id) {
  const c=initialCircuit();
- if(['open-closed','conductors','circuit-parts'].includes(id)) c.wires=[['battery:a','switch:a'],['switch:b','lamp:a'],['lamp:b','battery:b']];
+ if(['open-closed','conductors','circuit-parts','switch-types'].includes(id)) c.wires=[['battery:a','switch:a'],['switch:b','lamp:a'],['lamp:b','battery:b']];
  if(id==='conductors')Object.assign(c.components.find(x=>x.id==='switch'),{sample:true,closed:true});
  return c;
 }
@@ -23,9 +23,10 @@ export function createFoundations(getData,save,render) {
  s.quiz ||= [];s.baseline ||= 0;s.unlockedStage=Math.max(s.unlockedStage||0,s.stage);return s;}
  const choices=list=>list.map((text,i)=>`<button class="answer ${selection===i?'selected':''}" data-foundation-answer="${i}" aria-pressed="${selection===i}" ${affirmed?'disabled':''}>${esc(text)}</button>`).join('');
  const next=(label='Շարունակել',disabled=false)=>`<button class="button" id="foundation-next" ${disabled?'disabled':''}>${label}</button>`;
- function experiment(s){const extra=id==='conductors'?`<label class="field-label" for="sample-material">Փորձարկվող նյութ</label><select id="sample-material"><option value="copper" ${(s.material||'copper')==='copper'?'selected':''}>Պղինձ · հաղորդիչ</option><option value="plastic" ${s.material==='plastic'?'selected':''}>Պլաստիկ · մեկուսիչ</option><option value="wood" ${s.material==='wood'?'selected':''}>Չոր փայտ · մեկուսիչ</option></select>`:id==='circuit-parts'?`<label class="slider-field">Աղբյուրի լարում <strong id="source-voltage-value">${s.circuit.components.find(c=>c.type==='battery').voltage} Վ</strong><input type="range" id="source-voltage" min="3" max="9" step="3" value="${s.circuit.components.find(c=>c.type==='battery').voltage}"></label>`:'';
+ function experiment(s){const battery=s.circuit.components.find(c=>c.type==='battery');const extra=id==='switch-types'?`<label class="field-label" for="switch-kind">Կոնտակտի տեսակ</label><select id="switch-kind" ${!s.circuit.components.some(c=>c.type==='switch')?'disabled':''}><option value="no" ${s.switchKind!=='nc'?'selected':''}>Նորմալ բաց</option><option value="nc" ${s.switchKind==='nc'?'selected':''}>Նորմալ փակ</option></select>`:id==='conductors'?`<label class="field-label" for="sample-material">Փորձարկվող նյութ</label><select id="sample-material" ${!s.circuit.components.some(c=>c.id==='switch')?'disabled':''}><option value="copper" ${(s.material||'copper')==='copper'?'selected':''}>Պղինձ · հաղորդիչ</option><option value="plastic" ${s.material==='plastic'?'selected':''}>Պլաստիկ · մեկուսիչ</option><option value="wood" ${s.material==='wood'?'selected':''}>Չոր փայտ · մեկուսիչ</option></select>`:id==='circuit-parts'?`<label class="slider-field">Աղբյուրի լարում <strong id="source-voltage-value">${battery?.voltage??'—'} Վ</strong><input type="range" id="source-voltage" ${!battery?'disabled':''} min="3" max="9" step="3" value="${battery?.voltage??'—'}"></label>`:'';
  let view=circuitView(s.circuit).replace('9 Վ իդեալական աղբյուր',`${s.circuit.components.find(c=>c.type==='battery')?.voltage||9} Վ իդեալական աղբյուր`);if(id==='conductors')view=view.replace(/<button class="button secondary" id="circuit-switch">.*?<\/button>/,'').replaceAll('Անջատիչ','Նմուշ');
  const enough=s.experiments.length>s.baseline && (s.stage!==5||s.experiments.length>s.secondBaseline);
+ if(id==='switch-types')view=view.replace(/(id="circuit-switch">).*?(<\/button>)/,`$1${s.actuated?'Ազատել կոնտակտը':'Գործարկել կոնտակտը'}$2`);
  view=view.replace('class="button secondary" id="measure-electric"',`class="${enough?'text-button':'button'}" id="measure-electric"`);
  return extra+view+(enough?next(s.stage===5?'Համեմատել արդյունքները':'Քննարկել դիտարկումը'):'')+`<details class="measurement-journal"><summary>Իմ չափումները · ${s.experiments.length}</summary>${s.experiments.slice(-6).map((x,i)=>`<p>${i+1}. ${esc(x.reading)}</p>`).join('')}</details>`;
  }
@@ -55,13 +56,16 @@ export function createFoundations(getData,save,render) {
  root.querySelector('#foundation-reflection')?.addEventListener('input',e=>{s.reflection=e.target.value;const note=getData().notes.find(n=>n.id===s.noteId);if(note)note.conclusion=s.reflection;save();});
  function bindWorkbench(){
  bindCircuit(root,s.circuit,repaint);
- root.querySelector('#circuit-reset').onclick=()=>{s.circuit=startingCircuit(id);s.material=id==='conductors'?'copper':null;repaint();};
+ root.querySelector('#circuit-reset').onclick=()=>{s.circuit=startingCircuit(id);s.material=id==='conductors'?'copper':null;s.switchKind='no';s.actuated=false;repaint();};
  }
  if([2,5].includes(s.stage)){
  bindWorkbench();
- root.querySelector('#sample-material')?.addEventListener('change',e=>{s.material=e.target.value;s.circuit.components.find(c=>c.id==='switch').closed=s.material==='copper';repaint();});
+ const updateSwitch=()=>{const contact=s.circuit.components.find(c=>c.type==='switch');if(!contact)return;contact.closed=s.switchKind==='nc'?!s.actuated:!!s.actuated;repaint();};
+ root.querySelector('#switch-kind')?.addEventListener('change',e=>{s.switchKind=e.target.value;s.actuated=false;updateSwitch();});
+ if(id==='switch-types')root.querySelector('#circuit-switch').onclick=()=>{s.actuated=!s.actuated;updateSwitch();};
+ root.querySelector('#sample-material')?.addEventListener('change',e=>{s.material=e.target.value;const sample=s.circuit.components.find(c=>c.id==='switch');if(sample)sample.closed=s.material==='copper';repaint();});
  root.querySelector('#source-voltage')?.addEventListener('input',e=>{
- s.circuit.components.find(c=>c.type==='battery').voltage=Number(e.target.value);
+ const source=s.circuit.components.find(c=>c.type==='battery');if(!source)return;source.voltage=Number(e.target.value);
  root.querySelector('#source-voltage-value').textContent=e.target.value+' Վ';
  const holder=document.createElement('div');holder.innerHTML=circuitView(s.circuit);
  for(const selector of ['#circuit-canvas','#circuit-status'])root.querySelector(selector).replaceWith(holder.querySelector(selector));

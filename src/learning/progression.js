@@ -12,6 +12,10 @@ export function initializeProgress(data, topics) {
   if((record.stage>0||record.completed||data.currentLesson===id)&&!p.unlocked.includes(id))p.unlocked.push(id);
  }
  if(data.assessment && !p.lessons.motion)recordResult(data,'motion',data.assessment.score,3,{legacy:true},topics);
+ // Content expansion may make the immediate successor of an already-mastered
+ // lesson playable. Grant only successors justified by retained real results.
+ for(const t of topics)for(let i=0;i<t.lessons.length-1;i++)if(p.lessons[t.lessons[i].id]?.bestStars>=2&&t.lessons[i+1].playable&&!p.unlocked.includes(t.lessons[i+1].id))p.unlocked.push(t.lessons[i+1].id);
+ p.version=2;
  return p;
 }
 export function canOpen(data,id,topics) {
