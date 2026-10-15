@@ -127,3 +127,11 @@ summary{font-size:14px;line-height:1.8;cursor:pointer;min-height:44px;align-cont
 .science-lab>.lesson-action-dock,.circuit-workbench>.lesson-action-dock{margin:20px 0;padding:18px 0;border-bottom:1px solid var(--divider)}
 @media(max-width:600px){.science-lab>.lesson-action-dock,.circuit-workbench>.lesson-action-dock{margin:0;border-bottom:0}}
 @media(max-width:600px){#circuit-canvas [data-wire-end]{r:32px}.nav-toggle,.sound-button{width:44px;height:44px;min-width:44px;min-height:44px}}
+
+/* Focus survives lesson transitions and repeated keyboard circuit edits. */
+.robot-dialogue h2:focus-visible, .robot-response:focus-visible, #circuit-diagnostic:focus-visible, .learning-summary h2:focus-visible,
+#main-content h1:focus-visible { outline: 3px solid #27713a; outline-offset: 7px; }
+.focused-lesson :is(button,input,select,textarea,[tabindex]) { scroll-margin-block: 100px 140px; }
+.wire-reconnect { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin-block: 16px; }
+.wire-reconnect .field-label { flex: 1 1 200px; }
+.circuit-guidance .text-button { margin-top: 12px; }

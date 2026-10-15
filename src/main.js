@@ -1,3 +1,4 @@
+import {captureFocus,restoreFocus} from "./ui/focus.js";
 import {investigations} from './science/content';
 import "@fontsource/noto-sans-armenian/400.css";
 import "@fontsource/noto-sans-armenian/500.css";
@@ -431,6 +432,7 @@ function escape(v) {
   );
 }
 function render() {
+  const focusSnapshot=captureFocus($("#app"));
   cleanupExperiments();
   const incoming = document.createElement("div");
   incoming.id = "app";
@@ -482,6 +484,7 @@ function render() {
     hint,
     runs: data.runs.length,
   });
+  restoreFocus($("#app"),focusSnapshot);
 }
 function stop() {
   running = false;

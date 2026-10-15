@@ -26,6 +26,10 @@ The page surface is pure white. Desktop uses a stable navigation rail, a readabl
 
 The electrical workspace now supports stable wire records with exact terminal geometry, free wire-end disconnection/reconnection and explicit junction creation. It transparently reads old saved wire-pair arrays. Lamp power, instruments and visual contacts follow the same electrical graph. Block and AA battery appearances, bulb contacts, digital meters, LED/diode/capacitor, beakers/electrodes and breadboard artwork share the reference-driven SVG library. See [redesign diagnosis, file map, verification and model limits](docs/desktop-and-circuit-redesign.md).
 
+## Blueprint priority improvements
+
+Lesson rerenders retain keyboard focus; new stages focus the robot's question without interrupting mascot playback. Selected wire endpoints can be disconnected with Delete and reconnected through labelled terminal selectors, with no dragging required. The circuit robot offers four explicitly requested, state-aware hint levels. Hint state persists locally and resets when electrical evidence changes, while ordinary layout movement preserves it. Scoring and saved mastery are unchanged. See the [blueprint comparison and remaining gaps](docs/blueprint-gap-review.md).
+
 ## Learning product
 
 Navigation: home, topics, progress, research notebook. Simulations are embedded in lessons. Ten illustrated topic categories lead to centered vertical paths. Broad topics are independently selectable; within each topic, lessons require at least two stars on the immediate predecessor. The first playable lesson in each topic is available. Planned lessons are explicitly identified and cannot be opened. Previously started investigations remain accessible during migration.

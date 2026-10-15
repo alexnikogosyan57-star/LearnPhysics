@@ -1,6 +1,18 @@
-# Latest desktop and circuit verification
+# Latest blueprint priority verification — 2026-10-15
 
-Current redesign: **25 Node tests passed; 95 browser tests passed in one full run, followed by six focused final checks**, including a new real-touch wire-end case. The registry now contains 96 browser cases; this is not a claim of a single 96-case run. Both production and standalone artifacts were independently exercised over HTTP, at the six requested sizes, with connected/open/disconnected lamp behavior and reload persistence. No external asset requests or runtime errors were observed.
+**27 Node tests passed.** The broad Chromium run executed all 101 registered browser cases: **100 passed and one was interrupted** when an application edit triggered a Vite page reload during the cell-assembly case. Its snapshot returned to the introduction because the fixture initializes storage on every load. After freezing application edits, **14 focused cases passed**, including that complete cell investigation, the five new accessibility cases, all four circuit-integrity cases, the full original motion/notebook flow, retained best mastery, reset/skip-link behavior and robot decoder continuity. This is coverage across a broad run and final focused reruns, not a claim that all 101 passed in one uninterrupted run.
+
+New verification exercises a complete first charge investigation with Tab, Enter, arrow keys and keyboard text input only; selected-answer and stage-transition focus; repeated SVG component movement without refocusing; keyboard wire-end disconnection/reconnection and resulting real lamp power; four requested circuit hints, local reload persistence and restart on changed electrical evidence. Basic text contrast (at least 4.5:1), selected-answer focus contrast (at least 3:1), focus visibility and no document overflow were checked at 1440, 768 and 390 pixels.
+
+`npm run export:standalone` succeeded. Both final production artifacts (`index.html` and `physics-app.html`, approximately 29.3 MB) were independently served over HTTP and exercised: connected lamp → disconnected free end → reconnected lamp, actual power 4.05 W → 0 W → 4.05 W, saved hints after reload, and the same three viewport widths. No page errors, failed runtime requests or external runtime asset requests were observed. Desktop/mobile circuit screenshots were inspected. `git diff --check` passed. There is no repository lint/typecheck script.
+
+See [the blueprint comparison, implementation and remaining gaps](docs/blueprint-gap-review.md). This is not a complete WCAG audit or a manual screen-reader test. Other lessons have not all been individually completed exclusively with the keyboard. Scoring, progression policy and existing saved results remain unchanged; no new lesson or external analytics service was added. Public GitHub Pages HTTP reachability remains unverified from this network; Git branch publication is a separate operation.
+
+---
+
+# Previous desktop and circuit verification
+
+Previous redesign: **25 Node tests passed; 95 browser tests passed in one full run, followed by six focused final checks**, including a new real-touch wire-end case. The registry now contains 96 browser cases; this is not a claim of a single 96-case run. Both production and standalone artifacts were independently exercised over HTTP, at the six requested sizes, with connected/open/disconnected lamp behavior and reload persistence. No external asset requests or runtime errors were observed.
 
 See [the current diagnosis, changed-file map, complete verification and remaining model limits](docs/desktop-and-circuit-redesign.md). No new lesson was added in this redesign. There is no separate repository lint/typecheck script.
 
