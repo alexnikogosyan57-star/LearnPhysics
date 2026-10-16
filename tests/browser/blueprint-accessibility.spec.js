@@ -10,7 +10,7 @@ async function tabTo(page,selector){
  throw Error('Tab did not reach '+selector);
 }
 async function activate(page,selector){await tabTo(page,selector);await page.keyboard.press('Enter');}
-const next=p=>activate(p,'#investigation-next');
+const next=p=>activate(p,'#investigation-next, #assessment-continue');
 async function match(p){
  await tabTo(p,'[data-activity-match="0"]');await p.keyboard.press('Home');await p.keyboard.press('ArrowDown');await p.keyboard.press('ArrowDown');await p.keyboard.press('Tab');await p.keyboard.press('Home');await p.keyboard.press('ArrowDown');await p.keyboard.press('Tab');
 }
@@ -24,9 +24,9 @@ test('a new student completes an entire investigation using only keyboard and re
  await activate(page,'#charge-double');await activate(page,'#science-record');await next(page);
  await match(page);await activate(page,'#investigation-check');await next(page);
  await tabTo(page,'#investigation-reasoning');await page.keyboard.insertText('Փոխեցի լիցքը և համեմատեցի ուժի երկու չափումները։');await next(page);await next(page);
- await activate(page,'[data-activity-choice="0"]');await activate(page,'#investigation-assess');await next(page);
- await tabTo(page,'#activity-number');await page.keyboard.insertText('4');await activate(page,'#investigation-assess');await next(page);
- await match(page);await activate(page,'#investigation-assess');await next(page);
+ await activate(page,'[data-activity-choice="0"]');await activate(page,'#assessment-check');await next(page);
+ await tabTo(page,'#activity-number');await page.keyboard.insertText('4');await activate(page,'#assessment-check');await next(page);
+ await match(page);await activate(page,'#assessment-check');await next(page);
  await expect(page.locator('.earned-stars')).toHaveAttribute('aria-label','3 աստղ՝ 3-ից');await page.reload();
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('physics-journal-v1')));expect(saved.learning.lessons.charges.bestStars).toBe(3);expect(saved.learning.unlocked).toContain('atom');expect(saved.notes[0].lessonId).toBe('charges');expect(errors).toEqual([]);
 });

@@ -2,7 +2,7 @@ import {prepareRegressionNavigation} from './navigation-helper.js';
 import {test,expect} from '@playwright/test';import {topics} from '../../src/learning/topics.js';import {investigations} from '../../src/science/content.js';
 test.beforeEach(({page})=>prepareRegressionNavigation(page));
 const selectChoice=async(p,n)=>p.locator(`[data-activity-choice="${n}"]`).click();
-async function next(p){await p.locator('#investigation-next').click();}
+async function next(p){await p.locator('#investigation-next, #assessment-continue').click();}
 async function matching(p,activity,wrong=false){for(let i=0;i<activity.pairs.length;i++)await p.locator(`[data-activity-match="${i}"]`).selectOption(wrong?activity.pairs[(i+1)%activity.pairs.length][1]:activity.pairs[i][1]);}
 async function configure(p,l,variation=false){
  if(l.kind.startsWith('legacy-')){
@@ -28,10 +28,14 @@ async function configure(p,l,variation=false){
 }
 async function finish(p,l,mode='correct'){
  await p.goto(`/#lesson/${l.id}`);await next(p);await selectChoice(p,1-l.prediction.correct);await next(p);await configure(p,l);if(l.id==='charges'){await p.locator('#science-record').click();await p.locator('[data-charge-preset="positive"]').click();}await p.locator('#science-record').click();await next(p);await selectChoice(p,l.observation.correct);await p.locator('#investigation-check').click();await next(p);await next(p);await configure(p,l,true);await p.locator('#science-record').click();await next(p);await matching(p,l.assessment[2]);await p.locator('#investigation-check').click();await next(p);await p.locator('#investigation-reasoning').fill('Փոխեցի մեկ պայմանը և համեմատեցի երկու չափումները։');await next(p);await next(p);
- await selectChoice(p,mode==='zero'?1-l.assessment[0].correct:l.assessment[0].correct);await p.locator('#investigation-assess').click();await next(p);
- await p.locator('#activity-number').fill(String(mode==='zero'?987654:l.assessment[1].answer));await p.locator('#investigation-assess').click();await next(p);
+ await selectChoice(p,mode==='zero'?1-l.assessment[0].correct:l.assessment[0].correct);await p.locator('#assessment-check').click();await next(p);
+ await p.locator('#activity-number').fill(String(mode==='zero'?987654:l.assessment[1].answer));await p.locator('#assessment-check').click();await next(p);
  await matching(p,l.assessment[2],mode==='zero');if(mode==='two')await p.locator('[data-activity-match="1"]').selectOption(l.assessment[2].pairs[0][1]);
- await p.locator('#investigation-assess').click();await next(p);await expect(p.locator('.learning-summary')).toBeVisible();
+ await p.locator('#assessment-check').click();await next(p);while(await p.locator('#assessment-check').count()){
+ const text=await p.locator('.robot-dialogue h2').innerText(),q=l.assessment.find(a=>a.question===text);
+ if(q.type==='choice')await selectChoice(p,q.correct);else if(q.type==='number')await p.locator('#activity-number').fill(String(q.answer));else await matching(p,q);
+ await p.locator('#assessment-check').click();await next(p);
+ }await expect(p.locator('.learning-summary')).toBeVisible();
 }
 test('new-student textbook-independent sequence, weighted mastery, locked URL, lower replay and notebook',async({page})=>{
  await page.goto('/');await page.locator('[data-page="path"]').first().click();await page.locator('[data-choose-topics]').first().click();await page.locator('[data-topic="electricity"]').click();await expect(page.locator('.unit-lesson [data-module="charges"]')).toBeVisible();await expect(page.locator('[data-locked="atom"]')).toBeVisible();
@@ -43,7 +47,7 @@ for(const lesson of investigations)test(`complete investigation: ${lesson.id}`,a
  const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(id=>localStorage.setItem('physics-journal-v1',JSON.stringify({runs:[],notes:[],learning:{version:2,lessons:{},selectedTopic:'electricity',unlocked:[id]}})),lesson.id);
  if(['atom','cell-assembly','ammeter','symbols','acceleration','incline'].includes(lesson.id))await page.setViewportSize({width:390,height:844});
  await finish(page,lesson);await expect(page.locator('.earned-stars')).toHaveAttribute('aria-label','3 աստղ՝ 3-ից');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
- const topic=topics.find(t=>t.lessons.some(x=>x.id===lesson.id));if(topic){const index=topic.lessons.findIndex(x=>x.id===lesson.id),successor=topic.lessons[index+1];if(successor?.playable)await expect(page.locator(`[data-module="${successor.id}"]`)).toBeVisible();else if(index===topic.lessons.length-1)await expect(page.locator('[data-choose-topics]')).toBeVisible();}
+ const topic=topics.find(t=>t.lessons.some(x=>x.id===lesson.id));if(topic){const index=topic.lessons.findIndex(x=>x.id===lesson.id),successor=topic.lessons[index+1];if(successor?.id==='charge-checkpoint'){await expect(page.locator(`[data-module="${successor.id}"]`)).toHaveCount(0);}else if(successor?.playable)await expect(page.locator(`[data-module="${successor.id}"]`)).toBeVisible();else if(index===topic.lessons.length-1)await expect(page.locator('[data-choose-topics]')).toBeVisible();}
  const data=await page.evaluate(()=>JSON.parse(localStorage.getItem('physics-journal-v1')));expect(data.notes[0].lessonId).toBe(lesson.id);expect(data.investigations[lesson.id].runs.length).toBe(lesson.id==='charges'?3:2);expect(errors).toEqual([]);
 });
 test('real charge drag remains captured across updates; continuous robot decoder stays attached',async({page})=>{

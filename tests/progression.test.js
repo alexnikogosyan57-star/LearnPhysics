@@ -9,6 +9,6 @@ test('A–I: assessment thresholds, sequential unlocks, best score, reload, topi
  recordResult(d,'one',0,10,{},topics);assert.equal(d.learning.lessons.one.bestStars,2);assert.equal(canOpen(d,'two',topics),true);
  const loaded=JSON.parse(JSON.stringify(d));initializeProgress(loaded,topics);assert.equal(canOpen(loaded,'three',topics),true);assert.equal(canOpen(loaded,'motion',topics),true);
  recordResult(loaded,'motion',10,10,{},topics);assert.equal(nextLesson(loaded,'motion',topics),null);assert.equal(loaded.learning.lessons.one.attempts.length,3);
- for(const [n,s] of [[0,0],[3,0],[4,1],[6,1],[7,2],[8,2],[9,3],[10,3]])assert.equal(starsFor(n,10),s);
+ for(const [n,s] of [[0,0],[3,0],[4,0],[5,1],[6,1],[7,2],[8,2],[9,3],[10,3]])assert.equal(starsFor(n,10),s);
  assert.throws(()=>starsFor(0,0));assert.throws(()=>starsFor(12,10));
 });

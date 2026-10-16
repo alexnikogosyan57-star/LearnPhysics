@@ -1,3 +1,4 @@
+import {foundations} from '../../src/learning/foundations-content.js';
 import {prepareRegressionNavigation} from './navigation-helper.js';
 import {test,expect} from '@playwright/test';
 test.beforeEach(({page})=>prepareRegressionNavigation(page));
@@ -12,9 +13,11 @@ async function learn(page,id,answers){
  await page.locator('#measure-electric').click();await next(page);await pick(page,0);await page.locator('#foundation-check').click();await next(page);await next(page);
  if(id==='conductors')await page.locator('#sample-material').selectOption('plastic');else await page.locator('#circuit-switch').click();
  await page.locator('#measure-electric').click();await next(page);await pick(page,0);await page.locator('#foundation-check').click();await next(page);await next(page);
- for(const answer of answers){await pick(page,answer);await page.locator('#foundation-assess').click();}
+ for(const answer of answers){await page.locator(`[data-activity-choice="${answer}"]`).click();await page.locator('#assessment-check').click();await page.locator('#assessment-continue').click();}
+ await finishReview(page,id);
  await expect(page.locator('.learning-summary')).toBeVisible();
 }
+async function finishReview(page,id){const l=foundations.find(l=>l.id===id);while(await page.locator('#assessment-check').count()){const prompt=await page.locator('.robot-dialogue h2').innerText();const q=l.assessment.find(q=>q.text===prompt);await page.locator(`[data-activity-choice="${q.correct}"]`).click();await page.locator('#assessment-check').click();await page.locator('#assessment-continue').click();}}
 test('A–G: retained circuit access, best mastery, reload and locked URL',async({page})=>{
  await page.addInitScript(()=>{if(!localStorage.getItem('physics-journal-v1'))localStorage.setItem('physics-journal-v1',JSON.stringify({currentLesson:'circuits',runs:[],notes:[],learning:{version:1,selectedTopic:null,lessons:{},unlocked:['circuits']}}));});
  await page.goto('/');await page.locator('[data-page="path"]').first().click();await page.locator('[data-choose-topics]').first().click();await page.locator('[data-topic="electricity"]').click();
@@ -38,7 +41,7 @@ test('retained circuit investigations, mobile layout, notebook, topic independen
  }
  await page.locator('.lesson-top [data-page="path"]').click();await page.locator('[data-choose-topics]').click();await page.locator('[data-topic="robotics"]').click();await page.locator('.unit-lesson [data-module="sensors"]').click();
  // Existing final-topic investigation uses its actual first application score.
- await page.locator('#electric-next').click();await page.locator('[data-electric-answer="0"]').click();await page.locator('#electric-next').click();await page.locator('#measure-electric').click();await page.locator('#electric-next').click();await page.locator('[data-electric-answer="0"]').click();await page.locator('#electric-submit-observation').click();await page.locator('#electric-next').click();await page.locator('#electric-next').click();await page.locator('#electric-numeric').fill('1');await page.locator('#electric-check').click();
+ await page.locator('#electric-next').click();await page.locator('[data-electric-answer="0"]').click();await page.locator('#electric-next').click();await page.locator('#measure-electric').click();await page.locator('#electric-next').click();await page.locator('[data-electric-answer="0"]').click();await page.locator('#electric-submit-observation').click();await page.locator('#electric-next').click();await page.locator('#electric-next').click();await page.locator('#activity-number').fill('1');await page.locator('#assessment-check').click();await page.locator('#assessment-continue').click();
  await expect(page.locator('[data-choose-topics]')).toHaveText('Ընտրել հաջորդ թեման');await page.locator('[data-choose-topics]').click();await page.locator('[data-topic="mechanics"]').click();await expect(page.locator('.unit-lesson [data-module="motion"]')).toBeVisible();
  const d=await page.evaluate(()=>JSON.parse(localStorage.getItem('physics-journal-v1')));expect(d.notes.length).toBe(6);expect(d.learning.lessons.circuits.bestStars).toBe(3);expect(errors).toEqual([]);
 });
@@ -68,6 +71,7 @@ test('new switch-type and wiring lessons complete, save and show real next actio
  if(id==='switch-types'){await page.locator('#switch-kind').selectOption('nc');await expect(page.locator('#circuit-status')).toContainText('0.45');await page.locator('#circuit-switch').click();await expect(page.locator('#circuit-status')).toContainText('0 Ա');}
  else await page.locator('#circuit-switch').click();
  await page.locator('#measure-electric').click();await next(page);await pick(page,0);await page.locator('#foundation-check').click();await next(page);await next(page);
- for(const answer of answers){await pick(page,answer);await page.locator('#foundation-assess').click();}await expect(page.locator('.earned-stars')).toHaveAttribute('aria-label','3 աստղ՝ 3-ից');
+ for(const answer of answers){await page.locator(`[data-activity-choice="${answer}"]`).click();await page.locator('#assessment-check').click();await page.locator('#assessment-continue').click();}
+ await finishReview(page,id);await expect(page.locator('.earned-stars')).toHaveAttribute('aria-label','3 աստղ՝ 3-ից');
  }
 });

@@ -1,5 +1,5 @@
 // Keep keyboard position through the app's DOM morph without remounting the mascot.
-const identityAttributes = ['id','data-terminal','data-wire-end','data-wire-id','data-component','data-activity-choice','data-activity-match','data-foundation-answer','data-page','data-module','data-topic','data-science-param','data-edit','data-delete','data-predict','data-observe','data-quiz','data-stage','data-remove-wire','data-remove-junction','data-add-component'];
+const identityAttributes = ['id','data-checkpoint-answer','data-checkpoint-practice','data-practice-answer','data-terminal','data-wire-end','data-wire-id','data-component','data-activity-choice','data-activity-match','data-foundation-answer','data-page','data-module','data-topic','data-science-param','data-edit','data-delete','data-predict','data-observe','data-quiz','data-stage','data-remove-wire','data-remove-junction','data-add-component'];
 function signature(root) {
   return ['h1','.lesson-track','.robot-dialogue h2'].map(selector => {
     const el=root.querySelector(selector);
@@ -23,7 +23,7 @@ export function restoreFocus(root,snapshot) {
         : el.textContent===snapshot.text));
     if(target && (target.disabled || !target.getClientRects().length))target=null;
   }
-  if(sameView && !target)target=root.querySelector('.robot-response:not(:empty)') || (snapshot.identity.some(([a,v])=>a==='id'&&v==='circuit-hint')?root.querySelector('#circuit-diagnostic'):null);
+  if(sameView && !target)target=root.querySelector('.assessment-feedback') || root.querySelector('.robot-response:not(:empty)') || (snapshot.identity.some(([a,v])=>a==='id'&&v==='circuit-hint')?root.querySelector('#circuit-diagnostic'):null);
   target ||= root.querySelector('.robot-dialogue h2') || root.querySelector('.learning-summary h2') || root.querySelector('h1') || root.querySelector('#main-content');
   if(!target)return;
   if(!target.matches('button,input,select,textarea,a,summary,[tabindex]'))target.tabIndex=-1;

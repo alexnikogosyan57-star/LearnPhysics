@@ -1,13 +1,15 @@
 // Starting over clears an active attempt, never the student's demonstrated mastery.
 export function resetLessonAttempt(data,id){
  const science=data.investigations?.[id],electric=data.electricLessons?.[id];
- const record=id==='motion'?{stage:data.stage,runs:data.runs,prediction:data.prediction,answers:data.answers,assessment:data.assessment,conclusion:data.conclusion}:science||electric;
+ const record=id==='motion'?{stage:data.stage,runs:data.runs,prediction:data.prediction,answers:data.answers,assessment:data.assessment,conclusion:data.conclusion,motionFlow:data.motionFlow}:science||electric||data.checkpoints?.[id];
  if(record){
   data.lessonAttemptArchives ||= [];
   data.lessonAttemptArchives.push({lessonId:id,closed:Date.now(),record:structuredClone(record)});
  }
+ if(id==='motion'){delete data.motionFlow;}
  if(id==='motion')Object.assign(data,{stage:0,unlockedStage:0,runs:[],prediction:null,answers:{},assessment:null,conclusion:'',verification:'',reflection:''});
  else {
+  if(data.checkpoints)delete data.checkpoints[id];
   if(data.investigations)delete data.investigations[id];
   if(data.electricLessons)delete data.electricLessons[id];
   // An archived legacy attempt must not be imported back as the new attempt.
@@ -16,7 +18,7 @@ export function resetLessonAttempt(data,id){
  delete data.lessonSession;
 }
 export function lessonCompleted(data,id){
- return id==='motion'?!!data.assessment:!!(data.investigations?.[id]?.completed||data.electricLessons?.[id]?.completed);
+ return id==='motion'?!!data.assessment:!!(data.checkpoints?.[id]?.completed||data.investigations?.[id]?.completed||data.electricLessons?.[id]?.completed);
 }
 export function requestExitDialog(onLeave){
  const previous=document.activeElement,dialog=document.createElement('dialog');

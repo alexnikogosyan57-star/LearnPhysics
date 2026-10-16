@@ -1,3 +1,4 @@
+import {assessmentBody,bindAssessment,assessmentReaction,reviewSummary} from './learning/assessment-flow.js';
 import {resetLessonAttempt,lessonCompleted,requestExitDialog} from "./learning/session.js";
 import {captureFocus,restoreFocus} from "./ui/focus.js";
 import {investigations} from './science/content';
@@ -17,6 +18,7 @@ import {
   ChartNoAxesCombined,
   VolumeX,
   Volume2,
+  SlidersHorizontal,
   HardDrive,
   X,
   ArrowRight,
@@ -48,6 +50,7 @@ const icons = {
   ChartNoAxesCombined,
   VolumeX,
   Volume2,
+  SlidersHorizontal,
   HardDrive,
   X,
   ArrowRight,
@@ -91,7 +94,7 @@ import { electricLessons, physicsTopics } from "./electricity/content";
 import { createJourney } from "./electricity/journey";
 import { dialogue, guidedContent } from "./dialogue";
 import { renderMascot, mountMascots, updateMascotLayout, greetingHasStarted } from "./mascot";
-import { audioState, enableSound, muteSound, setVolume, playSound } from "./audio";
+import { audioState, enableSound, muteSound, toggleSound, setVolume, playSound } from "./audio";
 import {topics} from './learning/topics';
 import {initializeProgress,canOpen,recordResult,nextLesson,starsMarkup,starsFor} from './learning/progression';
 import {topicView,pathView,masteryProgress,pathContextView} from './learning/views';
@@ -181,7 +184,7 @@ function questionLayout(content, eventKey, caption, state = "thinking") {
 }
 function shell(body) {
   const active = ["lesson", "electric"].includes(page) ? "path" : page;
-  return `<a class="skip-link" href="#main-content">Անցնել բովանդակությանը</a><header class="site-header" data-screen="${page}"><div class="header-inner"><a class="brand" href="#home" aria-label="Ֆիզիկան շուրջդ է՝ գլխավոր էջ"><span class="brand-symbol">${icon("orbit")}</span><span>Ֆիզիկան <span class="brand-second">շուրջդ է</span></span></a><button id="nav-toggle" class="icon-button nav-toggle" aria-label="Բացել բաժինները" aria-expanded="false" aria-controls="main-nav">${icon("menu")}</button><nav id="main-nav" aria-label="Հիմնական բաժիններ">${navigation.map(([id, label, i]) => `<button data-page="${id}" class="nav-item ${active === id ? "active" : ""}" ${active === id ? 'aria-current="page"' : ""}>${icon(i)}<span>${id==='home'?'Ուսում':label}</span></button>`).join("")}</nav><button id="sound" class="icon-button sound-button" aria-label="Ձայնի կարգավորումներ">${icon(audioState().enabled ? "volume-2" : "volume-x")}</button></div></header><div class="main-shell" data-screen="${page}"><div class="page-layout ${page==='path'&&data.learning.selectedTopic?'with-context':''}"><main id="main-content" tabindex="-1">${body}</main>${page==='path'&&data.learning.selectedTopic?pathContextView(data):''}</div><footer><span>Ֆիզիկան շուրջդ է <span class="footer-dot">·</span> 9-րդ դասարան</span><span>${icon("hard-drive")} Քո գրառումները պահվում են այս սարքում</span></footer><p id="storage-warning" role="status"></p></div><dialog id="audio-dialog" aria-labelledby="audio-title"><button class="dialog-close icon-button" id="close-audio" aria-label="Փակել">${icon("x")}</button><span class="eyebrow">Ձայնի կարգավորումներ</span><h2 id="audio-title">Սովորելու հանգիստ միջավայր</h2><p>Կարճ, մեղմ ձայնային էֆեկտներ՝ փորձը սկսելիս, ճիշտ պատասխանի ու պահպանված գրառման համար։ Երաժշտություն չկա։</p><label class="volume-label">Ձայնի մակարդակ <input id="volume" type="range" min="0" max="100" value="${audioState().volume}" aria-label="Ձայնի մակարդակ"></label><button class="button" id="enable-sound" type="button">Միացնել ձայնը</button><button class="button secondary" id="mute">${icon("volume-x")} Անջատել ձայնը</button><p class="audio-note"><span id="audio-status" role="status">${audioState().enabled ? "Ձայնը միացված է։" : "Ձայնն անջատված է։ Միացրու այն, երբ ցանկանաս։"}</span><br>Տեղային ձայնային էֆեկտներ՝ Kenney · CC0։</p></dialog>`;
+  return `<a class="skip-link" href="#main-content">Անցնել բովանդակությանը</a><header class="site-header" data-screen="${page}"><div class="header-inner"><a class="brand" href="#home" aria-label="Ֆիզիկան շուրջդ է՝ գլխավոր էջ"><span class="brand-symbol">${icon("orbit")}</span><span>Ֆիզիկան <span class="brand-second">շուրջդ է</span></span></a><button id="nav-toggle" class="icon-button nav-toggle" aria-label="Բացել բաժինները" aria-expanded="false" aria-controls="main-nav">${icon("menu")}</button><nav id="main-nav" aria-label="Հիմնական բաժիններ">${navigation.map(([id, label, i]) => `<button data-page="${id}" class="nav-item ${active === id ? "active" : ""}" ${active === id ? 'aria-current="page"' : ""}>${icon(i)}<span>${id==='home'?'Ուսում':label}</span></button>`).join("")}</nav><div class="audio-controls" role="group" aria-label="Ձայնի կառավարում"><button id="sound" class="icon-button sound-button" aria-label="${audioState().enabled?'Անջատել ձայնը':'Միացնել ձայնը'}" title="${audioState().enabled?'Անջատել ձայնը':'Միացնել ձայնը'}" aria-pressed="${audioState().enabled}">${icon(audioState().enabled ? "volume-2" : "volume-x")}</button><button id="audio-settings" class="icon-button" aria-label="Ձայնի կարգավորումներ" title="Ձայնի կարգավորումներ" aria-haspopup="dialog" aria-controls="audio-dialog">${icon('sliders-horizontal')}</button><span id="sound-status" class="sr-only" role="status" aria-live="polite"></span></div></div></header><div class="main-shell" data-screen="${page}"><div class="page-layout ${page==='path'&&data.learning.selectedTopic?'with-context':''}"><main id="main-content" tabindex="-1">${body}</main>${page==='path'&&data.learning.selectedTopic?pathContextView(data):''}</div><footer><span>Ֆիզիկան շուրջդ է <span class="footer-dot">·</span> 9-րդ դասարան</span><span>${icon("hard-drive")} Քո գրառումները պահվում են այս սարքում</span></footer><p id="storage-warning" role="status"></p></div><dialog id="audio-dialog" aria-labelledby="audio-title"><button class="dialog-close icon-button" id="close-audio" aria-label="Փակել">${icon("x")}</button><span class="eyebrow">Ձայնի կարգավորումներ</span><h2 id="audio-title">Սովորելու հանգիստ միջավայր</h2><p>Կարճ, մեղմ ձայնային էֆեկտներ՝ փորձը սկսելիս, ճիշտ պատասխանի ու պահպանված գրառման համար։ Երաժշտություն չկա։</p><label class="volume-label">Ձայնի մակարդակ <input id="volume" type="range" min="0" max="100" value="${audioState().volume}" aria-label="Ձայնի մակարդակ"></label><button class="button" id="enable-sound" type="button">Միացնել ձայնը</button><button class="button secondary" id="mute">${icon("volume-x")} Անջատել ձայնը</button><p class="audio-note"><span id="audio-status" role="status">${audioState().enabled ? "Ձայնը միացված է։" : "Ձայնն անջատված է։ Միացրու այն, երբ ցանկանաս։"}</span><br>Տեղային ձայնային էֆեկտներ՝ Kenney · CC0։</p></dialog>`;
 }
 function home() {
   const current = [...investigations,...foundations,...electricLessons].find(l => l.id === data.currentLesson);
@@ -362,15 +365,11 @@ function explanation() {
 }
 function application() {
   if (data.assessment)
-    return guidedContent(`<div class="story"><span class="eyebrow">ՀԵՏԱԶՈՏՈՒԹՅՈՒՆԸ ԱՎԱՐՏՎԱԾ Է</span><h2>Դու արդեն մտածում ես որպես հետազոտող։</h2><p>Առաջին փորձից ճիշտ պատասխաններ՝ ${data.assessment.score} / 3։ Դու կանխատեսեցիր, փորձ կատարեցիր և բացատրեցիր կապը։ ${data.assessment.score < 3 ? "Վերանայիր ժամանակի և ճանապարհի կապը՝ նոր փորձով։" : "Այժմ կարող ես կապը կիրառել նոր իրավիճակներում։"}</p><div class="evidence"><h3>Ի՞նչ ցույց տվեցիր</h3><p>Հաստատուն արագությամբ՝ s = v × t։ Միջին արագությունը գտնելու համար հաշվում ենք ամբողջ ժամանակը։</p></div><label class="field-label" for="conclusion">Քո վերջնական եզրակացությունը</label><textarea id="conclusion" placeholder="Այս փորձից հասկացա, որ…">${escape(data.conclusion || "")}</textarea><button class="button secondary" id="save-lesson">Պահպանել տետրում ${icon("notebook-pen")}</button>${starsMarkup(starsFor(data.assessment.score,3))}${starsFor(data.assessment.score,3)>=2&&nextLesson(data,"motion",topics)?`<button class="button lesson-primary" data-module="pendulum">Անցնել հաջորդ դասին</button>`:""}<button class="text-button" data-page="path">Վերադառնալ ուսումնական ուղի</button><button class="${starsFor(data.assessment.score,3)<2?'button lesson-primary':'text-button'}" id="retry-quiz">Կրկին ստուգել գիտելիքը</button><p id="note-status" role="status"></p></div>`, `motion:complete:${data.assessment.created}`, "", "celebration");
-  const q = assessment[quizIndex];
-  return questionLayout(
-    `<div class="story"><span class="eyebrow">ԿԻՐԱՌԻՐ ԻՆՔՆՈՒՐՈՒՅՆ · ${quizIndex + 1} / 3</span><h2>${quizIndex === 0 ? "Ռոբոտից՝ հեծանիվ։ Նույն կապը։" : "Մտածիր ամբողջ իրավիճակի մասին։"}</h2><p>${q.q}</p>${quizIndex===0?'<p class="assessment-criteria">Երեք հարց՝ մեկական միավորով։ Գնահատվում է առաջին պատասխանը։ 0–39%՝ 0, 40–69%՝ 1, 70–89%՝ 2, 90–100%՝ 3 աստղ։</p>':''}${q.options.map((o, i) => `<button class="answer ${selected === i ? "selected" : ""}" data-quiz="${i}" aria-pressed="${selected === i}">${o}</button>`).join("")}<p class="feedback" role="status">${feedback}</p>${feedback && !feedback.startsWith("Ճիշտ") && hint < 2 ? '<button class="text-button" id="quiz-hint">' + icon("lightbulb") + " Հաջորդ հուշումը</button>" : ""}<button class="button" id="submit-quiz" ${selected === null ? "disabled" : ""}>${feedback.startsWith("Ճիշտ") ? "Հաջորդը" : "Ստուգել պատասխանը"} ${icon("arrow-right")}</button></div>`,
-    `motion:assessment:${assessmentAttempt}:${quizIndex}:answer:${selected}:hint:${hint}`,
-    feedback.startsWith("Ճիշտ") ? "Դու ճիշտ կիրառեցիր կապը։" : "Մի շտապիր։ Ի՞նչ է ասում իրավիճակը։",
-    feedback.startsWith("Ճիշտ") ? (quizIndex === 0 ? "eureka" : "success-answer") : feedback ? (hint > 0 ? "eureka" : "confused") : "thinking",
-  );
+    return guidedContent(`<div class="story"><span class="eyebrow">ՀԵՏԱԶՈՏՈՒԹՅՈՒՆԸ ԱՎԱՐՏՎԱԾ Է</span><h2>Դու արդեն մտածում ես որպես հետազոտող։</h2><p>Առաջին փորձից ճիշտ պատասխաններ՝ ${data.assessment.score} / 3։ Դու կանխատեսեցիր, փորձ կատարեցիր և բացատրեցիր կապը։ ${data.assessment.score < 3 ? "Վերանայիր ժամանակի և ճանապարհի կապը՝ նոր փորձով։" : "Այժմ կարող ես կապը կիրառել նոր իրավիճակներում։"}</p><div class="evidence"><h3>Ի՞նչ ցույց տվեցիր</h3><p>Հաստատուն արագությամբ՝ s = v × t։ Միջին արագությունը գտնելու համար հաշվում ենք ամբողջ ժամանակը։</p></div><label class="field-label" for="conclusion">Քո վերջնական եզրակացությունը</label><textarea id="conclusion" placeholder="Այս փորձից հասկացա, որ…">${escape(data.conclusion || "")}</textarea><button class="button secondary" id="save-lesson">Պահպանել տետրում ${icon("notebook-pen")}</button>${reviewSummary(data.motionFlow||{})}${starsMarkup(starsFor(data.assessment.score,3))}${starsFor(data.assessment.score,3)>=2&&nextLesson(data,"motion",topics)?`<button class="button lesson-primary" data-module="pendulum">Անցնել հաջորդ դասին</button>`:""}<button class="text-button" data-page="path">Վերադառնալ ուսումնական ուղի</button><button class="${starsFor(data.assessment.score,3)<2?'button lesson-primary':'text-button'}" id="retry-quiz">Կրկին ստուգել գիտելիքը</button><p id="note-status" role="status"></p></div>`, `motion:complete:${data.assessment.created}`, "", "celebration");
+  return guidedContent(`<div class="story">${assessmentBody(data.motionFlow ||= {},motionItems())}</div>`, `motion:assessment:${data.motionFlow?.assessmentFlow?.machine.phase}:${data.motionFlow?.assessmentFlow?.machine.index}`, '',assessmentReaction(data.motionFlow));
 }
+function motionItems(){return assessment.map((q,i)=>({...q,type:'choice',question:q.q,weight:1,why:['Ճանապարհը՝ 4 մ/վ × 5 վ = 20 մ։','Նույն արագությամբ կրկնակի ժամանակը տալիս է կրկնակի ճանապարհ՝ 20 մ և 10 մ։','Միջին արագությունը՝ 10 մ / (5 վ + 5 վ) = 1 մ/վ։ Կանգառը նույնպես մտնում է ամբողջ ժամանակի մեջ։'][i]}));}
+
 function notebook() {
   return (
     heading(
@@ -478,7 +477,7 @@ function render() {
   if (["lesson", "electric"].includes(page)) {
     const content = $(".lesson-content");
     const action = content.querySelector(".lesson-primary") || content.querySelector("#next-stage, #next-observation, #submit-quiz, #submit-observation, #save-lesson, #electric-next, #electric-submit-observation, #electric-check, #electric-save-reflection, #foundation-next, #foundation-check, #foundation-assess, #foundation-retry") || content.querySelector("#measure-electric");
-    if (action) {
+    if (action && !action.closest(".assessment-feedback")) {
       const dock = document.createElement("div");
       dock.className = "lesson-action-dock";
       action.replaceWith(dock);
@@ -602,6 +601,18 @@ function saveMotionNote() {
     if(prior)Object.assign(prior,note);else data.notes.push(note);
     save();
 }
+function syncAudioControls(message=''){
+ const state=audioState(),label=state.enabled?'Անջատել ձայնը':'Միացնել ձայնը';
+ $('#sound').innerHTML=icon(state.enabled?'volume-2':'volume-x');
+ $('#sound').setAttribute('aria-pressed',String(state.enabled));
+ $('#sound').setAttribute('aria-label',label);$('#sound').title=label;
+ $('#volume').value=state.volume;
+ $('#enable-sound').disabled=state.enabled;
+ $('#mute').disabled=!state.enabled;
+ const status=message||(state.enabled?'Ձայնը միացված է։':'Ձայնն անջատված է։');
+ $('#audio-status').textContent=status;$('#sound-status').textContent=status;
+ createIcons({icons,root:$('#sound')});
+}
 function bind() {
   document
     .querySelectorAll("[data-page]")
@@ -614,19 +625,14 @@ function bind() {
     e.preventDefault();
     go("home");
   };
-  $("#sound").onclick = () => $("#audio-dialog").showModal();
+  $("#sound").onclick = () => {toggleSound();syncAudioControls();};
+  $("#audio-settings").onclick = () => $("#audio-dialog").showModal();
   $("#close-audio").onclick = () => $("#audio-dialog").close();
-  const syncAudio = () => {
-    const state = audioState();
-    $("#volume").value = state.volume;
-    $("#audio-status").textContent = state.enabled ? "Ձայնը միացված է։" : "Ձայնն անջատված է։";
-    $("#sound").innerHTML = icon(state.enabled ? "volume-2" : "volume-x");
-    $("#enable-sound").disabled = state.enabled;
-    createIcons({ icons, root: $("#sound") });
-  };
-  $("#volume").oninput = (e) => { setVolume(e.target.value); syncAudio(); };
-  $("#enable-sound").onclick = () => { enableSound(); syncAudio(); };
-  $("#mute").onclick = () => { muteSound(); syncAudio(); };
+  $("#enable-sound").disabled=audioState().enabled;$("#mute").disabled=!audioState().enabled;
+  $("#volume").oninput = (e) => { setVolume(e.target.value); syncAudioControls(); };
+  $("#enable-sound").onclick = () => { enableSound(); syncAudioControls(); };
+  $("#mute").onclick = () => { muteSound(); syncAudioControls(); };
+  if(page==='lesson'&&data.stage===5&&!data.assessment){bindAssessment(document,data.motionFlow ||= {},motionItems(),save,render,(results,review)=>{data.assessment={score:results.filter(r=>r.correct).length,created:Date.now(),review};recordResult(data,'motion',data.assessment.score,3,{questions:results,review},topics);data.motionNoteId=null;saveMotionNote();});return;}
   $("#run")?.addEventListener("click", () => {
     playSound("control");
     if (running) {
@@ -727,51 +733,10 @@ function bind() {
     ][Math.min(hint, 2)];
     render();
   });
-  $("#submit-quiz")?.addEventListener("click", () => {
-    let q = assessment[quizIndex];
-    if (feedback.startsWith("Ճիշտ")) {
-      quizIndex++;
-      selected = null;
-      feedback = "";
-      hint = 0;
-      if (quizIndex === 3) {
-        data.assessment = {
-          score: quizAnswers.filter(Boolean).length,
-          created: Date.now(),
-        };
-        recordResult(data,"motion",data.assessment.score,3,{questions:quizAnswers},topics);
-        data.motionNoteId = null;
-        saveMotionNote();
-        quizIndex = 0;
-        save();
-      }
-      render();
-      return;
-    }
-    if (quizAnswers[quizIndex] === undefined)
-      quizAnswers[quizIndex] = selected === q.correct;
-    if (selected === q.correct) playSound("complete");
-    if (selected === q.correct)
-      feedback =
-        "Ճիշտ է։ " +
-        [
-          "4 մ/վ × 5 վ = 20 մ։",
-          "Արագությունը նույնն է, ժամանակը՝ երկու անգամ ավելի երկար։",
-          "Կանգառը նույնպես ներառվում է ամբողջ ժամանակի մեջ։",
-        ][quizIndex];
-    else
-      feedback =
-        "Մտածենք նորից։ " +
-        [
-          "Ամեն վայրկյան անցնում է 4 մետր։",
-          "Համեմատիր քայլելու տևողությունները։",
-          "Հաշվի առ նաև կանգառի 5 վայրկյանը։",
-        ][quizIndex];
-    render();
-  });
   $("#retry-quiz")?.addEventListener("click", () => {
     assessmentAttempt = Date.now();
     data.assessment = null;
+    delete data.motionFlow;
     quizIndex = 0;
     quizAnswers = [];
     save();
@@ -837,9 +802,4 @@ window.addEventListener('beforeunload',event=>{const id=activeLesson();if(id&&!l
 window.addEventListener('pagehide',()=>{stop();cleanupExperiments();});
 window.addEventListener('pageshow',event=>{if(event.persisted&&activeLesson()){finishLessonSession();go('path',true);}});
 
-window.addEventListener("physics-audio-error", () => {
-  if ($("#audio-status")) $("#audio-status").textContent = "Ձայնը չհաջողվեց նվագարկել։ Կարող ես կրկին միացնել այն։";
-  $("#sound").innerHTML = icon("volume-x");
-  createIcons({ icons, root: $("#sound") });
-  if ($("#enable-sound")) $("#enable-sound").disabled = false;
-});
+window.addEventListener('physics-audio-error',()=>syncAudioControls('Ձայնը չհաջողվեց նվագարկել։ Կարող ես կրկին միացնել այն։'));

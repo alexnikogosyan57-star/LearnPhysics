@@ -51,10 +51,10 @@ test("full investigation, simulation, notebook and reload", async ({
   await page.locator("summary").click();
   await page.locator("#next-stage").click();
   for (const correct of [1, 0, 2]) {
-    await page.locator(`[data-quiz="${correct}"]`).click();
-    await page.locator("#submit-quiz").click();
-    await expect(page.locator(".feedback")).toContainText("Ճիշտ");
-    await page.locator("#submit-quiz").click();
+    await page.locator(`[data-activity-choice="${correct}"]`).click();
+    await page.locator("#assessment-check").click();
+    await expect(page.locator(".assessment-feedback")).toContainText("Ճիշտ");
+    await page.locator("#assessment-continue").click();
   }
   await expect(page.locator(".robot-dialogue")).toContainText("3 / 3");
   await page
@@ -72,9 +72,10 @@ test("full investigation, simulation, notebook and reload", async ({
   await page.locator('[data-page="notebook"]').first().click();
   await expect(page.locator(".note")).toContainText("Իմ խմբագրված");
   await page.locator("#sound").click();
+  await page.locator("#audio-settings").click();
   await page.locator("#volume").fill("70");
   await page.locator("#mute").click();
-  await expect(page.locator("#volume")).toHaveValue("0");
+  await expect(page.locator("#volume")).toHaveValue("70");
   await page.locator("#close-audio").click();
   await page.locator('[data-page="progress"]').first().click();
   await expect(page.locator(".progress-stats")).toContainText("2");

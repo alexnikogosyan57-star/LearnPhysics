@@ -1,0 +1,545 @@
+{
+  "sourceCommit": "1fdf44506f03f5a7c9bc660390416e8704424105",
+  "units": [
+    {
+      "order": 1,
+      "id": "charge",
+      "title": "Լիցք, ատոմ և հոսանք",
+      "source": "src/learning/topics.js",
+      "line": 4,
+      "locale": "hy-AM",
+      "lessons": [
+        {
+          "order": 1,
+          "id": "charges",
+          "slug": "charges",
+          "route": "#lesson/charges",
+          "title": "Էլեկտրական լիցք",
+          "code": "E01",
+          "persistedProgressKey": "learning.lessons.charges",
+          "playable": true
+        },
+        {
+          "order": 2,
+          "id": "atom",
+          "slug": "atom",
+          "route": "#lesson/atom",
+          "title": "Ատոմի կառուցվածքը և էլեկտրոնները",
+          "code": "E02",
+          "persistedProgressKey": "learning.lessons.atom",
+          "playable": true
+        },
+        {
+          "order": 3,
+          "id": "electrification",
+          "slug": "electrification",
+          "route": "#lesson/electrification",
+          "title": "Էլեկտրականացում",
+          "code": "E03",
+          "persistedProgressKey": "learning.lessons.electrification",
+          "playable": true
+        },
+        {
+          "order": 4,
+          "id": "conductors",
+          "slug": "conductors",
+          "route": "#lesson/conductors",
+          "title": "Հաղորդիչներ և մեկուսիչներ",
+          "code": "E04",
+          "persistedProgressKey": "learning.lessons.conductors",
+          "playable": true
+        },
+        {
+          "order": 5,
+          "id": "electric-field",
+          "slug": "electric-field",
+          "route": "#lesson/electric-field",
+          "title": "Էլեկտրական դաշտ",
+          "code": "E05",
+          "persistedProgressKey": "learning.lessons.electric-field",
+          "playable": true
+        },
+        {
+          "order": 6,
+          "id": "current-origin",
+          "slug": "current-origin",
+          "route": "#lesson/current-origin",
+          "title": "Էլեկտրական հոսանքի առաջացումը",
+          "code": "E06",
+          "persistedProgressKey": "learning.lessons.current-origin",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "order": 2,
+      "id": "cell",
+      "title": "Գալվանական տարրեր և աղբյուրներ",
+      "source": "src/learning/topics.js",
+      "line": 5,
+      "locale": "hy-AM",
+      "lessons": [
+        {
+          "order": 1,
+          "id": "sources",
+          "slug": "sources",
+          "route": "#lesson/sources",
+          "title": "Էլեկտրական հոսանքի աղբյուրներ",
+          "code": "E07",
+          "persistedProgressKey": "learning.lessons.sources",
+          "playable": true
+        },
+        {
+          "order": 2,
+          "id": "galvanic",
+          "slug": "galvanic",
+          "route": "#lesson/galvanic",
+          "title": "Գալվանական տարրի կառուցվածքը",
+          "code": "E08",
+          "persistedProgressKey": "learning.lessons.galvanic",
+          "playable": true
+        },
+        {
+          "order": 3,
+          "id": "electrolytes",
+          "slug": "electrolytes",
+          "route": "#lesson/electrolytes",
+          "title": "Էլեկտրոդներ և էլեկտրոլիտ",
+          "code": "E09",
+          "persistedProgressKey": "learning.lessons.electrolytes",
+          "playable": true
+        },
+        {
+          "order": 4,
+          "id": "anode-cathode",
+          "slug": "anode-cathode",
+          "route": "#lesson/anode-cathode",
+          "title": "Անոդ և կաթոդ",
+          "code": "E10",
+          "persistedProgressKey": "learning.lessons.anode-cathode",
+          "playable": true
+        },
+        {
+          "order": 5,
+          "id": "charge-transport",
+          "slug": "charge-transport",
+          "route": "#lesson/charge-transport",
+          "title": "Էլեկտրոնների և իոնների շարժումը",
+          "code": "E11",
+          "persistedProgressKey": "learning.lessons.charge-transport",
+          "playable": true
+        },
+        {
+          "order": 6,
+          "id": "cell-assembly",
+          "slug": "cell-assembly",
+          "route": "#lesson/cell-assembly",
+          "title": "Գալվանական տարրի վիրտուալ հավաքում",
+          "code": "E12",
+          "persistedProgressKey": "learning.lessons.cell-assembly",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "order": 3,
+      "id": "circuit",
+      "title": "Մասերից՝ աշխատող շղթա",
+      "source": "src/learning/topics.js",
+      "line": 6,
+      "locale": "hy-AM",
+      "lessons": [
+        {
+          "order": 1,
+          "id": "circuits",
+          "slug": "circuits",
+          "route": "#lesson/circuits",
+          "title": "Էլեկտրական շղթայի հիմնական մասերը",
+          "code": "E13",
+          "persistedProgressKey": "learning.lessons.circuits",
+          "playable": true
+        },
+        {
+          "order": 2,
+          "id": "open-closed",
+          "slug": "open-closed",
+          "route": "#lesson/open-closed",
+          "title": "Բաց և փակ շղթաներ",
+          "code": "E14",
+          "persistedProgressKey": "learning.lessons.open-closed",
+          "playable": true
+        },
+        {
+          "order": 3,
+          "id": "circuit-parts",
+          "slug": "circuit-parts",
+          "route": "#lesson/circuit-parts",
+          "title": "Մարտկոց, լամպ և անջատիչ",
+          "code": "E14ա",
+          "persistedProgressKey": "learning.lessons.circuit-parts",
+          "playable": true
+        },
+        {
+          "order": 4,
+          "id": "switch-types",
+          "slug": "switch-types",
+          "route": "#lesson/switch-types",
+          "title": "Անջատիչների տեսակները",
+          "code": "E15",
+          "persistedProgressKey": "learning.lessons.switch-types",
+          "playable": true
+        },
+        {
+          "order": 5,
+          "id": "symbols",
+          "slug": "symbols",
+          "route": "#lesson/symbols",
+          "title": "Շղթայի պայմանական նշանները",
+          "code": "E16",
+          "persistedProgressKey": "learning.lessons.symbols",
+          "playable": true
+        },
+        {
+          "order": 6,
+          "id": "wiring",
+          "slug": "wiring",
+          "route": "#lesson/wiring",
+          "title": "Հաղորդալարեր և միացումներ",
+          "code": "E17",
+          "persistedProgressKey": "learning.lessons.wiring",
+          "playable": true
+        },
+        {
+          "order": 7,
+          "id": "first-circuit",
+          "slug": "first-circuit",
+          "route": "#lesson/first-circuit",
+          "title": "Հավաքիր աշխատող շղթա",
+          "code": "E18",
+          "persistedProgressKey": "learning.lessons.first-circuit",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "order": 4,
+      "id": "quantities",
+      "title": "Հոսանք, լարում և չափումներ",
+      "source": "src/learning/topics.js",
+      "line": 7,
+      "locale": "hy-AM",
+      "lessons": [
+        {
+          "order": 1,
+          "id": "current",
+          "slug": "current",
+          "route": "#lesson/current",
+          "title": "Էլեկտրական հոսանքի ուժ",
+          "code": "E19",
+          "persistedProgressKey": "learning.lessons.current",
+          "playable": true
+        },
+        {
+          "order": 2,
+          "id": "ammeter",
+          "slug": "ammeter",
+          "route": "#lesson/ammeter",
+          "title": "Ամպերաչափ",
+          "code": "E20",
+          "persistedProgressKey": "learning.lessons.ammeter",
+          "playable": true
+        },
+        {
+          "order": 3,
+          "id": "voltage",
+          "slug": "voltage",
+          "route": "#lesson/voltage",
+          "title": "Էլեկտրական լարում",
+          "code": "E21",
+          "persistedProgressKey": "learning.lessons.voltage",
+          "playable": true
+        },
+        {
+          "order": 4,
+          "id": "voltmeter",
+          "slug": "voltmeter",
+          "route": "#lesson/voltmeter",
+          "title": "Վոլտաչափ",
+          "code": "E22",
+          "persistedProgressKey": "learning.lessons.voltmeter",
+          "playable": true
+        },
+        {
+          "order": 5,
+          "id": "resistance",
+          "slug": "resistance",
+          "route": "#lesson/resistance",
+          "title": "Դիմադրություն",
+          "code": "E23",
+          "persistedProgressKey": "learning.lessons.resistance",
+          "playable": true
+        },
+        {
+          "order": 6,
+          "id": "ohm",
+          "slug": "ohm",
+          "route": "#lesson/ohm",
+          "title": "Օհմի օրենքը",
+          "code": "E24",
+          "persistedProgressKey": "learning.lessons.ohm",
+          "playable": true
+        },
+        {
+          "order": 7,
+          "id": "meters",
+          "slug": "meters",
+          "route": "#lesson/meters",
+          "title": "Չափիր և բացատրի՛ր",
+          "code": "E25",
+          "persistedProgressKey": "learning.lessons.meters",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "order": 5,
+      "id": "connections",
+      "title": "Հաջորդական և զուգահեռ կապեր",
+      "source": "src/learning/topics.js",
+      "line": 8,
+      "locale": "hy-AM",
+      "lessons": [
+        {
+          "order": 1,
+          "id": "series",
+          "slug": "series",
+          "route": "#lesson/series",
+          "title": "Հաջորդական և զուգահեռ միացումներ",
+          "code": "E26",
+          "persistedProgressKey": "learning.lessons.series",
+          "playable": true
+        },
+        {
+          "order": 2,
+          "id": "parallel",
+          "slug": "parallel",
+          "route": "#lesson/parallel",
+          "title": "Զուգահեռ միացում",
+          "code": "E27",
+          "persistedProgressKey": "learning.lessons.parallel",
+          "playable": true
+        },
+        {
+          "order": 3,
+          "id": "series-current",
+          "slug": "series-current",
+          "route": "#lesson/series-current",
+          "title": "Հոսանքի ուժը հաջորդական շղթայում",
+          "code": "E28",
+          "persistedProgressKey": "learning.lessons.series-current",
+          "playable": true
+        },
+        {
+          "order": 4,
+          "id": "series-voltage",
+          "slug": "series-voltage",
+          "route": "#lesson/series-voltage",
+          "title": "Լարումը հաջորդական շղթայում",
+          "code": "E29",
+          "persistedProgressKey": "learning.lessons.series-voltage",
+          "playable": true
+        },
+        {
+          "order": 5,
+          "id": "branch-current",
+          "slug": "branch-current",
+          "route": "#lesson/branch-current",
+          "title": "Հոսանքի բաշխումը ճյուղերում",
+          "code": "E30",
+          "persistedProgressKey": "learning.lessons.branch-current",
+          "playable": true
+        },
+        {
+          "order": 6,
+          "id": "equivalent-resistance",
+          "slug": "equivalent-resistance",
+          "route": "#lesson/equivalent-resistance",
+          "title": "Համարժեք դիմադրություն",
+          "code": "E31",
+          "persistedProgressKey": "learning.lessons.equivalent-resistance",
+          "playable": true
+        },
+        {
+          "order": 7,
+          "id": "compare-circuits",
+          "slug": "compare-circuits",
+          "route": "#lesson/compare-circuits",
+          "title": "Համեմատիր երկու շղթա",
+          "code": "E32",
+          "persistedProgressKey": "learning.lessons.compare-circuits",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "order": 6,
+      "id": "electric-energy",
+      "title": "Էլեկտրական աշխատանք և էներգիա",
+      "source": "src/learning/topics.js",
+      "line": 9,
+      "locale": "hy-AM",
+      "lessons": [
+        {
+          "order": 1,
+          "id": "electric-work",
+          "slug": "electric-work",
+          "route": "#lesson/electric-work",
+          "title": "Հոսանքի աշխատանքը",
+          "code": "E33",
+          "persistedProgressKey": "learning.lessons.electric-work",
+          "playable": true
+        },
+        {
+          "order": 2,
+          "id": "power",
+          "slug": "power",
+          "route": "#lesson/power",
+          "title": "Էլեկտրական հզորություն",
+          "code": "E34",
+          "persistedProgressKey": "learning.lessons.power",
+          "playable": true
+        },
+        {
+          "order": 3,
+          "id": "electric-energy",
+          "slug": "electric-energy",
+          "route": "#lesson/electric-energy",
+          "title": "Էլեկտրական էներգիա",
+          "code": "E35",
+          "persistedProgressKey": "learning.lessons.electric-energy",
+          "playable": true
+        },
+        {
+          "order": 4,
+          "id": "joule-heating",
+          "slug": "joule-heating",
+          "route": "#lesson/joule-heating",
+          "title": "Հոսանքի ջերմային ազդեցությունը",
+          "code": "E36",
+          "persistedProgressKey": "learning.lessons.joule-heating",
+          "playable": true
+        },
+        {
+          "order": 5,
+          "id": "lamp-power",
+          "slug": "lamp-power",
+          "route": "#lesson/lamp-power",
+          "title": "Լամպի հզորությունն ու լուսարձակումը",
+          "code": "E37",
+          "persistedProgressKey": "learning.lessons.lamp-power",
+          "playable": true
+        },
+        {
+          "order": 6,
+          "id": "energy-experiment",
+          "slug": "energy-experiment",
+          "route": "#lesson/energy-experiment",
+          "title": "Վիրտուալ էներգետիկ փորձ",
+          "code": "E38",
+          "persistedProgressKey": "learning.lessons.energy-experiment",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "order": 7,
+      "id": "electronics",
+      "title": "Լրացուցիչ էլեկտրոնիկա",
+      "source": "src/learning/topics.js",
+      "line": 10,
+      "locale": "hy-AM",
+      "lessons": [
+        {
+          "order": 1,
+          "id": "components",
+          "slug": "components",
+          "route": "#lesson/components",
+          "title": "Ռեզիստորներ և էլեկտրոնային բաղադրիչներ",
+          "code": "E39",
+          "persistedProgressKey": "learning.lessons.components",
+          "playable": true
+        },
+        {
+          "order": 2,
+          "id": "led",
+          "slug": "led",
+          "route": "#lesson/led",
+          "title": "Լուսադիոդներ",
+          "code": "E40",
+          "persistedProgressKey": "learning.lessons.led",
+          "playable": true
+        },
+        {
+          "order": 3,
+          "id": "diode",
+          "slug": "diode",
+          "route": "#lesson/diode",
+          "title": "Դիոդի աշխատանքի սկզբունքը",
+          "code": "E41",
+          "persistedProgressKey": "learning.lessons.diode",
+          "playable": true
+        },
+        {
+          "order": 4,
+          "id": "capacitor",
+          "slug": "capacitor",
+          "route": "#lesson/capacitor",
+          "title": "Կոնդենսատոր",
+          "code": "E42",
+          "persistedProgressKey": "learning.lessons.capacitor",
+          "playable": true
+        },
+        {
+          "order": 5,
+          "id": "transistor",
+          "slug": "transistor",
+          "route": "#lesson/transistor",
+          "title": "Տրանզիստորի հիմունքները",
+          "code": "E43",
+          "persistedProgressKey": "learning.lessons.transistor",
+          "playable": true
+        },
+        {
+          "order": 6,
+          "id": "breadboard",
+          "slug": "breadboard",
+          "route": "#lesson/breadboard",
+          "title": "Փորձասալ",
+          "code": "E44",
+          "persistedProgressKey": "learning.lessons.breadboard",
+          "playable": true
+        },
+        {
+          "order": 7,
+          "id": "project",
+          "slug": "project",
+          "route": "#lesson/project",
+          "title": "LED շղթայի կառուցում",
+          "code": "E45",
+          "persistedProgressKey": "learning.lessons.project",
+          "playable": true
+        },
+        {
+          "order": 8,
+          "id": "electronics-project",
+          "slug": "electronics-project",
+          "route": "#lesson/electronics-project",
+          "title": "Պարզ էլեկտրոնային նախագիծ",
+          "code": "E46",
+          "persistedProgressKey": "learning.lessons.electronics-project",
+          "playable": true
+        }
+      ]
+    }
+  ]
+}

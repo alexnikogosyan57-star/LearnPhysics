@@ -38,7 +38,7 @@ test('activity scores: numerical comma, wrong units/text rejected, partial match
 test('all E01–E46 are backed by actual investigations; ordered mastery unlocks exactly the next lesson',async()=>{
  const {topics}=await import('../src/learning/topics.js');const {investigations}=await import('../src/science/content.js');const {foundations}=await import('../src/learning/foundations-content.js');const {initializeProgress,recordResult,canOpen}=await import('../src/learning/progression.js');
  const lessons=topics.find(t=>t.id==='electricity').lessons;
- assert.equal(lessons.length,47);assert.equal(new Set(lessons.map(l=>l.id)).size,47);
+ assert.equal(lessons.length,48);assert.equal(new Set(lessons.map(l=>l.id)).size,48);
  for(let n=1;n<=46;n++){const code=`E${String(n).padStart(2,'0')}`,l=lessons.find(l=>l.code===code);assert.ok(l,code);assert.equal(l.playable,true);assert.ok([...investigations,...foundations].some(x=>x.id===l.id));assert.equal(l.source,null);assert.equal(l.classification,n>=39?'supplementary-electronics':'prerequisite-foundation');}
  const d={};initializeProgress(d,topics);
  for(let i=0;i<lessons.length;i++){const l=lessons[i];assert.ok(canOpen(d,l.id,topics),l.id);if(i+1<lessons.length)assert.equal(canOpen(d,lessons[i+1].id,topics),false);recordResult(d,l.id,7,10,{},topics);if(i+1<lessons.length)assert.ok(canOpen(d,lessons[i+1].id,topics));}
