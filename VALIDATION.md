@@ -1,3 +1,13 @@
+# Focused learning trail from supplied visual references — 2026-10-16
+
+Used the user's Duolingo screenshots as a layout reference, with an original olive trail, a compact robot dialogue, one continue action, a solid current-unit header, dotted winding connections and alternating desktop lesson captions. Mobile retains a readable single-sided sequence. Only the selected unit receives the strong header treatment; other units remain collapsible. Earned progress comes from existing records. No lesson IDs, scoring, saved-data schema, locking rules or removed navigation items changed.
+
+All 35 individual Node checks passed. Before the final responsive-coordinate adjustment, 12 selected browser cases passed (six widths, three lesson exit/reentry cases, three motion cases). After it, nine responsive/mascot cases and five keyboard/accessibility cases passed. The first accessibility invocation overlapped another runner and lost its shared Vite server; it failed, then all five passed with an independently started server. This is selected coverage, not a full-suite claim.
+
+Build and standalone export passed. Both final artifacts were served over HTTP and checked at 320, 390, 601, 650, 768, 1024, 1440 and 1920 px: no horizontal overflow, connector/node horizontal centres aligned within 1.1 px, the continue action opened the actual charge investigation, and reduced motion stopped running effects. No page errors were observed. Final desktop/mobile screenshots were visually inspected, including readable Armenian text, the transparent robot and visible second lesson. `git diff --check` passed. Public Pages HTTP availability remains unverified from this environment; branch publication is a separate operation.
+
+---
+
 # Research-informed expressive motion — 2026-10-16
 
 Reviewed the official Motion and Google Material Web public repositories after direct Duolingo/search/documentation requests were blocked by the CONNECT proxy. Exact sources, consulted commits, access limits and original design decisions are in [motion-design-research.md](docs/motion-design-research.md). No animation library or copied mascot/artwork was added.
