@@ -1,3 +1,4 @@
+import {motionTiming,motionEase,settleFrames} from './ui/motion-presets.js';
 /** Short, event-driven transitions. Never drive physics with a UI animation. */
 let previous;
 const preference = matchMedia("(prefers-reduced-motion: reduce)");
@@ -7,7 +8,7 @@ export function animate(element, frames, options = {}) {
     return;
   const animation = element.animate(frames, {
     duration: 240,
-    easing: "cubic-bezier(.2,.7,.2,1)",
+    easing: motionEase.standard,
     ...options,
   });
   active.add(animation);
@@ -30,7 +31,7 @@ function revealSections(root){
   let order=0;
   for(const entry of entries)if(entry.isIntersecting){
    revealObserver.unobserve(entry.target);
-   if(entry.target.isConnected)reveal(entry.target,order++*55);
+   if(entry.target.isConnected){reveal(entry.target,order++*motionTiming.stagger);drawLearningPath(entry.target);}
   }
  },{threshold:.08});
  elements.forEach(el=>revealObserver.observe(el));
@@ -52,7 +53,13 @@ export function animateRender(root,state){
   const target=root.querySelector('[data-mascot-state]')
    ?root.querySelector('.student-work')||root.querySelector('.robot-dialogue')||root.querySelector('.welcome-dialogue')
    :root.querySelector('.lesson-content')||root.querySelector('.page-heading');
-  reveal(target);
+  const forward=!previous||!width||parseFloat(width)>=parseFloat(previous.progress||0);
+  animate(target,[{opacity:.6,transform:`translateX(${forward?12:-12}px)`},{opacity:1,transform:'translateX(0)'}],{duration:motionTiming.question,easing:motionEase.arrive});
+  const choices=root.querySelectorAll('.student-work .answer');
+  [...choices].slice(0,6).forEach((choice,i)=>animate(choice,[{opacity:.5,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:220,delay:i*25}));
+  if(root.querySelector('.learning-summary')||root.querySelector('.concept-results')){
+   [...root.querySelectorAll('.student-work .earned-stars .earned svg')].forEach((star,i)=>animate(star,settleFrames(.6),{duration:motionTiming.achievement,delay:i*90,easing:'linear'}));
+  }
   // The guide's media and its ancestors never fade, scale or move.
   const question=root.querySelector('.robot-dialogue h2');
   if(question)animate(question,[{opacity:.4,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:280});
@@ -63,6 +70,7 @@ export function animateRender(root,state){
  }
  if(feedback&&(!previous||previous.response!==feedback)){
   animate(response,[{opacity:.35,transform:'translateY(9px)'},{opacity:1,transform:'translateY(0)'}],{duration:320});
+  feedbackMark(response);
   if(response?.classList.contains('correct'))animate(response,[{boxShadow:'inset 0 0 0 2px #88b879'},{boxShadow:'inset 0 0 0 0px transparent'}],{duration:650});
  }
  if(previous&&progress&&previous.progress!==width){
@@ -73,6 +81,7 @@ export function animateRender(root,state){
   animate(root.querySelector('.readouts,.science-readouts,#circuit-status'),[{backgroundColor:'#dcebcf'},{backgroundColor:'#f2f5ed'}],{duration:650});
   const latest=root.querySelector('.measurement-journal p:last-child');reveal(latest);
  }
+ if(response?.classList.contains('assessment-feedback')&&!response.querySelector('.motion-feedback-mark'))feedbackMark(response,false);
  previous={...state,prompt,composition,selectedText:selection,response:feedback,journal,progress:width};
 }
 // Event delegation survives the app's DOM updates and adds no state or sound.
@@ -92,7 +101,7 @@ document.addEventListener('toggle',event=>{
  const details=event.target;
  if(!(details instanceof HTMLDetailsElement)||!details.open||preference.matches)return;
  const rows=[...details.querySelectorAll('.unit-lesson')].slice(0,7);
- if(rows.length)rows.forEach((node,i)=>reveal(node,i*35));
+ if(rows.length){rows.forEach((node,i)=>reveal(node,i*35));drawLearningPath(details);}
  else animateDisclosure(details);
 },true);
 export function animateDisclosure(details) {
@@ -155,4 +164,35 @@ document.addEventListener('change',event=>{
  const control=event.target;
  if(!control.matches('select,input[type="checkbox"],input[type="radio"]'))return;
  animate(control.closest('label')||control,[{backgroundColor:'#edf5e4'},{backgroundColor:'transparent'}],{duration:360});
+});
+
+function feedbackMark(panel,play=true){
+ if(!panel?.classList.contains('assessment-feedback'))return;
+ let mark=panel.querySelector('.motion-feedback-mark');
+ if(!mark){
+  mark=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  mark.setAttribute('viewBox','0 0 32 32');mark.setAttribute('aria-hidden','true');mark.setAttribute('focusable','false');mark.classList.add('motion-feedback-mark');
+  const shape=document.createElementNS('http://www.w3.org/2000/svg','path');
+  shape.setAttribute('d',panel.classList.contains('correct')?'M8 16l5 5L24 10':'M24 13a9 9 0 1 0 0 8M24 7v6h-6');
+  shape.setAttribute('fill','none');shape.setAttribute('stroke','currentColor');shape.setAttribute('stroke-width','2.5');shape.setAttribute('stroke-linecap','round');shape.setAttribute('stroke-linejoin','round');mark.append(shape);panel.prepend(mark);
+ }
+ if(!play)return;
+ if(panel.classList.contains('correct'))animate(mark,settleFrames(.7),{duration:motionTiming.feedback,easing:'linear'});
+ else animate(mark,[{transform:'rotate(-18deg)',opacity:.5},{transform:'rotate(0deg)',opacity:1}],{duration:motionTiming.feedback,easing:motionEase.arrive});
+ const path=mark.querySelector('path'),length=path.getTotalLength();
+ animate(path,[{strokeDasharray:`${length}`,strokeDashoffset:length},{strokeDasharray:`${length}`,strokeDashoffset:0}],{duration:280,delay:60,easing:motionEase.standard});
+}
+function drawLearningPath(section){
+ if(preference.matches)return;
+ for(const path of section.querySelectorAll('.path-connector path')){
+  if(!path.getClientRects().length)continue;
+  const length=path.getTotalLength();if(!length)continue;
+  animate(path,[{strokeDasharray:`${length}`,strokeDashoffset:length,opacity:.3},{strokeDasharray:`${length}`,strokeDashoffset:0,opacity:1}],{duration:620,easing:motionEase.arrive});
+ }
+}
+document.addEventListener('pointerup',event=>{
+ const button=event.target.closest('button');
+ if(!button||button.disabled||button.getAttribute('aria-disabled')==='true')return;
+ const icon=button.querySelector('svg');
+ if(icon)animate(icon,settleFrames(.9),{duration:260,easing:'linear'});
 });

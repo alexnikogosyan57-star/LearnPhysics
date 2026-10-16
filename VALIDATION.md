@@ -1,3 +1,15 @@
+# Research-informed expressive motion — 2026-10-16
+
+Reviewed the official Motion and Google Material Web public repositories after direct Duolingo/search/documentation requests were blocked by the CONNECT proxy. Exact sources, consulted commits, access limits and original design decisions are in [motion-design-research.md](docs/motion-design-research.md). No animation library or copied mascot/artwork was added.
+
+Introduced distinct original motion recipes for directional questions, ordered choices, drawn correct/retry marks, earned-star settling, visible learning-path drawing and small control-icon release gestures. Decorative marks accompany explicit Armenian text and retain static visibility with reduced motion. Improved answer-selection indicators and tactile surfaces. Moved sound controls into the desktop rail and mobile header after visual inspection found the prior floating controls obscuring feedback text.
+
+**35 individual Node checks passed.** An initial selected 23-case browser run passed for complete checkpoint/review, motion, delayed mascot media, keyboard and responsive layouts. Following the header/selection refinement, all 13 affected browser cases passed, including the complete 25-task assessment, sound activation/volume persistence, keyboard-only lesson completion and six screen sizes. This is selected coverage, not a new full-suite claim.
+
+Build and standalone export passed. Both final production artifacts were independently served over HTTP: incorrect and correct answers produced distinct decorative marks, original responses remained `[false,true]`, no animated element contained the mascot, 390/768/1440 px layouts had no document overflow, and live reduced motion stopped all running effects while leaving the static feedback mark visible. The mobile sound controls stayed in the header (y < 90 px). No page errors were observed; final mobile feedback was visually inspected. `git diff --check` passed. Student data, official scores and physical models were not changed.
+
+---
+
 # Detailed interaction motion — 2026-10-16
 
 Extended motion to text/icon/navigation buttons, keyboard activations, field focus, checkbox/select changes, all disclosure contents, mobile menu items, sound activation and running-experiment controls. Range tracks fill from their actual min/max/value; their displayed labels respond to real input. Reset synchronizes the track without changing physics. Text-button effects remain within their bounds without clipping arrow icons. All effects follow reduced motion, including live changes; mascot transforms and simulation calculations are untouched.

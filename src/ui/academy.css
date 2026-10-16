@@ -268,3 +268,39 @@ input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{box-shadow:0 
 @media(prefers-reduced-motion:reduce){input[type=checkbox],input[type=radio]{transition:none!important}}
 .text-button{overflow:visible}
 .text-button>.interaction-ripple{inset:0!important;width:100%!important;height:100%!important;border-radius:8px}
+/* Distinct gestures for choosing, understanding and earning a result. */
+:root{--motion-arrive:cubic-bezier(.05,.7,.1,1);--motion-standard:cubic-bezier(.2,0,0,1)}
+.button:not(.secondary){box-shadow:inset 0 1px 0 #ffffff70}
+.button.secondary{box-shadow:inset 0 1px 0 #fff;border-bottom-width:4px}
+.answer{padding-inline-end:42px}
+.answer.selected::after{content:'';position:absolute;right:16px;top:22px;width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px #d7edf7}
+.motion-feedback-mark{display:block;float:right;width:42px;height:42px;margin:0 0 10px 14px;padding:7px;border-radius:50%;color:#427b35;background:#e2efd9;transform-origin:center;pointer-events:none;flex-shrink:0}
+.assessment-feedback.incorrect .motion-feedback-mark{color:#ab604a;background:#f9e2d9}
+.assessment-feedback{border-radius:14px;border:1px solid #d6e6ce;border-top-width:3px;box-shadow:0 3px 0 #e7efdf}
+.assessment-feedback.incorrect{border-color:#edc7bc;box-shadow:0 3px 0 #f8e4de}
+.robot-dialogue{transition:border-color 200ms var(--motion-standard),box-shadow 200ms var(--motion-standard)}
+.robot-dialogue:focus-within{border-color:#a0b58e}
+.unit-chevron{display:inline-block;transition:transform 240ms var(--motion-arrive)}
+.path-unit[open]>summary .unit-chevron{transform:rotate(180deg)}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){
+ .lesson-node:not([aria-disabled=true]):hover>svg{transform:rotate(-6deg) scale(1.08);transition:transform 220ms var(--motion-arrive)}
+ .unit-lesson.completed .lesson-node:hover>svg{transform:rotate(0deg) scale(1.12)}
+ .button:not(:disabled):active{box-shadow:inset 0 2px 0 #00000010}
+ .path-unit>summary:hover{background:#f8fbf4}
+}
+@media(prefers-reduced-motion:reduce){.robot-dialogue,.unit-chevron,.lesson-node>svg{transition:none!important}.lesson-node:hover>svg{transform:none!important}}
+
+/* Sound belongs in the chrome, never over the student's explanation. */
+.audio-controls{position:static;order:3;margin-top:auto;align-self:flex-start;z-index:auto}
+@media(max-width:900px){
+ .audio-controls{order:0;margin-top:0;align-self:auto;padding:3px;gap:2px;flex-shrink:0}
+ .audio-controls .icon-button{width:40px;min-width:40px;height:44px}
+}
+@media(max-width:600px){
+ .site-header{padding-inline:12px}
+ .header-inner{gap:8px}
+ .brand{font-size:16px;line-height:1.35;gap:8px}
+ .brand-second{display:block;font-size:11px}
+ .brand-symbol svg{width:28px;height:28px}
+ .nav-toggle{flex-shrink:0}
+}
