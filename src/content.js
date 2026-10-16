@@ -1,5 +1,4 @@
 export const navigation = [
- ["home", "Գլխավոր", "house"],
  ["path", "Թեմաներ", "route"],
  ["progress", "Իմ առաջընթացը", "chart-no-axes-combined"],
  ["notebook", "Հետազոտողի տետր", "notebook-pen"],

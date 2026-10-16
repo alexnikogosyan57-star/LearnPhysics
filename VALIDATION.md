@@ -1,3 +1,9 @@
+# Remove Study navigation item — 2026-10-16
+
+Removed the screenshot's «Ուսում» item from the shared navigation registry, so it is absent from both desktop and mobile menus. The remaining entries are topics, progress and notebook. Build/standalone export and all six navigation/layout browser cases (1920, 1440, 1366, 1024, 768 and 390 px) passed. A direct registry check confirmed the removed entry is absent. `git diff --check` passed. No grading, lesson or student-storage changes were made.
+
+---
+
 # Expanded motion design — 2026-10-16
 
 Added staggered page/section entrances on navigation and scroll, fresh question transitions, animated selections and feedback, progress-fill movement, measurement highlights, tactile press ripples, topic/nav hover responses, a subtle current-lesson ring, slow brand motion and dialog entrances. The mascot and its ancestors are never faded, transformed or scaled by these effects. Simulation calculations, controls, scores and stored data are unchanged. All added effects respect reduced motion, including live preference changes.
