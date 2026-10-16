@@ -38,6 +38,7 @@ function revealSections(root){
 preference.addEventListener('change',()=>{if(preference.matches)revealObserver?.disconnect();});
 export function animateRender(root,state){
  for(const animation of active)animation.cancel();
+ syncControlMotion(root);
  const prompt=root.querySelector('.robot-dialogue h2')?.textContent||'';
  const composition=(root.querySelector('h1')?.textContent||'')+':'+!!root.querySelector('.topic-options');
  const selection=[...root.querySelectorAll('.answer.selected')].map(el=>el.textContent).join('|');
@@ -77,7 +78,7 @@ export function animateRender(root,state){
 // Event delegation survives the app's DOM updates and adds no state or sound.
 document.addEventListener('pointerdown',event=>{
  if(preference.matches||event.button!==0)return;
- const button=event.target.closest('button.button,button.answer,button.lesson-node');
+ const button=event.target.closest('button.button,button.answer,button.lesson-node,button.icon-button,button.text-button,button.nav-item');
  if(!button||button.disabled||button.getAttribute('aria-disabled')==='true')return;
  const rect=button.getBoundingClientRect(),ripple=document.createElement('span');
  ripple.className='interaction-ripple';ripple.setAttribute('aria-hidden','true');
@@ -90,7 +91,9 @@ document.addEventListener('pointerdown',event=>{
 document.addEventListener('toggle',event=>{
  const details=event.target;
  if(!(details instanceof HTMLDetailsElement)||!details.open||preference.matches)return;
- for(const [i,node] of [...details.querySelectorAll('.unit-lesson')].slice(0,7).entries())reveal(node,i*35);
+ const rows=[...details.querySelectorAll('.unit-lesson')].slice(0,7);
+ if(rows.length)rows.forEach((node,i)=>reveal(node,i*35));
+ else animateDisclosure(details);
 },true);
 export function animateDisclosure(details) {
   if (!details.open) return;
@@ -109,3 +112,47 @@ export function animateSaved(element) {
     { opacity: 1, transform: "translateY(0)" },
   ]);
 }
+
+// Fine-grained control motion follows real DOM state, never simulated readings.
+function syncControlMotion(root=document){
+ for(const input of root.querySelectorAll('input[type="range"]')){
+  const min=input.min===''?0:Number(input.min),max=input.max===''?100:Number(input.max),value=Number(input.value);
+  input.style.setProperty('--range-fill',`${max>min?Math.max(0,Math.min(100,(value-min)/(max-min)*100)):0}%`);
+ }
+ for(const button of root.querySelectorAll('#run,#science-run,#pendulum-run,#rc-start')){
+  button.dataset.motionRunning=String(!!button.querySelector('.lucide-pause')||button.textContent.includes('Դադար'));
+ }
+}
+const controlPulses=new WeakMap();
+document.addEventListener('input',event=>{
+ const input=event.target;
+ if(!input.matches('input[type="range"]'))return;
+ syncControlMotion(input.closest('main,dialog')||document);
+ requestAnimationFrame(()=>{
+  const live=input.id?document.getElementById(input.id):input;
+  if(!live?.isConnected)return;
+  const host=live.closest('label')||(live.id?document.querySelector(`label[for="${CSS.escape(live.id)}"]`):null)||live.parentElement;
+  const label=host?.querySelector('strong,output,[data-parameter-label]'),now=performance.now();
+  if(label&&now-(controlPulses.get(label)||0)>140){
+   controlPulses.set(label,now);
+   animate(label,[{color:'#285b20',transform:'scale(1.04)'},{color:'inherit',transform:'scale(1)'}],{duration:200});
+  }
+ });
+},true);
+document.addEventListener('focusin',event=>{
+ const input=event.target;
+ if(!input.matches('input:not([type="range"]):not([type="checkbox"]),textarea,select'))return;
+ animate(input,[{boxShadow:'0 0 0 0 rgba(88,99,77,0)'},{boxShadow:'0 0 0 5px rgba(88,99,77,.12)'},{boxShadow:'0 0 0 2px rgba(88,99,77,.05)'}],{duration:400});
+});
+document.addEventListener('keydown',event=>{
+ if(event.repeat||!['Enter',' '].includes(event.key))return;
+ const button=event.target.closest('button');
+ if(!button||button.disabled)return;
+ animate(button.querySelector('svg'),[{opacity:.55},{opacity:1}],{duration:180});
+});
+document.addEventListener('click',()=>requestAnimationFrame(()=>syncControlMotion()));
+document.addEventListener('change',event=>{
+ const control=event.target;
+ if(!control.matches('select,input[type="checkbox"],input[type="radio"]'))return;
+ animate(control.closest('label')||control,[{backgroundColor:'#edf5e4'},{backgroundColor:'transparent'}],{duration:360});
+});

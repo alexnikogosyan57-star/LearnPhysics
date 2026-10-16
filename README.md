@@ -91,3 +91,5 @@ The circuit experiments no longer display the add-component palette or the compo
 ## Motion design
 
 Pages, topic lists and learning stages enter with short staggered transitions. Choices, feedback, measurements and progress respond to actual student events; navigation, controls and the current lesson have restrained motion. The robot media and physical simulation stay independent of UI effects. Reduced motion disables the added effects and cancels ongoing transitions.
+
+Motion also covers focus, disclosure contents, mobile menus, real slider fills and value changes, checkbox/select choices, sound activation and running-experiment controls. UI indicators derive from actual control state; no independent animated physics values are introduced.

@@ -1,3 +1,13 @@
+# Detailed interaction motion — 2026-10-16
+
+Extended motion to text/icon/navigation buttons, keyboard activations, field focus, checkbox/select changes, all disclosure contents, mobile menu items, sound activation and running-experiment controls. Range tracks fill from their actual min/max/value; their displayed labels respond to real input. Reset synchronizes the track without changing physics. Text-button effects remain within their bounds without clipping arrow icons. All effects follow reduced motion, including live changes; mascot transforms and simulation calculations are untouched.
+
+Build and standalone export passed, and all 35 individual model/progression tests passed. Eighteen selected motion, keyboard, responsive navigation and circuit cases passed. After final range-label refinements, ten affected motion/navigation/checkpoint cases passed, including the complete 25-task assessment. No full-suite claim is made.
+
+Final production index and standalone HTML were independently exercised over HTTP: speed 4 on the 1–6 slider produced an actual 60% track fill and animated value label, running/paused indicators followed the real experiment state, and distance/time remained consistent within the existing independently rounded one-decimal display precision. Disclosure, volume controls, live reduced-motion cancellation and 390/768/1440 px layouts passed with no observed page errors or transformed mascot/ancestor. The first production assertion was too strict for the existing display rounding and was corrected to its mathematical rounding bound. `git diff --check` passed.
+
+---
+
 # Remove Study navigation item — 2026-10-16
 
 Removed the screenshot's «Ուսում» item from the shared navigation registry, so it is absent from both desktop and mobile menus. The remaining entries are topics, progress and notebook. Build/standalone export and all six navigation/layout browser cases (1920, 1440, 1366, 1024, 768 and 390 px) passed. A direct registry check confirmed the removed entry is absent. `git diff --check` passed. No grading, lesson or student-storage changes were made.

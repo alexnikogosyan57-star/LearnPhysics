@@ -223,3 +223,48 @@ summary{font-size:14px;line-height:1.8;cursor:pointer;min-height:44px;align-cont
 @keyframes dialog-enter{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes backdrop-enter{from{background-color:transparent}to{background-color:rgba(38,39,36,.28)}}
 @media(prefers-reduced-motion:reduce){.interaction-ripple{display:none}.topic-art svg,.nav-item svg,.button>.lucide,.text-button>.lucide,.lesson-track>span{transition:none!important}.unit-lesson.current .lesson-node::after{animation:none!important}.brand-symbol>svg,dialog[open],dialog[open]::backdrop{animation:none!important}}
+/* Small interactions share one tactile motion language. */
+.icon-button,.text-button,.nav-item{position:relative;isolation:isolate;overflow:hidden}
+input:not([type=range]),textarea,select{transition:border-color 180ms,background-color 180ms,box-shadow 180ms}
+input:not([type=range]):focus,textarea:focus,select:focus{border-color:#58634d;background-color:#fcfdf9}
+.slider-field strong,[data-parameter-label],label output{display:inline-block;font-variant-numeric:tabular-nums}
+input[type=range]{appearance:none;-webkit-appearance:none;background:transparent;min-height:44px;cursor:ew-resize;--range-fill:0%}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:6px;background:linear-gradient(to right,#58634d 0 var(--range-fill),#dce2d7 var(--range-fill) 100%)}
+input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:20px;height:20px;margin-top:-7px;border:3px solid #fff;border-radius:50%;background:#58634d;box-shadow:0 0 0 1px #58634d;transition:box-shadow 180ms,background-color 180ms}
+input[type=range]::-moz-range-track{height:6px;border-radius:6px;background:#dce2d7}
+input[type=range]::-moz-range-progress{height:6px;border-radius:6px;background:#58634d}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border:3px solid #fff;border-radius:50%;background:#58634d;box-shadow:0 0 0 1px #58634d}
+input[type=range]:focus-visible::-webkit-slider-thumb,input[type=range]:active::-webkit-slider-thumb{box-shadow:0 0 0 6px #58634d25;background:#344b2c}
+input[type=range]:disabled{cursor:default;opacity:.55}
+summary{transition:color 180ms,background-color 180ms}
+summary::marker{color:#58634d}
+summary:hover{color:#285b20}
+.note,.mastery-row,.charge-preset{transition:border-color 200ms,background-color 200ms,box-shadow 200ms}
+.science-visual,.scene-wrap,.circuit-workbench{transition:border-color 220ms,box-shadow 220ms}
+.science-visual:focus-within,.scene-wrap:focus-within,.circuit-workbench:focus-within{box-shadow:0 0 0 3px #87917a18}
+#circuit-canvas [data-wire]:hover,#circuit-canvas [data-wire]:focus-visible{filter:drop-shadow(0 0 3px #58634d66)}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){
+ .icon-button:hover svg{transform:rotate(-7deg) scale(1.1)}
+ .icon-button svg{transition:transform 200ms}
+ .text-button:active,.icon-button:active{transform:translateY(1px)}
+ .note:hover,.mastery-row:hover{border-color:#b9caaa;background-color:#fcfdf9}
+ .charge-preset:hover{box-shadow:0 3px 0 #58634d12}
+}
+@media(prefers-reduced-motion:no-preference){
+ #main-nav.mobile-open .nav-item{animation:menu-item-enter 260ms both}
+ #main-nav.mobile-open .nav-item:nth-child(2){animation-delay:35ms}
+ #main-nav.mobile-open .nav-item:nth-child(3){animation-delay:70ms}
+ #nav-toggle[aria-expanded=true] svg{transform:rotate(90deg);transition:transform 220ms}
+ #sound[aria-pressed=true] svg{animation:sound-enabled 260ms ease-out}
+ button[data-motion-running=true]{animation:running-control 2.8s ease-in-out infinite}
+ .note:focus-within{box-shadow:0 0 0 3px #87917a22}
+}
+@keyframes menu-item-enter{from{opacity:.2;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+@keyframes sound-enabled{from{transform:scale(.75)}60%{transform:scale(1.12)}to{transform:scale(1)}}
+@keyframes running-control{0%,100%{box-shadow:0 0 0 0 #58634d00}50%{box-shadow:0 0 0 4px #58634d20}}
+@media(prefers-reduced-motion:reduce){input,textarea,select,summary,.note,.mastery-row,.charge-preset,.science-visual,.scene-wrap,.circuit-workbench,.icon-button svg{transition:none!important}#main-nav.mobile-open .nav-item,#sound[aria-pressed=true] svg,button[data-motion-running=true]{animation:none!important}#nav-toggle[aria-expanded=true] svg{transform:none!important}input[type=range]::-webkit-slider-thumb{transition:none!important}}
+input[type=checkbox],input[type=radio]{accent-color:#58634d;transition:box-shadow 180ms}
+input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{box-shadow:0 0 0 4px #87917a22}
+@media(prefers-reduced-motion:reduce){input[type=checkbox],input[type=radio]{transition:none!important}}
+.text-button{overflow:visible}
+.text-button>.interaction-ripple{inset:0!important;width:100%!important;height:100%!important;border-radius:8px}
