@@ -83,3 +83,7 @@ Publish `dist/` and `.nojekyll` to `gh-pages`. GitHub Pages should use that bran
 ## Checkpoint and deliberate answer feedback
 
 The first electrical unit ends with a separate in-app 25-task checkpoint (`charge-checkpoint`), preserving the original E07 sources lesson. All assessment engines now separate checking from continuing and use bounded mistake review. Official scores count original responses only; corrections and remaining practice needs are separate. Two official stars unlock the next activity, with historical access preserved. See [the assessment implementation and persistence policy](docs/assessment-and-checkpoint.md).
+
+## Simplified experiment controls
+
+The circuit experiments no longer display the add-component palette or the component/wire configuration panels. Connect terminals, move components and drag wire endpoints directly in the experiment. Keyboard users can disconnect an endpoint with Delete, press Enter on it, then activate the target terminal to reconnect. The switch, last-wire undo, reset and measurement actions remain available. Existing circuit data and electrical calculations are retained.
