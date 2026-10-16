@@ -87,3 +87,7 @@ The first electrical unit ends with a separate in-app 25-task checkpoint (`charg
 ## Simplified experiment controls
 
 The circuit experiments no longer display the add-component palette or the component/wire configuration panels. Connect terminals, move components and drag wire endpoints directly in the experiment. Keyboard users can disconnect an endpoint with Delete, press Enter on it, then activate the target terminal to reconnect. The switch, last-wire undo, reset and measurement actions remain available. Existing circuit data and electrical calculations are retained.
+
+## Motion design
+
+Pages, topic lists and learning stages enter with short staggered transitions. Choices, feedback, measurements and progress respond to actual student events; navigation, controls and the current lesson have restrained motion. The robot media and physical simulation stay independent of UI effects. Reduced motion disables the added effects and cancels ongoing transitions.

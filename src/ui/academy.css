@@ -198,3 +198,28 @@ summary{font-size:14px;line-height:1.8;cursor:pointer;min-height:44px;align-cont
 .checkpoint-visual{padding:22px;text-align:center;font-size:clamp(20px,4vw,34px);letter-spacing:3px;background:#f5f5ef;border-radius:12px;margin:18px 0}
 .checkpoint-practice{margin:24px 0;padding:20px;border:1px solid #dce2d7;border-radius:12px}
 .concept-results{padding:18px 0;border-block:1px solid #e0e5dc;margin:20px 0}
+/* A livelier learning surface; the mascot and physical model remain independent. */
+.button,.answer,.lesson-node{position:relative;isolation:isolate}
+.interaction-ripple{position:absolute;pointer-events:none;border-radius:50%;background:currentColor;z-index:-1;max-width:none;clip-path:inset(0 round 50%)}
+.button,.answer{overflow:hidden}
+.lesson-track>span{transform-origin:left center}
+.topic-art svg,.nav-item svg,.button>.lucide,.text-button>.lucide{transition:transform 240ms cubic-bezier(.2,.7,.2,1)}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){
+ .topic-option:hover .topic-art svg{transform:translateY(-5px) rotate(-3deg) scale(1.04)}
+ .nav-item:hover>svg{transform:translateY(-2px) rotate(-6deg)}
+ .button:hover>.lucide,.text-button:hover>.lucide{transform:translateX(4px)}
+ .answer:hover:not(:disabled){transform:translateY(-2px);border-color:#9acb74}
+ .answer:active:not(:disabled){transform:translateY(2px)}
+}
+@media(prefers-reduced-motion:no-preference){
+ .unit-lesson.current .lesson-node::after{content:'';position:absolute;inset:-11px;border:2px solid #86b968;border-radius:50%;pointer-events:none;animation:current-lesson-ring 3.6s ease-out infinite}
+ .brand-symbol>svg{animation:brand-orbit 24s linear infinite}
+ .lesson-track>span{transition:background-color 240ms}
+ dialog[open]{animation:dialog-enter 220ms cubic-bezier(.2,.7,.2,1)}
+ dialog[open]::backdrop{animation:backdrop-enter 220ms ease-out}
+}
+@keyframes current-lesson-ring{0%,65%,100%{opacity:0;transform:scale(.96)}15%{opacity:.55}55%{opacity:0;transform:scale(1.18)}}
+@keyframes brand-orbit{to{transform:rotate(360deg)}}
+@keyframes dialog-enter{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes backdrop-enter{from{background-color:transparent}to{background-color:rgba(38,39,36,.28)}}
+@media(prefers-reduced-motion:reduce){.interaction-ripple{display:none}.topic-art svg,.nav-item svg,.button>.lucide,.text-button>.lucide,.lesson-track>span{transition:none!important}.unit-lesson.current .lesson-node::after{animation:none!important}.brand-symbol>svg,dialog[open],dialog[open]::backdrop{animation:none!important}}

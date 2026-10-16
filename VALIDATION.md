@@ -1,3 +1,13 @@
+# Expanded motion design — 2026-10-16
+
+Added staggered page/section entrances on navigation and scroll, fresh question transitions, animated selections and feedback, progress-fill movement, measurement highlights, tactile press ripples, topic/nav hover responses, a subtle current-lesson ring, slow brand motion and dialog entrances. The mascot and its ancestors are never faded, transformed or scaled by these effects. Simulation calculations, controls, scores and stored data are unchanged. All added effects respect reduced motion, including live preference changes.
+
+Build and standalone export passed. `npm test` passed all ten test files; explicit `node --test --test-isolation=none tests/*.test.js` confirmed all **35 individual checks passed**. Seventeen selected browser cases passed for motion, slow mascot-frame swaps, keyboard access and six device sizes. All six checkpoint cases passed, including full review, immutable scores and reload. After refining topic-screen transition detection, the affected nine desktop/motion cases passed again. This is selected coverage across runs, not a new full-suite claim.
+
+Both final production artifacts were served over HTTP and independently checked for actual topic-entry and press animations, no animated mascot/ancestor, cancellation of effects under reduced motion, 390/768/1440 px layouts and no page errors. `git diff --check` passed. The initial sandbox prevented local server startup; the same browser checks passed once local server/Chromium execution was permitted.
+
+---
+
 # Simplified circuit experiment controls — 2026-10-16
 
 Removed the add-component palette and the entire component/wire inspector from the shared experiment renderer. Selecting or dragging a component or wire does not restore those panels. Existing stored components, wires, junctions, results and notes are retained. Direct terminal connections, component movement, endpoint dragging, switch, last-wire undo, reset and measurement remain. Keyboard endpoint reconnection now works directly: Enter on the endpoint, then activate the target terminal. Lesson instructions and hints no longer refer to removed settings.
