@@ -25,10 +25,30 @@ function createLegacyJourney(getData,save,render) {
   if(s.stage===1)body=`<h2>${l.prediction}</h2><p>Ընտրիր քո կանխատեսումը։ Պատասխանը միասին փորձով կստուգենք։</p>${choices(l.choices)}${next('Գրանցել կանխատեսումն ու փորձել',selected===null)}`;
   if(s.stage===2)body=`<h2>Հիմա քո հերթն է փորձելու։</h2><p>${id==='circuits'?'Միացրու մարտկոցի, անջատիչի ու լամպի ելքերը փակ ճանապարհով։ Փակիր անջատիչը, հետո բացիր այն։':'Փոխիր մեկ պայման և գրանցիր չափումը։ Հետո փոխիր այն ու համեմատիր արդյունքները։'}</p>${experimentView(l,s)}${next('Քննարկել դիտարկումը',!s.experiments.length)}`;
   if(s.stage===3)body=`<h2>${l.observe}</h2><p>Հենվիր քո փորձի վրա։</p>${choices(l.observations)}<p class="feedback" role="status">${feedback}</p>${feedback.startsWith('Ճիշտ')?next('Բացահայտել կապը'):`<button class="button" id="electric-submit-observation" ${selected===null?'disabled':''}>Ստուգել դիտարկումը</button>${feedback?'<button class="text-button" id="electric-hint">Հուշում</button>':''}`}`;
-  if(s.stage===4)body=`<h2>Եկ կապենք փորձն ու բացատրությունը։</h2><p>${l.explanation.split("։ ").slice(0,2).join("։ ")}</p><details><summary>Ավելի մանրամասն</summary><p>${l.explanation}</p></details><div class="evidence"><strong>${l.formula}</strong><p>Քո վերջին չափումը՝ ${escape(s.experiments.at(-1)?.reading)}</p></div>${next('Փորձել նոր իրավիճակում')}`;
+  if(s.stage===4){
+   const predText = (s.prediction !== null && s.prediction !== undefined) ? l.choices[s.prediction] : 'Գրանցված չէ';
+   const readingText = s.experiments.at(-1)?.reading || 'Չափում դեռ չկա';
+   body=`<h2>Եկ կապենք փորձն ու բացատրությունը։</h2><p>${l.explanation.split("։ ").slice(0,2).join("։ ")}</p><div class="prediction-comparison"><p><strong>Քո կանխատեսումն էր՝</strong> «${escape(predText)}»։</p><p><strong>Փորձով չափեցինք՝</strong> «${escape(readingText)}»։</p></div><details><summary>Ավելի մանրամասն</summary><p>${l.explanation}</p></details><div class="evidence"><strong>${l.formula}</strong><p>Քո վերջին չափումը՝ ${escape(readingText)}</p></div>${next('Փորձել նոր իրավիճակում')}`;
+  }
   if(s.stage===5)body=assessmentBody(s,[{type:'number',question:l.challenge,answer:l.answer,unit:l.unit,weight:1,why:`${l.formula}։ ${l.hint}`}]);
-  if(s.stage===6){const a=s.lastResult,best=getData().learning.lessons[id]?.bestStars||0,following=nextLesson(getData(),id,topics),topic=topics.find(t=>t.lessons.some(x=>x.id===id)),final=topic.lessons.at(-1).id===id;
-  body=`<h2>${a?.stars>=2?'Դու փորձով բացահայտեցիր մի նոր կապ։':'Այս կապը ևս մեկ փորձով ամրապնդենք։'}</h2><p>Կիրառման առաջին պատասխանը՝ ${a?.earned??0} / 1 միավոր։ Լավագույն արդյունքը՝ ${best} աստղ։</p>${starsMarkup(a?.stars||0)}<div class="evidence"><strong>${l.formula}</strong><p>${l.explanation}</p></div>${a?.stars>=2&&following?`<button class="button" data-module="${following.id}">Անցնել հաջորդ դասին</button>`:a?.stars>=2?`${final?'<p>Թեման ավարտված է։</p>':'<p>Հաջորդ դասը նախապատրաստվում է։</p>'}<button class="button" data-choose-topics>Ընտրել հաջորդ թեման</button>`:'<button class="button" id="legacy-retry">Կրկնել դասը</button>'}${a?.stars>=2?'<button class="text-button" id="legacy-retry">Կրկնել դասը</button>':''}<button class="text-button" data-page="path">Վերադառնալ ուսումնական ուղի</button><details><summary>Իմ եզրակացությունը</summary><label class="field-label" for="electric-reflection">Ի՞նչն էր քեզ համար նոր։</label><textarea id="electric-reflection">${escape(s.reflection||'')}</textarea><button class="text-button" id="electric-save-reflection">Պահպանել եզրակացությունը</button><p id="electric-note-status" role="status"></p></details>`;
+  if(s.stage===6){
+   const record = getData().learning?.lessons?.[id];
+   const a = s.lastResult || (record ? { stars: record.bestStars, earned: record.bestScore, possible: 1 } : { stars: 0, earned: 0, possible: 1 });
+   const stars = a?.stars ?? record?.bestStars ?? 0;
+   const earned = a?.earned ?? record?.bestScore ?? 0;
+   const following = nextLesson(getData(),id,topics);
+   const topic = topics.find(t=>t.lessons.some(x=>x.id===id)), final = topic?.lessons?.at(-1)?.id===id;
+   const actionButtons = (stars >= 2) ? (
+    (following ? `<button class="button lesson-primary" data-module="${following.id}">Հաջորդ դասը →</button>` :
+     final ? `<p>Թեման ավարտված է։</p><button class="button lesson-primary" data-choose-topics>Ընտրել հաջորդ թեման</button>` :
+     `<p>Հաջորդ դասը նախապատրաստվում է։</p><button class="button lesson-primary" data-choose-topics>Ընտրել հաջորդ թեման</button>`) +
+    `<button class="text-button" id="legacy-retry">Կրկնել դասը</button>` +
+    `<button class="text-button" data-page="path">Վերադառնալ ուսումնական ուղի</button>`
+   ) : (
+    `<button class="button lesson-primary" id="legacy-retry">Կրկին փորձել</button>` +
+    `<button class="text-button" data-page="path">Վերադառնալ ուսումնական ուղի</button>`
+   );
+   body=`<h2>${stars>=2?'Դու փորձով բացահայտեցիր մի նոր կապ։':'Այս կապը ևս մեկ փորձով ամրապնդենք։'}</h2><p>Կիրառման առաջին պատասխանը՝ ${earned} / 1 միավոր։ Լավագույն արդյունքը՝ ${record?.bestStars||stars} աստղ։</p>${starsMarkup(stars)}<div class="evidence"><strong>${l.formula}</strong><p>${l.explanation}</p></div>${actionButtons}<details><summary>Իմ եզրակացությունը</summary><label class="field-label" for="electric-reflection">Ի՞նչն էր քեզ համար նոր։</label><textarea id="electric-reflection">${escape(s.reflection||'')}</textarea><button class="text-button" id="electric-save-reflection">Պահպանել եզրակացությունը</button><p id="electric-note-status" role="status"></p></details>`;
   }
   if(s.stage===6)body+=reviewSummary(s);
   const stepNames=["Իրավիճակ","Կանխատեսում","Փորձ","Դիտարկում","Բացատրություն","Կիրառում","Եզրակացություն"];

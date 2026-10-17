@@ -8,8 +8,28 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 export function createCheckpoint(getData,save,render){
  const state=()=>{const d=getData();d.checkpoints ||= {};return d.checkpoints[checkpointId] ||= {started:false,machine:assessmentState(),drafts:{},practice:{}};};
  const repaint=()=>{save();render();};
- function responseControls(q,s,index){const value=s.drafts[index];const disabled=s.machine.phase==='FEEDBACK'?'disabled':'';
- if(q.type==='choice')return q.options.map((o,i)=>`<button class="answer ${value===i?'selected':''}" data-checkpoint-answer="${i}" aria-pressed="${value===i}" ${disabled}>${esc(o)}</button>`).join('');
+ function responseControls(q,s,index){const value=s.drafts[index];const disabled=s.machine.phase==='FEEDBACK'?'disabled aria-disabled="true"':'';const submitted=s.machine.phase==='FEEDBACK';
+ if(q.type==='choice'){
+  return `<div class="activity-choices" role="radiogroup" aria-label="Պատասխանի տարբերակներ">${q.options.map((o,i)=>{
+   const isSelected = value === i;
+   const isCorrect = submitted && correctResponse(q, i);
+   const isWrong = submitted && isSelected && !correctResponse(q, i);
+   const isNeutral = submitted && !isSelected && !correctResponse(q, i);
+   const classes = [
+    'answer',
+    isSelected ? 'selected' : '',
+    isCorrect ? 'is-correct' : '',
+    isWrong ? 'is-incorrect' : '',
+    isNeutral ? 'is-neutral' : '',
+   ].filter(Boolean).join(' ');
+
+   let indicator = `<span class="answer-indicator radio-dot" aria-hidden="true"></span>`;
+   if(isCorrect) indicator = `<span class="answer-indicator icon-check" aria-hidden="true"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span><span class="sr-only"> (Ճիշտ պատասխան)</span>`;
+   else if(isWrong) indicator = `<span class="answer-indicator icon-cross" aria-hidden="true"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></span><span class="sr-only"> (Քո սխալ պատասխանը)</span>`;
+
+   return `<button type="button" role="radio" class="${classes}" data-checkpoint-answer="${i}" data-shortcut="${i+1}" aria-checked="${isSelected}" aria-pressed="${isSelected}" ${disabled}><span class="answer-badge" aria-hidden="true">${i+1}</span><span class="answer-text">${esc(o)}</span>${indicator}</button>`;
+  }).join('')}</div>`;
+ }
  if(q.type==='number')return `<label class="field-label" for="checkpoint-number">Պատասխան (${q.unit})</label><input id="checkpoint-number" inputmode="decimal" type="text" value="${esc(value??'')}" ${disabled}>`;
  const v=value?.value??(q.simulation==='atom'?10:q.simulation==='distance'?1:{closed:false,material:'plastic'}),r=simulationReading(q.simulation,v);
  if(q.simulation==='distance')return `<div class="checkpoint-lab"><div class="charge-scene" aria-label="Երկու դրական լիցք"><span>⊕</span><span style="margin-left:${v*35}px">⊕</span></div><label for="checkpoint-slider">Հեռավորություն՝ <output>${v} մ</output></label><input id="checkpoint-slider" type="range" min="0.5" max="3" step="0.25" value="${v}" ${disabled}><p>Ուժ՝ ${r.force.toFixed(3)} նՆ · սկզբնականի ${r.ratio.toFixed(3)} մասը</p><p>q₁ = q₂ = +1 նԿլ · F = k|q₁q₂| / r²</p></div>`;
@@ -20,11 +40,44 @@ export function createCheckpoint(getData,save,render){
  if(!s.started)body='<h2>Պատրա՞ստ ես միացնել քո բացահայտումները։</h2><p>Քեզ սպասում է 25 առաջադրանք՝ նկարներ, փորձեր, հաշվարկներ և առօրյա իրավիճակներ։ Ամեն պատասխանից հետո կբացատրեմ միտքը, վերջում միասին կկրկնենք սխալները։ Յուրաքանչյուր սկզբնական առաջադրանքը՝ 1 միավոր։ Կրկնությունը չի փոխում գնահատականը։</p><p>0–49%՝ 0 աստղ · 50–69%՝ 1 · 70–89%՝ 2 · 90–100%՝ 3։ Հաջորդ բաժնի համար պետք է առնվազն 2 աստղ։ 25 հարցից դա առնվազն 18 ճիշտ պատասխան է։</p><button class="button lesson-primary" id="checkpoint-start">Սկսել ստուգումը</button>';
  else if(m.phase==='COMPLETED'){
  const g=s.result,following=nextLesson(getData(),checkpointId,topics);
- body=`<h2>${g.stars>=2?'Քո գիտելիքները ճանապարհ են բացում։':'Գիտենք՝ ինչն է պետք ամրապնդել։'}</h2><p>Պաշտոնական արդյունք՝ ${g.earned} / 25 · ${g.percent}%։ Կրկնության ընթացքում ուղղել ես ${m.corrected.length} սխալ։ Լավագույն արդյունք՝ ${getData().learning.lessons[checkpointId]?.bestStars||0} աստղ։</p>${starsMarkup(g.stars)}<div class="concept-results">${g.concepts.map(c=>`<p>${c.title}՝ ${c.earned} / ${c.possible}</p>`).join('')}</div><h3>Առաջարկվող կրկնություն</h3>${g.weak.length?g.weak.map(id=>`<button class="text-button" data-checkpoint-practice="${id}">${conceptNames[id]} · վարժություն</button> <button class="text-button" data-module="${id}">Վերադառնալ դասին</button>`).join('<br>'):'<p>Բոլոր թեմաների սկզբնական հարցերին ճիշտ ես պատասխանել։</p>'}${s.practiceTopic?practiceView(s):''}<details><summary>Իմ պատասխաններն ու բացատրությունները</summary>${checkpointQuestions.map((q,i)=>`<div class="assessment-review"><strong>${i+1}. ${q.prompt}</strong><p>${g.results[i].correct?'Ճիշտ':'Կրկնելու կարիք կա'} · Քո պատասխանը՝ ${esc(answerText(q,m.original[i]?.response))}</p><p>${q.why}</p></div>`).join('')}</details>${m.unresolved.length?`<p>Կրկնության ${m.unresolved.length} առաջադրանք դեռ դժվարություն առաջացրեց։ Վերը նշված վարժություններն ու դասերը կօգնեն։</p>`:''}${following?`<button class="button lesson-primary" data-module="${following.id}">Անցնել հաջորդ բաժին</button>`:'<p>Հաջորդ բաժինը կբացվի պաշտոնական ստուգման առնվազն 2 աստղով։</p>'}<button class="button secondary" id="checkpoint-retry">Կրկին հանձնել ամբողջ ստուգումը</button><p>Նախորդ փորձերն ու լավագույն գնահատականը պահպանվում են։</p>`;
+ const actionButtons = (g.stars >= 2) ? (
+  (following ? `<button class="button lesson-primary" data-module="${following.id}">Հաջորդ դասը →</button>` : '') +
+  `<button class="text-button" id="checkpoint-retry">Կրկնել ստուգումը</button>` +
+  `<button class="text-button" data-page="path">Վերադառնալ ուսումնական ուղի</button>`
+ ) : (
+  `<button class="button lesson-primary" id="checkpoint-retry">Կրկին փորձել</button>` +
+  `<button class="text-button" data-page="path">Վերադառնալ ուսումնական ուղի</button>`
+ );
+ body=`<h2>${g.stars>=2?'Քո գիտելիքները ճանապարհ են բացում։':'Գիտենք՝ ինչն է պետք ամրապնդել։'}</h2><p>Պաշտոնական արդյունք՝ ${g.earned} / 25 · ${g.percent}%։ Կրկնության ընթացքում ուղղել ես ${m.corrected.length} սխալ։ Լավագույն արդյունք՝ ${getData().learning.lessons[checkpointId]?.bestStars||0} աստղ։</p>${starsMarkup(g.stars)}<div class="concept-results">${g.concepts.map(c=>`<p>${c.title}՝ ${c.earned} / ${c.possible}</p>`).join('')}</div><h3>Առաջարկվող կրկնություն</h3>${g.weak.length?g.weak.map(id=>`<button class="text-button" data-checkpoint-practice="${id}">${conceptNames[id]} · վարժություն</button> <button class="text-button" data-module="${id}">Վերադառնալ դասին</button>`).join('<br>'):'<p>Բոլոր թեմաների սկզբնական հարցերին ճիշտ ես պատասխանել։</p>'}${s.practiceTopic?practiceView(s):''}<details><summary>Իմ պատասխաններն ու բացատրությունները</summary>${checkpointQuestions.map((q,i)=>`<div class="assessment-review"><strong>${i+1}. ${q.prompt}</strong><p>${g.results[i].correct?'Ճիշտ':'Կրկնելու կարիք կա'} · Քո պատասխանը՝ ${esc(answerText(q,m.original[i]?.response))}</p><p>${q.why}</p></div>`).join('')}</details>${m.unresolved.length?`<p>Կրկնության ${m.unresolved.length} առաջադրանք դեռ դժվարություն առաջացրեց։ Վերը նշված վարժություններն ու դասերը կօգնեն։</p>`:''}${actionButtons}<p>Նախորդ փորձերն ու լավագույն գնահատականը պահպանվում են։</p>`;
  }else{
  const i=questionIndex(m),original=checkpointQuestions[i],reviewing=m.phase==='MISTAKE_REVIEW'||m.feedback?.reviewing,q=reviewing?{...reviewTasks[original.topic],type:'choice',id:original.id,topic:original.topic}:original;
  const feedback=m.phase==='FEEDBACK';
- body=`<h2>${q.prompt}</h2><p>${reviewing?'Սխալների կրկնություն':`Առաջադրանք ${i+1} / 25`} · ${conceptNames[q.topic]}${reviewing?' · պաշտոնական գնահատականը չի փոխվում':''}</p>${q.visual?`<div class="checkpoint-visual" role="img" aria-label="${esc(q.visual)}">${q.visual}</div>`:''}${responseControls(q,s,i)}${feedback?`<div class="assessment-feedback ${m.feedback.correct?'correct':'incorrect'}" role="status"><span class="robot-speaker">Ռոբոտը բացատրում է</span><strong>${m.feedback.correct?'Ճիշտ ես մտածել։':'Այս պատասխանը ճիշտ չէ։ Եկ հասկանանք՝ ինչու։'}</strong><p>Քո պատասխանը՝ ${esc(answerText(q,s.drafts[i]))}</p><p>${q.why}</p>${reviewing&&!m.feedback.correct?'<p>Հուշում․ առանձնացրու՝ ինչն է շարժվում, ինչը մնում է հաստատուն, և ինչ նշան ունեն լիցքերը։ Հաջորդ փորձից առաջ վերընթերցիր բացատրությունը։</p>':''}<button class="button lesson-primary" id="checkpoint-continue">Շարունակել</button></div>`:`<button class="button lesson-primary" id="checkpoint-check" ${s.drafts[i]===undefined||s.drafts[i]===''?'disabled':''}>${q.type==='simulation'?'Գրանցել և ստուգել փորձը':'Ստուգել'}</button>`}`;
+ const dockMarkup = feedback ? `
+  <div class="lesson-feedback-dock assessment-feedback ${m.feedback.correct ? 'correct' : 'incorrect'}" role="status" aria-live="polite">
+   <div class="feedback-dock-inner">
+    <div class="feedback-dock-info">
+     <div class="feedback-status-row">
+      <span class="feedback-badge ${m.feedback.correct ? 'correct' : 'incorrect'}" aria-hidden="true">${m.feedback.correct ? '✓' : '✕'}</span>
+      <strong class="feedback-heading ${m.feedback.correct ? 'correct' : 'incorrect'}">${m.feedback.correct ? 'Ճիշտ է' : 'Դեռ ճիշտ չէ'}</strong>
+     </div>
+     <div class="feedback-explanation">
+      <p class="feedback-scientific">${esc(q.why)}</p>
+     </div>
+    </div>
+    <div class="feedback-dock-actions">
+     <button class="button lesson-primary ${m.feedback.correct ? '' : 'danger'}" id="checkpoint-continue">Շարունակել</button>
+    </div>
+   </div>
+  </div>` : `
+  <div class="lesson-feedback-dock idle" role="region" aria-label="Ստուգման գործողություններ">
+   <div class="feedback-dock-inner">
+    <div class="feedback-dock-info"></div>
+    <div class="feedback-dock-actions">
+     <button class="button lesson-primary" id="checkpoint-check" ${s.drafts[i]===undefined||s.drafts[i]===''?'disabled':''}>${q.type==='simulation'?'Գրանցել և ստուգել փորձը':'Ստուգել'}</button>
+    </div>
+   </div>
+  </div>`;
+ body=`<h2>${q.prompt}</h2><p class="task-counter">${reviewing?'Սխալների կրկնություն':`Առաջադրանք ${i+1} / 25`} · ${conceptNames[q.topic]}${reviewing?' · պաշտոնական գնահատականը չի փոխվում':''}</p>${q.visual?`<div class="checkpoint-visual" role="img" aria-label="${esc(q.visual)}">${q.visual}</div>`:''}${responseControls(q,s,i)}${dockMarkup}`;
  }
  return `<div class="lesson-top"><button class="text-button" data-page="path">← Ուսումնական ուղի</button><span>Ամփոփում · 25 առաջադրանք</span></div><div class="lesson-context"><h1>Լիցք, ատոմ և հոսանք․ ամփոփիչ ստուգում</h1></div><div class="lesson-track" role="progressbar" aria-label="Ստուգման ընթացքը" aria-valuemin="0" aria-valuemax="25" aria-valuenow="${Math.min(25,m.index)}"><span style="width:${m.index*4}%"></span></div><section class="lesson-content">${guidedContent(`<div class="story">${body}</div>`,`checkpoint:${m.phase}:${questionIndex(m)}`, '',m.phase==='COMPLETED'?'success-complete':m.feedback?m.feedback.correct?'success-answer':'confused':'thinking')}</section>`;
  }
@@ -39,7 +92,16 @@ export function createCheckpoint(getData,save,render){
  const slider=root.querySelector('#checkpoint-slider');if(slider)slider.oninput=e=>setSim(Number(e.target.value));
  const material=root.querySelector('#checkpoint-material');if(material)material.onchange=e=>setSim({...s.drafts[i]?.value||{closed:false},material:e.target.value});
  on('#checkpoint-switch',()=>{const v=s.drafts[i]?.value||{closed:false,material:'plastic'};setSim({...v,closed:!v.closed});});
- on('#checkpoint-check',()=>{const original=checkpointQuestions[i],review=m.phase==='MISTAKE_REVIEW',q=review?{...reviewTasks[original.topic],type:'choice'}:original;if(submitAssessment(m,s.drafts[i],correctResponse(q,s.drafts[i])))repaint();});
+ on('#checkpoint-check',()=>{
+  if(m.phase === 'FEEDBACK') return;
+  const btn = root.querySelector('#checkpoint-check');
+  if(btn) btn.disabled = true;
+  const original=checkpointQuestions[i],review=m.phase==='MISTAKE_REVIEW',q=review?{...reviewTasks[original.topic],type:'choice'}:original;
+  if(submitAssessment(m,s.drafts[i],correctResponse(q,s.drafts[i])))repaint();
+  requestAnimationFrame(()=>{
+   root.querySelector('#checkpoint-continue')?.focus();
+  });
+ });
  on('#checkpoint-continue',()=>{if(!continueAssessment(m,25))return;if(m.phase==='MISTAKE_REVIEW')delete s.drafts[questionIndex(m)];if(m.phase==='COMPLETED')finish(s);repaint();});
  on('#checkpoint-retry',()=>{const d=getData();d.checkpointArchives ||= [];d.checkpointArchives.push(structuredClone(s));delete d.checkpoints[checkpointId];state().started=true;repaint();});
  root.querySelectorAll('[data-checkpoint-practice]').forEach(b=>b.onclick=()=>{s.practiceTopic=b.dataset.checkpointPractice;repaint();});

@@ -39,6 +39,9 @@ import {
   Trash2,
   Plus,
   Menu,
+  Rocket,
+  Plane,
+  Wind,
 } from "lucide";
 const icons = {
   Orbit,
@@ -70,6 +73,9 @@ const icons = {
   Trash2,
   Plus,
   Menu,
+  Rocket,
+  Plane,
+  Wind,
 };
 import { distance, advance, point, wheelAngle } from "./physics";
 import {
@@ -97,6 +103,7 @@ import {topics} from './learning/topics';
 import {initializeProgress,canOpen,recordResult,nextLesson,starsMarkup,starsFor} from './learning/progression';
 import {topicView,pathView,masteryProgress,pathContextView} from './learning/views';
 import {foundations} from './learning/foundations-content';
+import {aerolabView, bindAeroLab} from './labs/aerolab.js';
 let assessmentAttempt = Date.now();
 let cleanupMascots = () => {};
 let cleanupExperiments = () => {};
@@ -148,6 +155,7 @@ function requestLessonExit(action){
  if(lessonCompleted(data,id))leave();else requestExitDialog(leave);
 }
 function openModule(id,approved=false) {
+ if(id==='aerolab'){go('aerolab',true);history.replaceState(null,'','#aerolab');return true;}
  if(activeLesson()&&!approved){
   if(activeLesson()===id)return true;
   requestLessonExit(()=>openModule(id,true));return false;
@@ -359,11 +367,23 @@ function heading(k, title, sub, action = "") {
 function path() { return pathView(data); }
 function explanation() {
   const r = data.runs.at(-1) || { speed: 2, duration: 5, distance: 10 };
-  return guidedContent(`<div class="story"><span class="eyebrow">ՔՈ ՓՈՐՁԻ ԱՊԱՑՈՒՅՑԸ</span><h2>Երեք մեծություն։ Մի պարզ կապ։</h2><p>Հաստատուն արագությամբ շարժվելիս անցած ճանապարհը գտնում ենք արագությունը բազմապատկելով ժամանակով։</p><div class="formula"><div><strong>s</strong><span>ճանապարհ, մ</span></div><b>=</b><div><strong>v</strong><span>արագություն, մ/վ</span></div><b>×</b><div><strong>t</strong><span>ժամանակ, վ</span></div></div><div class="evidence"><span>ՔՈ ՎԵՐՋԻՆ ՓՈՐՁԸ</span><h3>${num(r.speed)} մ/վ × ${r.duration} վ = ${num(r.distance)} մ</h3><p>Ամեն վայրկյան՝ ${num(r.speed)} մետր։ ${r.duration} վայրկյանում՝ ${num(r.distance)} մետր։</p></div><details><summary>Ավելի մանրամասն՝ միջին արագության մասին</summary><p>Միջին արագությունը ամբողջ անցած ճանապարհի և ամբողջ ժամանակի հարաբերությունն է՝ v<sub>միջ</sub> = s / t։ Հավասարաչափ շարժման դեպքում այն հավասար է հաստատուն արագությանը։ Եթե ճանապարհին կանգնես, կանգառի ժամանակն էլ պետք է հաշվել։</p></details><button id="next-stage" class="button">Փորձել նոր իրավիճակում ${icon("arrow-right")}</button></div>`, "motion:explanation", "", "thinking");
+  const predText = data.prediction !== null && prediction[data.prediction] ? prediction[data.prediction] : 'Գրանցված չէ';
+  return guidedContent(`<div class="story"><span class="eyebrow">ՔՈ ՓՈՐՁԻ ԱՊԱՑՈՒՅՑԸ</span><h2>Երեք մեծություն։ Մի պարզ կապ։</h2><p>Հաստատուն արագությամբ շարժվելիս անցած ճանապարհը գտնում ենք արագությունը բազմապատկելով ժամանակով։</p><div class="prediction-comparison"><p><strong>Քո կանխատեսումն էր՝</strong> «${escape(predText)}»։</p><p><strong>Փորձով չափեցինք՝</strong> «${num(r.speed)} մ/վ × ${r.duration} վ = ${num(r.distance)} մ»։</p></div><div class="formula"><div><strong>s</strong><span>ճանապարհ, մ</span></div><b>=</b><div><strong>v</strong><span>արագություն, մ/վ</span></div><b>×</b><div><strong>t</strong><span>ժամանակ, վ</span></div></div><div class="evidence"><span>ՔՈ ՎԵՐՋԻՆ ՓՈՐՁԸ</span><h3>${num(r.speed)} մ/վ × ${r.duration} վ = ${num(r.distance)} մ</h3><p>Ամեն վայրկյան՝ ${num(r.speed)} մետր։ ${r.duration} վայրկյանում՝ ${num(r.distance)} մետր։</p></div><details><summary>Ավելի մանրամասն՝ միջին արագության մասին</summary><p>Միջին արագությունը ամբողջ անցած ճանապարհի և ամբողջ ժամանակի հարաբերությունն է՝ v<sub>միջ</sub> = s / t։ Հավասարաչափ շարժման դեպքում այն հավասար է հաստատուն արագությանը։ Եթե ճանապարհին կանգնես, կանգառի ժամանակն էլ պետք է հաշվել։</p></details><button id="next-stage" class="button">Փորձել նոր իրավիճակում ${icon("arrow-right")}</button></div>`, "motion:explanation", "", "thinking");
 }
 function application() {
-  if (data.assessment)
-    return guidedContent(`<div class="story"><span class="eyebrow">ՀԵՏԱԶՈՏՈՒԹՅՈՒՆԸ ԱՎԱՐՏՎԱԾ Է</span><h2>Դու արդեն մտածում ես որպես հետազոտող։</h2><p>Առաջին փորձից ճիշտ պատասխաններ՝ ${data.assessment.score} / 3։ Դու կանխատեսեցիր, փորձ կատարեցիր և բացատրեցիր կապը։ ${data.assessment.score < 3 ? "Վերանայիր ժամանակի և ճանապարհի կապը՝ նոր փորձով։" : "Այժմ կարող ես կապը կիրառել նոր իրավիճակներում։"}</p><div class="evidence"><h3>Ի՞նչ ցույց տվեցիր</h3><p>Հաստատուն արագությամբ՝ s = v × t։ Միջին արագությունը գտնելու համար հաշվում ենք ամբողջ ժամանակը։</p></div><label class="field-label" for="conclusion">Քո վերջնական եզրակացությունը</label><textarea id="conclusion" placeholder="Այս փորձից հասկացա, որ…">${escape(data.conclusion || "")}</textarea><button class="button secondary" id="save-lesson">Պահպանել տետրում ${icon("notebook-pen")}</button>${reviewSummary(data.motionFlow||{})}${starsMarkup(starsFor(data.assessment.score,3))}${starsFor(data.assessment.score,3)>=2&&nextLesson(data,"motion",topics)?`<button class="button lesson-primary" data-module="pendulum">Անցնել հաջորդ դասին</button>`:""}<button class="text-button" data-page="path">Վերադառնալ ուսումնական ուղի</button><button class="${starsFor(data.assessment.score,3)<2?'button lesson-primary':'text-button'}" id="retry-quiz">Կրկին ստուգել գիտելիքը</button><p id="note-status" role="status"></p></div>`, `motion:complete:${data.assessment.created}`, "", "celebration");
+  if (data.assessment) {
+    const following = nextLesson(data, "motion", topics);
+    const stars = starsFor(data.assessment.score, 3);
+    const actionButtons = (stars >= 2) ? (
+      (following ? `<button class="button lesson-primary" data-module="${following.id}">Հաջորդ դասը →</button>` : "") +
+      `<button class="text-button" id="retry-quiz">Կրկնել դասը</button>` +
+      `<button class="text-button" data-page="path">Վերադառնալ ուսումնական ուղի</button>`
+    ) : (
+      `<button class="button lesson-primary" id="retry-quiz">Կրկին փորձել</button>` +
+      `<button class="text-button" data-page="path">Վերադառնալ ուսումնական ուղի</button>`
+    );
+    return guidedContent(`<div class="story"><span class="eyebrow">ՀԵՏԱԶՈՏՈՒԹՅՈՒՆԸ ԱՎԱՐՏՎԱԾ Է</span><h2>Դու արդեն մտածում ես որպես հետազոտող։</h2><p>Առաջին փորձից ճիշտ պատասխաններ՝ ${data.assessment.score} / 3։ Դու կանխատեսեցիր, փորձ կատարեցիր և բացատրեցիր կապը։ ${data.assessment.score < 3 ? "Վերանայիր ժամանակի և ճանապարհի կապը՝ նոր փորձով։" : "Այժմ կարող ես կապը կիրառել նոր իրավիճակներում։"}</p><div class="evidence"><h3>Ի՞նչ ցույց տվեցիր</h3><p>Հաստատուն արագությամբ՝ s = v × t։ Միջին արագությունը գտնելու համար հաշվում ենք ամբողջ ժամանակը։</p></div><label class="field-label" for="conclusion">Քո վերջնական եզրակացությունը</label><textarea id="conclusion" placeholder="Այս փորձից հասկացա, որ…">${escape(data.conclusion || "")}</textarea><button class="button secondary" id="save-lesson">Պահպանել տետրում ${icon("notebook-pen")}</button>${reviewSummary(data.motionFlow||{})}${starsMarkup(stars)}${actionButtons}<p id="note-status" role="status"></p></div>`, `motion:complete:${data.assessment.created}`, "", "celebration");
+  }
   return guidedContent(`<div class="story">${assessmentBody(data.motionFlow ||= {},motionItems())}</div>`, `motion:assessment:${data.motionFlow?.assessmentFlow?.machine.phase}:${data.motionFlow?.assessmentFlow?.machine.index}`, '',assessmentReaction(data.motionFlow));
 }
 function motionItems(){return assessment.map((q,i)=>({...q,type:'choice',question:q.q,weight:1,why:['Ճանապարհը՝ 4 մ/վ × 5 վ = 20 մ։','Նույն արագությամբ կրկնակի ժամանակը տալիս է կրկնակի ճանապարհ՝ 20 մ և 10 մ։','Միջին արագությունը՝ 10 մ / (5 վ + 5 վ) = 1 մ/վ։ Կանգառը նույնպես մտնում է ամբողջ ժամանակի մեջ։'][i]}));}
@@ -464,6 +484,7 @@ function render() {
     {
       home,
       path,
+      aerolab: () => aerolabView(data),
       lesson,
       electric: () => journey.view(),
       notebook,
@@ -474,14 +495,17 @@ function render() {
   cleanupMascots();
   if (["lesson", "electric"].includes(page)) {
     const content = $(".lesson-content");
-    const action = content.querySelector(".lesson-primary") || content.querySelector("#next-stage, #next-observation, #submit-quiz, #submit-observation, #save-lesson, #electric-next, #electric-submit-observation, #electric-check, #electric-save-reflection, #foundation-next, #foundation-check, #foundation-assess, #foundation-retry") || content.querySelector("#measure-electric");
-    if (action && !action.closest(".assessment-feedback")) {
-      const dock = document.createElement("div");
-      dock.className = "lesson-action-dock";
-      action.replaceWith(dock);
-      dock.append(action);
-      const experimentControls=content.querySelector('.science-controls,.circuit-tools,.sim-controls');
-      if(experimentControls)experimentControls.after(dock);else content.append(dock);
+    const existingDock = content.querySelector(".lesson-feedback-dock, .lesson-action-dock");
+    if (!existingDock) {
+      const action = content.querySelector(".lesson-primary") || content.querySelector("#next-stage, #next-observation, #submit-quiz, #submit-observation, #save-lesson, #electric-next, #electric-submit-observation, #electric-check, #electric-save-reflection, #foundation-next, #foundation-check, #foundation-assess, #foundation-retry") || content.querySelector("#measure-electric");
+      if (action && !action.closest(".assessment-feedback, .lesson-feedback-dock")) {
+        const dock = document.createElement("div");
+        dock.className = "lesson-action-dock";
+        action.replaceWith(dock);
+        dock.append(action);
+        const experimentControls=content.querySelector('.science-controls,.circuit-tools,.sim-controls');
+        if(experimentControls)experimentControls.after(dock);else content.append(dock);
+      }
     }
     $("#main-content").classList.add("focused-lesson");
   }
@@ -491,6 +515,7 @@ function render() {
   bindRedesign();
   cleanupMascots = mountMascots($("#app"));
   if (page === "electric") cleanupExperiments = journey.bind($("#main-content"));
+  else if (page === "aerolab") cleanupExperiments = bindAeroLab($("#main-content"), data, save, render);
   animateRender($("#main-content"), {
     view:
       page === "electric" ? journey.key() : page === "lesson"
@@ -792,8 +817,8 @@ function bind() {
 }
 const initialHash=location.hash;
 if(initialHash.startsWith('#lesson/'))openModule(decodeURIComponent(initialHash.slice(8)));
-else {if(['#home','#path','#progress','#notebook'].includes(initialHash))page=initialHash.slice(1);render();if(!initialHash)history.replaceState(null,'','#path');}
-window.addEventListener('hashchange',()=>{const h=location.hash;if(activeLesson()&&h!=='#main-content')history.replaceState(null,'',`#lesson/${activeLesson()}`);if(h==='#main-content'){$('#main-content').focus();return;}if(h.startsWith('#lesson/'))openModule(decodeURIComponent(h.slice(8)));else go(['#path','#progress','#notebook'].includes(h)?h.slice(1):'home');});
+else {if(['#home','#path','#aerolab','#progress','#notebook'].includes(initialHash))page=initialHash.slice(1);render();if(!initialHash)history.replaceState(null,'','#path');}
+window.addEventListener('hashchange',()=>{const h=location.hash;if(activeLesson()&&h!=='#main-content')history.replaceState(null,'',`#lesson/${activeLesson()}`);if(h==='#main-content'){$('#main-content').focus();return;}if(h.startsWith('#lesson/'))openModule(decodeURIComponent(h.slice(8)));else go(['#path','#aerolab','#progress','#notebook'].includes(h)?h.slice(1):'home');});
 
 // Native confirmation is browser-controlled and requires a prior user interaction.
 window.addEventListener('beforeunload',event=>{const id=activeLesson();if(id&&!lessonCompleted(data,id)){event.preventDefault();event.returnValue='';}});

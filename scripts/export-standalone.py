@@ -6,7 +6,7 @@ import re
 
 root = Path(__file__).resolve().parents[1]
 build = root / "dist"
-html = (build / "index.html").read_text()
+html = (build / "index.html").read_text(encoding="utf-8")
 
 
 def data_uri(path):
@@ -16,7 +16,7 @@ def data_uri(path):
 
 def inline_css(match):
     css_path = build / match.group(1)
-    css = css_path.read_text()
+    css = css_path.read_text(encoding="utf-8")
 
     def asset(asset_match):
         relative = asset_match.group(1).strip("\"'")
@@ -27,7 +27,7 @@ def inline_css(match):
 
 
 def inline_js(match):
-    js = (build / match.group(1)).read_text()
+    js = (build / match.group(1)).read_text(encoding="utf-8")
     # Vite emits local image URLs as quoted strings. Inline the mascot, too.
     for path in [*(build / "assets").glob("*.webp"), *(build / "assets").glob("*.mp4"), *(build / "assets").glob("*.webm"), *(build / "assets").glob("*.png"), *(build / "assets").glob("*.ogg")]:
         uri = data_uri(path)
@@ -40,5 +40,5 @@ def inline_js(match):
 html = re.sub(r'<link rel="stylesheet"[^>]*href="\./([^"]+)"[^>]*>', inline_css, html)
 html = re.sub(r'<script type="module"[^>]*src="\./([^"]+)"[^>]*></script>', inline_js, html)
 output = build / "physics-app.html"
-output.write_text(html)
+output.write_text(html, encoding="utf-8")
 print(f"Standalone application: {output} ({output.stat().st_size:,} bytes)")

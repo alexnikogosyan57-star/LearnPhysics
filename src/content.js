@@ -1,5 +1,6 @@
 export const navigation = [
  ["path", "Թեմաներ", "route"],
+ ["aerolab", "Թռչող սարքեր", "rocket"],
  ["progress", "Իմ առաջընթացը", "chart-no-axes-combined"],
  ["notebook", "Հետազոտողի տետր", "notebook-pen"],
 ];

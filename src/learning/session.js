@@ -18,7 +18,8 @@ export function resetLessonAttempt(data,id){
  delete data.lessonSession;
 }
 export function lessonCompleted(data,id){
- return id==='motion'?!!data.assessment:!!(data.checkpoints?.[id]?.completed||data.investigations?.[id]?.completed||data.electricLessons?.[id]?.completed);
+ if(id==='motion')return !!data.assessment||((data.learning?.lessons?.motion?.bestStars||0)>=2);
+ return !!(data.checkpoints?.[id]?.completed||data.investigations?.[id]?.completed||data.electricLessons?.[id]?.completed||((data.learning?.lessons?.[id]?.bestStars||0)>=2));
 }
 export function requestExitDialog(onLeave){
  const previous=document.activeElement,dialog=document.createElement('dialog');
