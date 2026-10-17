@@ -6,18 +6,43 @@ import {
   dronePhysicsModel,
   supersonicMachModel,
   turbofanBraytonModel,
+  orbitPhysicsModel,
+  helicopterSwashplateModel,
+  gliderThermalModel,
+  ionThrusterModel,
   DIY_PROJECTS,
   AERO_CHALLENGES,
   AERO_BADGES,
 } from './aerolab-models.js';
-import { rocketArt, airfoilTunnelArt, droneArt, supersonicMachArt, turbofanEngineArt } from './aerolab-art.js';
+import {
+  rocketArt,
+  airfoilTunnelArt,
+  droneArt,
+  supersonicMachArt,
+  turbofanEngineArt,
+  orbitCannonArt,
+  helicopterSwashplateArt,
+  ionThrusterArt,
+  gliderThermalArt,
+} from './aerolab-art.js';
 import { playSound } from '../audio.js';
+import {
+  AEROLAB_CURRICULUM,
+  LEVEL_1_LESSONS,
+  DIY_SAFE_PROJECT_GLIDER,
+  ensureAeroLearningState,
+  canOpenAeroLesson,
+  recordAeroLessonCompletion,
+  toggleDiyStep,
+  toggleDiyMaterial,
+} from './aerolab-path-data.js';
+import { mountLessonWidget } from './aerolab-lesson-widgets.js';
 
 const num = (n, dec = 1) => Number(n.toFixed(dec)).toLocaleString('hy-AM');
 
 export function initialAeroLabState() {
   return {
-    tab: 'rocket', // 'rocket' | 'drone' | 'tunnel' | 'supersonic' | 'jet' | 'diy' | 'badges' | 'quiz'
+    tab: 'rocket', // 'rocket' | 'drone' | 'helicopter' | 'tunnel' | 'supersonic' | 'jet' | 'orbit' | 'diy' | 'badges' | 'quiz'
     rocket: initialRocketState({
       bottleVolume: 0.0015,
       waterFraction: 0.35,
@@ -33,6 +58,13 @@ export function initialAeroLabState() {
       mass: 0.8,
       altitude: 1.5,
     },
+    helicopter: {
+      collective: 50,
+      cyclicPitch: 0,
+      cyclicRoll: 0,
+      tailPedal: 50,
+      mainRpm: 400,
+    },
     tunnel: {
       angleDeg: 4,
       airSpeed: 20,
@@ -46,6 +78,22 @@ export function initialAeroLabState() {
       bypassRatio: 8.5,
       altitude: 0,
       airspeedKmh: 250,
+    },
+    orbit: {
+      launchAltitudeKm: 400,
+      horizontalVelocityKms: 7.67,
+    },
+    glider: {
+      airSpeedKmh: 90,
+      bankAngleDeg: 30,
+      thermalStrength: 3.5,
+      thermalRadius: 120,
+    },
+    ion: {
+      beamVoltageV: 1500,
+      beamCurrentA: 1.8,
+      propellant: 'xenon',
+      spacecraftMassKg: 650,
     },
     diySelected: 'water-rocket',
     quiz: {
@@ -86,6 +134,10 @@ export function aerolabView(state) {
             <span class="tab-icon">🛸</span>
             <span>Քվադրոկոպտեր</span>
           </button>
+          <button class="tab-button ${aero.tab === 'helicopter' ? 'active' : ''}" data-aerotab="helicopter" role="tab" aria-selected="${aero.tab === 'helicopter'}">
+            <span class="tab-icon">🚁</span>
+            <span>Ուղղաթիռ & Swashplate</span>
+          </button>
           <button class="tab-button ${aero.tab === 'tunnel' ? 'active' : ''}" data-aerotab="tunnel" role="tab" aria-selected="${aero.tab === 'tunnel'}">
             <span class="tab-icon">💨</span>
             <span>Աերոդինամիկ Խողովակ</span>
@@ -97,6 +149,18 @@ export function aerolabView(state) {
           <button class="tab-button ${aero.tab === 'jet' ? 'active' : ''}" data-aerotab="jet" role="tab" aria-selected="${aero.tab === 'jet'}">
             <span class="tab-icon">✈️</span>
             <span>Տուրբոֆեն Շարժիչ</span>
+          </button>
+          <button class="tab-button ${aero.tab === 'orbit' ? 'active' : ''}" data-aerotab="orbit" role="tab" aria-selected="${aero.tab === 'orbit'}">
+            <span class="tab-icon">🛰️</span>
+            <span>Ուղեծրային Թնդանոթ</span>
+          </button>
+          <button class="tab-button ${aero.tab === 'glider' ? 'active' : ''}" data-aerotab="glider" role="tab" aria-selected="${aero.tab === 'glider'}">
+            <span class="tab-icon">🌬️</span>
+            <span>Թերմիկ Սավառնում</span>
+          </button>
+          <button class="tab-button ${aero.tab === 'ion' ? 'active' : ''}" data-aerotab="ion" role="tab" aria-selected="${aero.tab === 'ion'}">
+            <span class="tab-icon">⚡</span>
+            <span>Իոնային Շարժիչ</span>
           </button>
           <button class="tab-button ${aero.tab === 'diy' ? 'active' : ''}" data-aerotab="diy" role="tab" aria-selected="${aero.tab === 'diy'}">
             <span class="tab-icon">🛠️</span>
@@ -124,9 +188,13 @@ export function aerolabView(state) {
 function renderTabContent(aero) {
   if (aero.tab === 'rocket') return renderRocketLab(aero);
   if (aero.tab === 'drone') return renderDroneLab(aero);
+  if (aero.tab === 'helicopter') return renderHelicopterLab(aero);
   if (aero.tab === 'tunnel') return renderWindTunnel(aero);
   if (aero.tab === 'supersonic') return renderSupersonicLab(aero);
   if (aero.tab === 'jet') return renderJetLab(aero);
+  if (aero.tab === 'orbit') return renderOrbitLab(aero);
+  if (aero.tab === 'glider') return renderGliderLab(aero);
+  if (aero.tab === 'ion') return renderIonLab(aero);
   if (aero.tab === 'diy') return renderDiyGuide(aero);
   if (aero.tab === 'badges') return renderBadgesView(aero);
   if (aero.tab === 'quiz') return renderAeroQuiz(aero);
@@ -815,6 +883,602 @@ function renderJetLab(aero) {
   `;
 }
 
+/**
+ * TAB: Brilliant-style Helicopter Swashplate & Rotor Aerodynamics Simulator
+ */
+function renderHelicopterLab(aero) {
+  const h = aero.helicopter;
+  const physics = helicopterSwashplateModel({
+    collective: h.collective,
+    cyclicPitch: h.cyclicPitch,
+    cyclicRoll: h.cyclicRoll,
+    tailPedal: h.tailPedal,
+    mainRpm: h.mainRpm,
+  });
+
+  return `
+    <div class="aerolab-simulator-layout">
+      <!-- Left Column: Simulation Canvas & Telemetry -->
+      <div class="sim-viewport-card">
+        <div class="sim-viewport-header">
+          <div class="viewport-title-wrap">
+            <span class="sim-tag">🚁 ՈՒՂՂԱԹԻՌԻ ՌՈՏՈՐ & SWASHPLATE</span>
+            <span class="flow-status ${physics.yawState === 'balanced' ? 'is-good' : 'is-stalled'}">
+              ${
+                physics.yawState === 'balanced'
+                  ? (physics.isHovering ? '✓ Կատարյալ Հովերինգ (Կախում)' : '✓ Հավասարակշռված Թռիչք')
+                  : '⚠️ Պոչային Հակամոմենտի Շեղում (Spinout)'
+              }
+            </span>
+          </div>
+          <div class="viewport-actions">
+            <button class="action-btn-small" data-helipreset="hover">🚁 Հովերինգ (50%)</button>
+            <button class="action-btn-small" data-helipreset="forward">⏩ Առաջընթաց (Cyclic +25)</button>
+            <button class="action-btn-small" data-helipreset="climb">⬆️ Վերելք (Collective 75%)</button>
+            <button class="action-btn-small secondary" data-helipreset="spinout">🌀 Պտտահողմ (Spinout)</button>
+          </div>
+        </div>
+
+        <!-- Helicopter Viewport SVG -->
+        <div class="tunnel-scene-wrap">
+          ${helicopterSwashplateArt({
+            colPitchDeg: physics.colPitchDeg,
+            tiltForwardDeg: physics.tiltForwardDeg,
+            tiltRollDeg: physics.tiltRollDeg,
+            mainTorqueNm: physics.mainTorqueNm,
+            tailAntiTorqueNm: physics.tailAntiTorqueNm,
+            netYawTorqueNm: physics.netYawTorqueNm,
+            yawState: physics.yawState,
+            isHover: physics.isHovering,
+            flightState: physics.flightState,
+            totalThrustKn: physics.totalThrustKn,
+            verticalLiftKn: physics.verticalLiftKn,
+            forwardThrustKn: physics.forwardThrustKn,
+            showVectors: aero.showVectors,
+          })}
+        </div>
+
+        <!-- Dynamic Telemetry Readouts -->
+        <div class="telemetry-grid">
+          <div class="telemetry-card">
+            <span class="telemetry-label">Վերամբարձ Ուժ (L_վեր)</span>
+            <strong class="telemetry-value ${physics.verticalLiftKn >= 20 ? 'is-good' : ''}" id="val-heli-lift">
+              ${physics.verticalLiftKn} <small>կՆ</small>
+            </strong>
+            <span class="telemetry-hint">Քաշ՝ 20.0 կՆ | Քայլ՝ ${physics.colPitchDeg}°</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="telemetry-label">Առաջ Մղող Քարշուժ (T_առաջ)</span>
+            <strong class="telemetry-value ${Math.abs(physics.forwardThrustKn) > 0.5 ? 'is-good' : ''}">
+              ${physics.forwardThrustKn} <small>կՆ</small>
+            </strong>
+            <span class="telemetry-hint">Սկավառակի թեքում՝ ${physics.tiltForwardDeg}°</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="telemetry-label">Պտտող Մոմենտների Հաշվեկշիռ</span>
+            <strong class="telemetry-value ${physics.yawState === 'balanced' ? 'is-good' : 'is-stalled'}">
+              ${physics.netYawTorqueNm} <small>Ն·մ</small>
+            </strong>
+            <span class="telemetry-hint">Ռեակցիա՝ ${physics.mainTorqueNm} Ն·մ | Պոչ՝ ${physics.tailAntiTorqueNm} Ն·մ</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="telemetry-label">Թռիչքային Կարգավիճակ</span>
+            <strong class="telemetry-value is-good">
+              ${
+                physics.flightState === 'hover'
+                  ? 'Հովերինգ'
+                  : physics.flightState === 'climb'
+                  ? 'Վերելք'
+                  : physics.flightState === 'descent'
+                  ? 'Վայրէջք'
+                  : physics.flightState === 'forward'
+                  ? 'Առաջընթաց'
+                  : 'Հետընթաց'
+              }
+            </strong>
+            <span class="telemetry-hint">Կուրս՝ ${physics.yawState === 'balanced' ? 'Հաստատուն' : 'Անկայուն'}</span>
+          </div>
+        </div>
+
+        <!-- Brilliant Conceptual Card -->
+        <div class="physics-explanation-box">
+          <h4>💡 Ինչպե՞ս է աշխատում Լիցքաթիթեղը (Swashplate) և Պոչային Պտուտակը</h4>
+          <p>
+            Ուղղաթիռի հիմնական պտուտակը կատարում է երկու կարևորագույն դեր.
+            <strong>1. Համատարած քայլ (Collective Pitch)՝</strong> բարձրացնում կամ իջեցնում է լիցքաթիթեղը՝ բոլոր թիակների անկյունը փոխելով միաժամանակ, ինչը ապահովում է վերելքը։
+            <strong>2. Շրջափուլային քայլ (Cyclic Pitch)՝</strong> թեքում է լիցքաթիթեղը։ Շնորհիվ 90° գիրոսկոպիկ պրեցեսիայի և աերոդինամիկ փուլային շեղման, թիակների հարթությունը թեքվում է թռիչքի ուղղությամբ։
+            <strong>3. Նյուտոնի 3-րդ օրենքը՝</strong> շարժիչը պտտում է գլխավոր ռոտորը, իսկ ֆյուզելյաժը հակառակ ուղղությամբ ստանում է հզոր ռեակտիվ պտտող մոմենտ։ Պոչային պտուտակը (Tail Rotor) չեզոքացնում է այս պտույտը՝ պահելով ուղղաթիռի կայուն ուղղությունը։
+          </p>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive Sliders & Controls -->
+      <div class="sim-controls-card">
+        <h3>Ուղղաթիռի Ղեկավարում</h3>
+
+        <!-- Collective Pitch Slider -->
+        <div class="control-row">
+          <div class="control-label-wrap">
+            <label for="param-heli-collective">Համատարած Քայլ (Collective Pitch)</label>
+            <strong id="label-heli-collective">${h.collective} % (${physics.colPitchDeg}°)</strong>
+          </div>
+          <input type="range" id="param-heli-collective" min="0" max="100" step="1" value="${h.collective}">
+          <div class="range-marks"><span>0% (4° - Իջեցում)</span><span>50% (11° - Հովերինգ)</span><span>100% (18° - Վերելք)</span></div>
+        </div>
+
+        <!-- Cyclic Pitch Slider -->
+        <div class="control-row">
+          <div class="control-label-wrap">
+            <label for="param-heli-cyclic">Ցիկլիկ Թեքում (Cyclic Pitch Stick)</label>
+            <strong id="label-heli-cyclic">${h.cyclicPitch > 0 ? '+' : ''}${h.cyclicPitch} (${physics.tiltForwardDeg}°)</strong>
+          </div>
+          <input type="range" id="param-heli-cyclic" min="-50" max="50" step="2" value="${h.cyclicPitch}">
+          <div class="range-marks"><span>-50 (Ետ)</span><span>0 (Չեզոք)</span><span>+50 (Առաջ)</span></div>
+        </div>
+
+        <!-- Tail Rotor Pedal Slider -->
+        <div class="control-row">
+          <div class="control-label-wrap">
+            <label for="param-heli-tail">Պոչային Պտուտակ (Anti-Torque Pedals)</label>
+            <strong id="label-heli-tail">${h.tailPedal} %</strong>
+          </div>
+          <input type="range" id="param-heli-tail" min="0" max="100" step="1" value="${h.tailPedal}">
+          <div class="range-marks"><span>0% (Ձախ)</span><span>50% (Հավասարակշռված)</span><span>100% (Աջ)</span></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * TAB: Brilliant-style Newton's Orbital Cannonball & Satellite Simulator
+ */
+function renderOrbitLab(aero) {
+  const o = aero.orbit;
+  const physics = orbitPhysicsModel({
+    launchAltitudeKm: o.launchAltitudeKm,
+    horizontalVelocityKms: o.horizontalVelocityKms,
+  });
+
+  return `
+    <div class="aerolab-simulator-layout">
+      <!-- Left Column: Orbital Canvas & Telemetry -->
+      <div class="sim-viewport-card">
+        <div class="sim-viewport-header">
+          <div class="viewport-title-wrap">
+            <span class="sim-tag">🛰️ ՆՅՈՒՏՈՆԻ ԹՆԴԱՆՈԹ & ՈՒՂԵԾԻՐ</span>
+            <span class="flow-status ${physics.isStableOrbit ? 'is-good' : (physics.status === 'hyperbolic' || physics.status === 'parabolic') ? 'is-warning' : 'is-stalled'}">
+              ${
+                physics.status === 'circular'
+                  ? '✓ Շրջանաձև LEO Ուղեծիր (1-ին տիեզերական)'
+                  : physics.status === 'elliptic'
+                  ? '✓ Էլիպսաձև Կեպլերյան Ուղեծիր'
+                  : (physics.status === 'hyperbolic' || physics.status === 'parabolic')
+                  ? '🌌 Խույսի Հետագիծ (2-րդ տիեզերական)'
+                  : '⚠️ Բալիստիկ Անկում (v < v₁)'
+              }
+            </span>
+          </div>
+          <div class="viewport-actions">
+            <button class="action-btn-small" data-orbitpreset="suborbital">☄️ Ենթաուղեծրային (4.5 կմ/վ)</button>
+            <button class="action-btn-small" data-orbitpreset="leo">🛰️ Կայուն LEO (7.67 կմ/վ)</button>
+            <button class="action-btn-small" data-orbitpreset="gto">⬭ Էլիպս (9.8 կմ/վ)</button>
+            <button class="action-btn-small secondary" data-orbitpreset="escape">🌌 Խույս (11.0 կմ/վ)</button>
+          </div>
+        </div>
+
+        <!-- Orbit Viewport SVG -->
+        <div class="tunnel-scene-wrap">
+          ${orbitCannonArt({
+            launchAltitudeKm: o.launchAltitudeKm,
+            horizontalVelocityKms: o.horizontalVelocityKms,
+            orbitModel: physics,
+            showVectors: aero.showVectors,
+          })}
+        </div>
+
+        <!-- Dynamic Telemetry Readouts -->
+        <div class="telemetry-grid">
+          <div class="telemetry-card">
+            <span class="telemetry-label">Հորիզոնական Արագություն (v₀)</span>
+            <strong class="telemetry-value" id="val-orbit-v0">${o.horizontalVelocityKms} <small>կմ/վ</small></strong>
+            <span class="telemetry-hint">1-ին տիեզերական v₁՝ ${physics.v1Kms} կմ/վ</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="telemetry-label">Էքսցենտրիսիտետ (e)</span>
+            <strong class="telemetry-value ${physics.status === 'circular' ? 'is-good' : ''}">
+              ${physics.eccentricity}
+            </strong>
+            <span class="telemetry-hint">${physics.status === 'circular' ? 'Շրջան (e ≈ 0)' : physics.eccentricity < 1 ? 'Էլիպս (e < 1)' : 'Պարաբոլ/Հիպերբոլ (e ≥ 1)'}</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="telemetry-label">Պերիգեյ / Ապոգեյ (h_p / h_a)</span>
+            <strong class="telemetry-value ${physics.hasCollided ? 'is-stalled' : 'is-good'}">
+              ${physics.periapsisKm} <small>կմ</small> / ${physics.apoapsisKm !== null ? physics.apoapsisKm + ' կմ' : '∞'}
+            </strong>
+            <span class="telemetry-hint">${physics.hasCollided ? 'Բախում Երկրի մակերևույթին' : 'Անվտանգ բարձրություն մթնոլորտից'}</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="telemetry-label">Պարբերություն (T) & Գրավիտացիա (g)</span>
+            <strong class="telemetry-value">
+              ${physics.periodMin ? physics.periodMin + ' րոպե' : '—'}
+            </strong>
+            <span class="telemetry-hint">g = ${physics.gravityAtAlt} մ/վ² (${Math.round((physics.gravityAtAlt / 9.81) * 100)}% g₀)</span>
+          </div>
+        </div>
+
+        <!-- Brilliant Conceptual Card -->
+        <div class="physics-explanation-box">
+          <h4>💡 Ինչու՞ արբանյակը չի ընկնում Երկրի վրա (Նյուտոնի մտային փորձը)</h4>
+          <p>
+            Եթե բարձր լեռան գագաթից թնդանոթով հորիզոնական կրակենք, յուրաքանչյուր 8,000 մետր հորիզոնական թռիչքի դեպքում Երկրի գնդաձև մակերևույթը կորանում և իջնում է ուղիղ 4.9 մետրով։ Իսկ ազատ անկման արագացման պատճառով արկը առաջին վայրկյանում իջնում է հենց $h = \\frac{1}{2}gt^2 \\approx 4.9$ մետրով։ Երբ արկի հորիզոնական արագությունը հասնում է $v_1 \\approx 7.9$ կմ/վ ($7.67$ կմ/վ 400 կմ բարձրության վրա), արկն անընդհատ ընկնում է Երկրի վրա, սակայն Երկրի մակերեսը նույնքանով «փախչում է» նրա տակից։ Անկշռությունը ոչ թե գրավիտացիայի բացակայությունն է, այլ անվերջանալի ազատ անկում։
+          </p>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive Sliders & Presets -->
+      <div class="sim-controls-card">
+        <h3>Տիեզերական Պարամետրեր</h3>
+
+        <!-- Horizontal Launch Velocity Slider -->
+        <div class="control-row">
+          <div class="control-label-wrap">
+            <label for="param-orbit-v0">Հորիզոնական Արագություն (v₀)</label>
+            <strong id="label-orbit-v0">${o.horizontalVelocityKms} կմ/վ</strong>
+          </div>
+          <input type="range" id="param-orbit-v0" min="1.0" max="12.5" step="0.05" value="${o.horizontalVelocityKms}">
+          <div class="range-marks">
+            <span>1.0 կմ/վ</span>
+            <span>7.67 կմ/վ (LEO)</span>
+            <span>10.85 կմ/վ (Խույս)</span>
+            <span>12.5 կմ/վ</span>
+          </div>
+        </div>
+
+        <!-- Launch Altitude Slider -->
+        <div class="control-row">
+          <div class="control-label-wrap">
+            <label for="param-orbit-alt">Ուղեծրային Բարձրություն (h)</label>
+            <strong id="label-orbit-alt">${o.launchAltitudeKm} կմ</strong>
+          </div>
+          <input type="range" id="param-orbit-alt" min="100" max="1500" step="50" value="${o.launchAltitudeKm}">
+          <div class="range-marks"><span>100 կմ (Կարմանի գիծ)</span><span>400 կմ (ISS)</span><span>1,500 կմ</span></div>
+        </div>
+
+        <!-- Velocity Indicator Thresholds -->
+        <div class="orbit-hud-card" style="margin-top: 1.25rem; padding: 1rem; border-radius: 12px; background: #0f172a; border: 1.5px solid #334155;">
+          <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; color: #f8fafc;">🚀 Տիեզերական Արագության Սանդղակ</h4>
+          <div style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.85rem;">
+            <div style="display: flex; justify-content: space-between; color: ${o.horizontalVelocityKms < physics.v1Kms ? '#f87171' : '#94a3b8'};">
+              <span>☄️ Ենթաուղեծրային տիրույթ՝</span>
+              <strong>&lt; ${physics.v1Kms} կմ/վ</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; color: ${physics.status === 'circular' ? '#4ade80' : '#94a3b8'};">
+              <span>🛰️ 1-ին տիեզերական (Շրջան)՝</span>
+              <strong>${physics.v1Kms} կմ/վ</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; color: ${physics.status === 'elliptic' ? '#fbbf24' : '#94a3b8'};">
+              <span>⬭ Էլիպսաձև փակ ուղեծիր՝</span>
+              <strong>${physics.v1Kms} – ${physics.vEscKms} կմ/վ</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; color: ${o.horizontalVelocityKms >= physics.vEscKms ? '#c084fc' : '#94a3b8'};">
+              <span>🌌 2-րդ տիեզերական (Հեռացում)՝</span>
+              <strong>&ge; ${physics.vEscKms} կմ/վ</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * TAB: Brilliant-style Atmospheric Thermal Soaring & Glider Polar Simulator
+ */
+function renderGliderLab(aero) {
+  const g = aero.glider;
+  const physics = gliderThermalModel({
+    airSpeedKmh: g.airSpeedKmh,
+    bankAngleDeg: g.bankAngleDeg,
+    thermalStrength: g.thermalStrength,
+    thermalRadius: g.thermalRadius,
+  });
+
+  return `
+    <div class="aerolab-simulator-layout">
+      <!-- Left Column: Simulation Viewport & Telemetry -->
+      <div class="sim-viewport-card">
+        <div class="sim-viewport-header">
+          <div class="viewport-title-wrap">
+            <span class="sim-tag">🌬️ ԹԵՐՄԻԿ ՍԱՎԱՌՆՈՒՄ & ՊՈԼՅԱՐԱ</span>
+            <span class="flow-status ${physics.isClimbing ? 'is-good' : 'is-stalled'}">
+              ${
+                physics.isClimbing
+                  ? `✓ Դրական Վերելք (+${physics.netClimbRate} մ/վ)`
+                  : `⚠️ Բարձրության Կորուստ (${physics.netClimbRate} մ/վ)`
+              }
+            </span>
+          </div>
+          <div class="viewport-actions">
+            <button class="action-btn-small" data-gliderpreset="optimal">🌀 Օպտիմալ Թերմիկ (30°)</button>
+            <button class="action-btn-small" data-gliderpreset="level">➡️ Ուղիղ Սավառնում (Max L/D)</button>
+            <button class="action-btn-small" data-gliderpreset="steep">⚡ Կտրուկ Թեքում (55°, 1.7g)</button>
+            <button class="action-btn-small secondary" data-gliderpreset="weak">☁️ Թույլ Թերմիկ (1.5 մ/վ)</button>
+          </div>
+        </div>
+
+        <!-- Glider Viewport SVG -->
+        <div class="tunnel-scene-wrap">
+          ${gliderThermalArt({
+            airSpeedKmh: physics.forwardSpeedKmh,
+            bankAngleDeg: physics.bankAngleDeg,
+            thermalStrength: g.thermalStrength,
+            thermalRadius: g.thermalRadius,
+            turnRadiusM: physics.turnRadiusM,
+            loadFactor: physics.loadFactor,
+            turnSinkRate: physics.turnSinkRate,
+            thermalUpdraft: physics.thermalUpdraft,
+            netClimbRate: physics.netClimbRate,
+            bestLd: physics.bestLd,
+            isClimbing: physics.isClimbing,
+            showVectors: aero.showVectors,
+          })}
+        </div>
+
+        <!-- Telemetry HUD Cards -->
+        <div class="telemetry-grid">
+          <div class="telemetry-card">
+            <span class="telemetry-label">Արդյունարար Վերելք (Net Climb)</span>
+            <strong class="telemetry-value ${physics.isClimbing ? 'is-good' : 'is-stalled'}" id="val-glider-net">
+              ${physics.netClimbRate > 0 ? '+' : ''}${physics.netClimbRate} <small>մ/վ</small>
+            </strong>
+            <span class="telemetry-hint">Թերմիկ (${physics.thermalUpdraft} մ/վ) - Իջեցում (${physics.turnSinkRate} մ/վ)</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="telemetry-label">Շրջադարձի Շառավիղ (R)</span>
+            <strong class="telemetry-value">
+              ${physics.turnRadiusM < 9999 ? physics.turnRadiusM + ' մ' : 'Ուղղագիծ'}
+            </strong>
+            <span class="telemetry-hint">R = v² / (g · tan φ)</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="telemetry-label">Գերբեռնվածություն (n = 1/cos φ)</span>
+            <strong class="telemetry-value ${physics.loadFactor > 1.5 ? 'is-warning' : ''}">
+              ${physics.loadFactor} <small>g</small>
+            </strong>
+            <span class="telemetry-hint">Թևերի բեռնվածություն շրջադարձում</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="telemetry-label">Աերոդինամիկ Որակ (L/D)</span>
+            <strong class="telemetry-value is-good">
+              ${physics.bestLd} : 1
+            </strong>
+            <span class="telemetry-hint">Օպտիմալ արագություն՝ ${physics.bestSpeedKmh} կմ/ժ</span>
+          </div>
+        </div>
+
+        <!-- Brilliant Conceptual Explanation -->
+        <div class="physics-explanation-box">
+          <h4>💡 Ինչպե՞ս են սավառնորդները ժամերով մնում օդում առանց շարժիչի</h4>
+          <p>
+            Արևի ճառագայթներից տաքացած գետնի մակերևույթը տաքացնում է սահմանամերձ օդը։ Տաք օդը, լինելով ավելի թեթև, վեր է բարձրանում հզոր կոնվեկտիվ սյուներով (թերմիկներ)՝ 2-6 մ/վ արագությամբ։ Երբ սավառնակը կողաթեքվում է ($\phi = 30^\circ$) և պտտվում է թերմիկի ներսում, նրա սեփական իջեցման արագությունը (օր. $1.0$ մ/վ) փոքր է օդի վերընթաց արագությունից ($+3.5$ մ/վ), և սավառնակը բարձրանում է $+2.5$ մ/վ արագությամբ՝ կուտակելով հսկայական պոտենցիալ էներգիա։
+          </p>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive Sliders -->
+      <div class="sim-controls-card">
+        <h3>Սավառնման Պարամետրեր</h3>
+
+        <!-- Forward Airspeed Slider -->
+        <div class="control-row">
+          <div class="control-label-wrap">
+            <label for="param-glider-speed">Առաջընթաց Արագություն (v_a)</label>
+            <strong id="label-glider-speed">${g.airSpeedKmh} կմ/ժ</strong>
+          </div>
+          <input type="range" id="param-glider-speed" min="60" max="180" step="2" value="${g.airSpeedKmh}">
+          <div class="range-marks">
+            <span>60 կմ/ժ (Stall-ի մոտ)</span>
+            <span>90 կմ/ժ (Best L/D)</span>
+            <span>180 կմ/ժ (Արագ անցում)</span>
+          </div>
+        </div>
+
+        <!-- Bank Angle Slider -->
+        <div class="control-row">
+          <div class="control-label-wrap">
+            <label for="param-glider-bank">Կողաթեքման Անկյուն (Bank Angle φ)</label>
+            <strong id="label-glider-bank">${g.bankAngleDeg}°</strong>
+          </div>
+          <input type="range" id="param-glider-bank" min="0" max="65" step="1" value="${g.bankAngleDeg}">
+          <div class="range-marks">
+            <span>0° (Ուղիղ)</span>
+            <span>30° (Օպտիմալ)</span>
+            <span>60° (2.0 g ծանրաբեռնվածություն)</span>
+          </div>
+        </div>
+
+        <!-- Thermal Core Strength Slider -->
+        <div class="control-row">
+          <div class="control-label-wrap">
+            <label for="param-glider-thermal">Թերմիկի Ուժգնություն (w_core)</label>
+            <strong id="label-glider-thermal">+${g.thermalStrength} մ/վ</strong>
+          </div>
+          <input type="range" id="param-glider-thermal" min="0" max="8.0" step="0.2" value="${g.thermalStrength}">
+          <div class="range-marks">
+            <span>0 մ/վ (Հանդարտ օդ)</span>
+            <span>3.5 մ/վ (Միջին)</span>
+            <span>8.0 մ/վ (Հզոր կոնվեկցիա)</span>
+          </div>
+        </div>
+
+        <!-- Thermal Radius Slider -->
+        <div class="control-row">
+          <div class="control-label-wrap">
+            <label for="param-glider-radius">Թերմիկ Սյան Շառավիղ (R_thermal)</label>
+            <strong id="label-glider-radius">${g.thermalRadius} մ</strong>
+          </div>
+          <input type="range" id="param-glider-radius" min="50" max="250" step="10" value="${g.thermalRadius}">
+          <div class="range-marks">
+            <span>50 մ (Նեղ սյուն)</span>
+            <span>120 մ</span>
+            <span>250 մ (Լայն ամպատակ)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * TAB: Brilliant-style Ion Space Thruster & Electric Propulsion Simulator
+ */
+function renderIonLab(aero) {
+  const ion = aero.ion;
+  const physics = ionThrusterModel({
+    beamVoltageV: ion.beamVoltageV,
+    beamCurrentA: ion.beamCurrentA,
+    propellant: ion.propellant,
+    spacecraftMassKg: ion.spacecraftMassKg,
+  });
+
+  return `
+    <div class="aerolab-simulator-layout">
+      <!-- Left Column: Simulation Viewport & Telemetry -->
+      <div class="sim-viewport-card">
+        <div class="sim-viewport-header">
+          <div class="viewport-title-wrap">
+            <span class="sim-tag">⚡ ԻՈՆԱՅԻՆ ՇԱՐԺԻՉ & ԽՈՐ ՏԻԵԶԵՐՔ</span>
+            <span class="flow-status is-good">
+              ✓ Isp = ${physics.specificImpulseSec.toLocaleString('hy-AM')} վ (>10x քիմիական հրթիռից)
+            </span>
+          </div>
+          <div class="viewport-actions">
+            <button class="action-btn-small" data-ionpreset="dawn">🛰️ NASA Dawn (Ceres)</button>
+            <button class="action-btn-small" data-ionpreset="starlink">📡 Starlink (Kr/Ar)</button>
+            <button class="action-btn-small" data-ionpreset="bepi">🪐 BepiColombo (Mercury)</button>
+            <button class="action-btn-small secondary" data-ionpreset="deepspace">🌌 Deep Space 1 (NSTAR)</button>
+          </div>
+        </div>
+
+        <!-- Ion Viewport SVG -->
+        <div class="tunnel-scene-wrap">
+          ${ionThrusterArt({
+            beamVoltageV: ion.beamVoltageV,
+            beamCurrentA: ion.beamCurrentA,
+            propellant: ion.propellant,
+            thrustMilliN: physics.thrustMilliN,
+            specificImpulseSec: physics.specificImpulseSec,
+            exhaustVelocityKms: physics.exhaustVelocityKms,
+            beamPowerKw: physics.beamPowerKw,
+            showVectors: aero.showVectors,
+          })}
+        </div>
+
+        <!-- Telemetry HUD Cards -->
+        <div class="telemetry-grid">
+          <div class="telemetry-card">
+            <span class="telemetry-label">Տեսակարար Իմպուլս (I_sp)</span>
+            <strong class="telemetry-value is-good" id="val-ion-isp">
+              ${physics.specificImpulseSec.toLocaleString('hy-AM')} <small>վ</small>
+            </strong>
+            <span class="telemetry-hint">Արտահոսքի արագություն՝ ${physics.exhaustVelocityKms} կմ/վ</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="telemetry-label">Շարունակական Քարշուժ (F)</span>
+            <strong class="telemetry-value">
+              ${physics.thrustMilliN} <small>մՆ</small>
+            </strong>
+            <span class="telemetry-hint">Ծախս՝ ${physics.massFlowMgS} մգ/վ (աննշան կորուստ)</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="telemetry-label">Օրական Արագացում (Δv / օր)</span>
+            <strong class="telemetry-value is-good">
+              +${physics.deltaVPerDayMs} <small>մ/վ / օր</small>
+            </strong>
+            <span class="telemetry-hint">Արագացում՝ ${physics.accelerationMmS2} մմ/վ²</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="telemetry-label">Էլեկտրական Հզորություն (P)</span>
+            <strong class="telemetry-value">
+              ${physics.totalPowerKw} <small>կՎտ</small>
+            </strong>
+            <span class="telemetry-hint">Քարշ/Հզորություն՝ ${physics.thrustToPowerRatio} մՆ/կՎտ</span>
+          </div>
+        </div>
+
+        <!-- Brilliant Conceptual Explanation -->
+        <div class="physics-explanation-box">
+          <h4>💡 Ինչու՞ իոնային շարժիչներն անփոխարինելի են խոր տիեզերքում</h4>
+          <p>
+            Քիմիական հրթիռների այրման արգասիքները դուրս են նետվում առավելագույնը 3-4.5 կմ/վ արագությամբ ($I_{\\text{sp}} \\approx 300-450$ վ)։ Իսկ էլեկտրաստատիկ դաշտով արագացվող Քսենոնի իոնները սլանում են <b>40-50 կմ/վ արագությամբ</b> ($I_{\\text{sp}} > 4,500$ վ)։ Ցիոլկովսկու բանաձևի համաձայն՝ $\\Delta v = v_e \\ln(m_0/m_f)$․ իոնային շարժիչի դեպքում միջմոլորակային թռիչքի համար պահանջվում է <b>10 անգամ ավելի քիչ վառելիք</b>։ Տիեզերանավի քաշի 80%-ը դառնում է գիտական օգտակար բեռ, այլ ոչ թե ծանր վառելիքային բաքեր։
+          </p>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive Sliders -->
+      <div class="sim-controls-card">
+        <h3>Էլեկտրական Շարժիչի Պարամետրեր</h3>
+
+        <!-- Beam Voltage Slider -->
+        <div class="control-row">
+          <div class="control-label-wrap">
+            <label for="param-ion-voltage">Արագացնող Լարում (Beam Voltage)</label>
+            <strong id="label-ion-voltage">${ion.beamVoltageV} Վ</strong>
+          </div>
+          <input type="range" id="param-ion-voltage" min="800" max="3500" step="50" value="${ion.beamVoltageV}">
+          <div class="range-marks">
+            <span>800 Վ (34 կմ/վ)</span>
+            <span>1,500 Վ (47 կմ/վ)</span>
+            <span>3,500 Վ (72 կմ/վ)</span>
+          </div>
+        </div>
+
+        <!-- Beam Current Slider -->
+        <div class="control-row">
+          <div class="control-label-wrap">
+            <label for="param-ion-current">Իոնային Փնջի Հոսանք (Beam Current)</label>
+            <strong id="label-ion-current">${ion.beamCurrentA} Ա</strong>
+          </div>
+          <input type="range" id="param-ion-current" min="0.5" max="3.5" step="0.1" value="${ion.beamCurrentA}">
+          <div class="range-marks">
+            <span>0.5 Ա (35 մՆ)</span>
+            <span>1.8 Ա (128 մՆ)</span>
+            <span>3.5 Ա (250 մՆ)</span>
+          </div>
+        </div>
+
+        <!-- Propellant Gas Selector -->
+        <div class="control-row">
+          <div class="control-label-wrap">
+            <label for="param-ion-propellant">Աշխատանքային Մարմին (Propellant)</label>
+            <strong id="label-ion-propellant">${physics.propellantName}</strong>
+          </div>
+          <select id="param-ion-propellant" class="propellant-select" style="width: 100%; padding: 0.6rem; border-radius: 8px; font-weight: 700; background: #0f172a; color: #f8fafc; border: 1.5px solid #334155;">
+            <option value="xenon" ${ion.propellant === 'xenon' ? 'selected' : ''}>Քսենոն (Xenon Xe, 131.3 amu) · Դասական ստանդարտ</option>
+            <option value="krypton" ${ion.propellant === 'krypton' ? 'selected' : ''}>Կրիպտոն (Krypton Kr, 83.8 amu) · Starlink մատչելի</option>
+            <option value="argon" ${ion.propellant === 'argon' ? 'selected' : ''}>Արգոն (Argon Ar, 39.9 amu) · Գերբարձր Isp</option>
+            <option value="iodine" ${ion.propellant === 'iodine' ? 'selected' : ''}>Յոդ (Iodine I₂, 126.9 amu) · Պինդ պահեստավորում</option>
+          </select>
+        </div>
+
+        <!-- Spacecraft Mass Slider -->
+        <div class="control-row">
+          <div class="control-label-wrap">
+            <label for="param-ion-mass">Տիեզերանավի Զանգված (Mass)</label>
+            <strong id="label-ion-mass">${ion.spacecraftMassKg} կգ</strong>
+          </div>
+          <input type="range" id="param-ion-mass" min="200" max="2000" step="50" value="${ion.spacecraftMassKg}">
+          <div class="range-marks">
+            <span>200 կգ (CubeSat)</span>
+            <span>650 կգ (Dawn)</span>
+            <span>2,000 կգ (Ծանր զոնդ)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
 
 /**
  * TAB 3: DIY Home Engineering Guide
@@ -1394,6 +2058,216 @@ export function bindAeroLab(root, state, save, render) {
         aero.jet.bypassRatio = 8.5;
         aero.jet.altitude = 1000;
         aero.jet.airspeedKmh = 200;
+      }
+      playSound('control');
+      render();
+    };
+  });
+
+  // Helicopter Swashplate & Rotor Controls
+  const heliCol = root.querySelector('#param-heli-collective');
+  if (heliCol) {
+    heliCol.oninput = (e) => {
+      aero.helicopter.collective = Number(e.target.value);
+      render();
+    };
+  }
+
+  const heliCyc = root.querySelector('#param-heli-cyclic');
+  if (heliCyc) {
+    heliCyc.oninput = (e) => {
+      aero.helicopter.cyclicPitch = Number(e.target.value);
+      render();
+    };
+  }
+
+  const heliTail = root.querySelector('#param-heli-tail');
+  if (heliTail) {
+    heliTail.oninput = (e) => {
+      aero.helicopter.tailPedal = Number(e.target.value);
+      render();
+    };
+  }
+
+  root.querySelectorAll('[data-helipreset]').forEach((btn) => {
+    btn.onclick = () => {
+      const preset = btn.dataset.helipreset;
+      if (preset === 'hover') {
+        aero.helicopter.collective = 50;
+        aero.helicopter.cyclicPitch = 0;
+        aero.helicopter.tailPedal = 50;
+      } else if (preset === 'forward') {
+        aero.helicopter.collective = 55;
+        aero.helicopter.cyclicPitch = 25;
+        aero.helicopter.tailPedal = 55;
+      } else if (preset === 'climb') {
+        aero.helicopter.collective = 75;
+        aero.helicopter.cyclicPitch = 0;
+        aero.helicopter.tailPedal = 68;
+      } else if (preset === 'spinout') {
+        aero.helicopter.collective = 80;
+        aero.helicopter.cyclicPitch = 0;
+        aero.helicopter.tailPedal = 10;
+      }
+      playSound('control');
+      render();
+    };
+  });
+
+  // Orbital Cannonball & Keplerian Controls
+  const orbitV0 = root.querySelector('#param-orbit-v0');
+  if (orbitV0) {
+    orbitV0.oninput = (e) => {
+      aero.orbit.horizontalVelocityKms = Number(e.target.value);
+      render();
+    };
+  }
+
+  const orbitAlt = root.querySelector('#param-orbit-alt');
+  if (orbitAlt) {
+    orbitAlt.oninput = (e) => {
+      aero.orbit.launchAltitudeKm = Number(e.target.value);
+      render();
+    };
+  }
+
+  root.querySelectorAll('[data-orbitpreset]').forEach((btn) => {
+    btn.onclick = () => {
+      const preset = btn.dataset.orbitpreset;
+      if (preset === 'suborbital') {
+        aero.orbit.horizontalVelocityKms = 4.5;
+        aero.orbit.launchAltitudeKm = 400;
+      } else if (preset === 'leo') {
+        aero.orbit.horizontalVelocityKms = 7.67;
+        aero.orbit.launchAltitudeKm = 400;
+      } else if (preset === 'gto') {
+        aero.orbit.horizontalVelocityKms = 9.8;
+        aero.orbit.launchAltitudeKm = 400;
+      } else if (preset === 'escape') {
+        aero.orbit.horizontalVelocityKms = 11.0;
+        aero.orbit.launchAltitudeKm = 400;
+      }
+      playSound('control');
+      render();
+    };
+  });
+
+  // Atmospheric Glider & Thermal Soaring Controls
+  const gliderSpeed = root.querySelector('#param-glider-speed');
+  if (gliderSpeed) {
+    gliderSpeed.oninput = (e) => {
+      aero.glider.airSpeedKmh = Number(e.target.value);
+      render();
+    };
+  }
+
+  const gliderBank = root.querySelector('#param-glider-bank');
+  if (gliderBank) {
+    gliderBank.oninput = (e) => {
+      aero.glider.bankAngleDeg = Number(e.target.value);
+      render();
+    };
+  }
+
+  const gliderThermal = root.querySelector('#param-glider-thermal');
+  if (gliderThermal) {
+    gliderThermal.oninput = (e) => {
+      aero.glider.thermalStrength = Number(e.target.value);
+      render();
+    };
+  }
+
+  const gliderRadius = root.querySelector('#param-glider-radius');
+  if (gliderRadius) {
+    gliderRadius.oninput = (e) => {
+      aero.glider.thermalRadius = Number(e.target.value);
+      render();
+    };
+  }
+
+  root.querySelectorAll('[data-gliderpreset]').forEach((btn) => {
+    btn.onclick = () => {
+      const preset = btn.dataset.gliderpreset;
+      if (preset === 'optimal') {
+        aero.glider.airSpeedKmh = 85;
+        aero.glider.bankAngleDeg = 30;
+        aero.glider.thermalStrength = 4.0;
+        aero.glider.thermalRadius = 120;
+      } else if (preset === 'level') {
+        aero.glider.airSpeedKmh = 92;
+        aero.glider.bankAngleDeg = 0;
+        aero.glider.thermalStrength = 0;
+      } else if (preset === 'steep') {
+        aero.glider.airSpeedKmh = 95;
+        aero.glider.bankAngleDeg = 55;
+        aero.glider.thermalStrength = 4.0;
+      } else if (preset === 'weak') {
+        aero.glider.airSpeedKmh = 80;
+        aero.glider.bankAngleDeg = 20;
+        aero.glider.thermalStrength = 1.5;
+        aero.glider.thermalRadius = 90;
+      }
+      playSound('control');
+      render();
+    };
+  });
+
+  // Ion Thruster & Spacecraft Electric Propulsion Controls
+  const ionVoltage = root.querySelector('#param-ion-voltage');
+  if (ionVoltage) {
+    ionVoltage.oninput = (e) => {
+      aero.ion.beamVoltageV = Number(e.target.value);
+      render();
+    };
+  }
+
+  const ionCurrent = root.querySelector('#param-ion-current');
+  if (ionCurrent) {
+    ionCurrent.oninput = (e) => {
+      aero.ion.beamCurrentA = Number(e.target.value);
+      render();
+    };
+  }
+
+  const ionPropellant = root.querySelector('#param-ion-propellant');
+  if (ionPropellant) {
+    ionPropellant.onchange = (e) => {
+      aero.ion.propellant = e.target.value;
+      render();
+    };
+  }
+
+  const ionMass = root.querySelector('#param-ion-mass');
+  if (ionMass) {
+    ionMass.oninput = (e) => {
+      aero.ion.spacecraftMassKg = Number(e.target.value);
+      render();
+    };
+  }
+
+  root.querySelectorAll('[data-ionpreset]').forEach((btn) => {
+    btn.onclick = () => {
+      const preset = btn.dataset.ionpreset;
+      if (preset === 'dawn') {
+        aero.ion.beamVoltageV = 1500;
+        aero.ion.beamCurrentA = 1.8;
+        aero.ion.propellant = 'xenon';
+        aero.ion.spacecraftMassKg = 650;
+      } else if (preset === 'starlink') {
+        aero.ion.beamVoltageV = 1200;
+        aero.ion.beamCurrentA = 2.4;
+        aero.ion.propellant = 'krypton';
+        aero.ion.spacecraftMassKg = 300;
+      } else if (preset === 'bepi') {
+        aero.ion.beamVoltageV = 2200;
+        aero.ion.beamCurrentA = 2.8;
+        aero.ion.propellant = 'xenon';
+        aero.ion.spacecraftMassKg = 1500;
+      } else if (preset === 'deepspace') {
+        aero.ion.beamVoltageV = 1100;
+        aero.ion.beamCurrentA = 1.2;
+        aero.ion.propellant = 'xenon';
+        aero.ion.spacecraftMassKg = 490;
       }
       playSound('control');
       render();

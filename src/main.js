@@ -724,13 +724,15 @@ function bind() {
     if (chosen === undefined) return;
     data.answers[observationIndex] = chosen;
     observationSelection = null;
-    if (chosen === questions[observationIndex].correct) playSound("complete");
+    if (chosen === questions[observationIndex].correct) playSound("correct");
+    else playSound("incorrect");
     save(); render();
   });
   document.querySelectorAll("[data-hint]").forEach(
     (b) =>
       (b.onclick = () => {
         hint++;
+        playSound("hint");
         render();
       }),
   );

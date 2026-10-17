@@ -1,3 +1,4 @@
+import {playSound} from '../audio.js';
 export const escapeHTML=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function activityMarkup(activity,draft={},disabled=false){
  const esc=escapeHTML;
@@ -39,7 +40,7 @@ export function scoreActivity(activity,draft,weight){
  return activity.pairs.reduce((sum,p,i)=>sum+(draft.matches?.[i]===p[1]?weight/activity.pairs.length:0),0);
 }
 export function bindActivity(root,draft,onChange){
- root.querySelectorAll('[data-activity-choice]').forEach(b=>b.onclick=()=>{draft.choice=Number(b.dataset.activityChoice);onChange(true);});
+ root.querySelectorAll('[data-activity-choice]').forEach(b=>b.onclick=()=>{draft.choice=Number(b.dataset.activityChoice);playSound('tap');onChange(true);});
  root.querySelector('#activity-text')?.addEventListener('input',e=>{draft.text=e.target.value;onChange(false);});
  root.querySelector('#activity-number')?.addEventListener('input',e=>{draft.number=e.target.value;onChange(false);});
  root.querySelectorAll('[data-activity-match]').forEach(select=>select.onchange=()=>{draft.matches ||= {};draft.matches[select.dataset.activityMatch]=select.value;onChange(false);});

@@ -1247,3 +1247,435 @@ export function helicopterSwashplateArt({
   `;
 }
 
+/**
+ * Ion Space Thruster & Deep Space Continuous Spiral Artwork
+ */
+export function ionThrusterArt({
+  beamVoltageV = 1500,
+  beamCurrentA = 1.8,
+  propellant = 'xenon',
+  thrustMilliN = 128,
+  specificImpulseSec = 4788,
+  exhaustVelocityKms = 46.95,
+  beamPowerKw = 2.7,
+  showVectors = true,
+} = {}) {
+  const PROPELLANT_COLORS = {
+    xenon: { primary: '#38bdf8', secondary: '#818cf8', plasma: '#a855f7' },
+    krypton: { primary: '#4ade80', secondary: '#2dd4bf', plasma: '#34d399' },
+    argon: { primary: '#c084fc', secondary: '#e879f9', plasma: '#d946ef' },
+    iodine: { primary: '#f43f5e', secondary: '#fb7185', plasma: '#e11d48' },
+  };
+  const colors = PROPELLANT_COLORS[propellant] || PROPELLANT_COLORS.xenon;
+  const beamIntensity = Math.min(1, Math.max(0.3, beamCurrentA / 3.0));
+  const plumeLength = Math.min(220, Math.max(80, 100 + (beamVoltageV - 1000) * 0.05));
+
+  return `
+    <svg viewBox="0 0 680 380" class="aerolab-art ion-art" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Իոնային շարժիչ և տիեզերական պարուրաձև ուղեծիր">
+      <defs>
+        <!-- Deep Space Background Gradient -->
+        <radialGradient id="space-bg" cx="50%" cy="50%" r="70%">
+          <stop offset="0%" stop-color="#0b132b"/>
+          <stop offset="60%" stop-color="#050a18"/>
+          <stop offset="100%" stop-color="#020617"/>
+        </radialGradient>
+
+        <!-- Ion Plume Gradient -->
+        <linearGradient id="ion-plume-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="${colors.primary}" stop-opacity="${0.95 * beamIntensity}"/>
+          <stop offset="40%" stop-color="${colors.secondary}" stop-opacity="${0.75 * beamIntensity}"/>
+          <stop offset="85%" stop-color="${colors.plasma}" stop-opacity="${0.35 * beamIntensity}"/>
+          <stop offset="100%" stop-color="${colors.primary}" stop-opacity="0"/>
+        </linearGradient>
+
+        <!-- Plasma Glow in Chamber -->
+        <radialGradient id="plasma-core" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+          <stop offset="30%" stop-color="${colors.primary}" stop-opacity="0.8"/>
+          <stop offset="70%" stop-color="${colors.plasma}" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="#0f172a" stop-opacity="0"/>
+        </radialGradient>
+
+        <!-- Metallic Grid Shader -->
+        <linearGradient id="metal-chassis" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#64748b"/>
+          <stop offset="30%" stop-color="#334155"/>
+          <stop offset="70%" stop-color="#1e293b"/>
+          <stop offset="100%" stop-color="#0f172a"/>
+        </linearGradient>
+
+        <!-- Solar Panel Cell Pattern -->
+        <pattern id="solar-grid" width="12" height="10" patternUnits="userSpaceOnUse">
+          <rect width="12" height="10" fill="#1e3a8a" stroke="#3b82f6" stroke-width="0.8"/>
+          <line x1="0" y1="5" x2="12" y2="5" stroke="#60a5fa" stroke-width="0.5"/>
+        </pattern>
+      </defs>
+
+      <!-- Background with Stars -->
+      <rect width="680" height="380" fill="url(#space-bg)"/>
+      <g fill="#94a3b8" opacity="0.6">
+        <circle cx="45" cy="35" r="1.2"/>
+        <circle cx="120" cy="70" r="0.8"/>
+        <circle cx="210" cy="25" r="1.5"/>
+        <circle cx="340" cy="65" r="1.0"/>
+        <circle cx="450" cy="40" r="1.2"/>
+        <circle cx="560" cy="85" r="1.0"/>
+        <circle cx="630" cy="30" r="1.4"/>
+        <circle cx="90" cy="340" r="1.0"/>
+        <circle cx="230" cy="360" r="1.2"/>
+        <circle cx="480" cy="350" r="0.8"/>
+        <circle cx="620" cy="320" r="1.3"/>
+      </g>
+
+      <!-- Left Section: Cutaway Schematic of Ion Thruster -->
+      <g id="thruster-schematic" transform="translate(40, 180)">
+        <!-- Spacecraft Body / Avionics Hull -->
+        <polygon points="-30,-85 30,-85 30,85 -30,85 -40,60 -40,-60" fill="url(#metal-chassis)" stroke="#475569" stroke-width="2"/>
+        <text x="-25" y="-92" font-size="10" font-weight="700" fill="#94a3b8">Տիեզերանավի Կորպուս</text>
+
+        <!-- Solar Array Wing (Top Left) -->
+        <rect x="-35" y="-140" width="85" height="45" rx="3" fill="url(#solar-grid)" stroke="#60a5fa" stroke-width="1.5"/>
+        <line x1="5" y1="-95" x2="5" y2="-85" stroke="#94a3b8" stroke-width="3"/>
+        <text x="7" y="-120" font-size="9" font-weight="700" fill="#93c5fd" text-anchor="middle">Արևային Մարտկոց</text>
+
+        <!-- Xenon Propellant Tank (Spherical COPV) -->
+        <circle cx="0" cy="0" r="26" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+        <path d="M -18 -18 C -5 -30, 20 -20, 22 5" fill="none" stroke="#38bdf8" stroke-width="1.5" opacity="0.6"/>
+        <text x="0" y="4" font-size="9" font-weight="700" fill="#e0f2fe" text-anchor="middle">${propellant.toUpperCase()}</text>
+        <text x="0" y="15" font-size="8" font-weight="600" fill="#7dd3fc" text-anchor="middle">Բալոն</text>
+
+        <!-- Propellant Feed Line & Valve -->
+        <path d="M 26 0 L 50 0" stroke="#0284c7" stroke-width="3" fill="none"/>
+        <polygon points="40,-4 46,0 40,4" fill="#38bdf8"/>
+
+        <!-- Ionization Discharge Chamber -->
+        <path d="M 50,-50 L 125,-50 L 125,50 L 50,50 Z" fill="#0f172a" stroke="#64748b" stroke-width="2"/>
+        
+        <!-- Permanent Ring Magnets (Cusp Magnetic Confinement) -->
+        <rect x="52" y="-48" width="10" height="8" rx="2" fill="#ef4444"/>
+        <rect x="80" y="-48" width="10" height="8" rx="2" fill="#3b82f6"/>
+        <rect x="108" y="-48" width="10" height="8" rx="2" fill="#ef4444"/>
+        <rect x="52" y="40" width="10" height="8" rx="2" fill="#ef4444"/>
+        <rect x="80" y="40" width="10" height="8" rx="2" fill="#3b82f6"/>
+        <rect x="108" y="40" width="10" height="8" rx="2" fill="#ef4444"/>
+
+        <!-- Plasma Glow Inside Chamber -->
+        <ellipse cx="88" cy="0" rx="32" ry="38" fill="url(#plasma-core)"/>
+        
+        <!-- Ions (Xe+) and Electrons (e-) floating in plasma -->
+        <g font-size="9" font-weight="800">
+          <text x="70" y="-12" fill="#38bdf8">${propellant === 'xenon' ? 'Xe⁺' : 'Ion⁺'}</text>
+          <text x="95" y="15" fill="#38bdf8">${propellant === 'xenon' ? 'Xe⁺' : 'Ion⁺'}</text>
+          <text x="80" y="28" fill="#fbbf24">e⁻</text>
+          <text x="100" y="-18" fill="#fbbf24">e⁻</text>
+        </g>
+
+        <!-- Electrostatic Accelerator Grids (Screen Grid & Accel Grid) -->
+        <!-- Screen Grid (+1500V) -->
+        <line x1="126" y1="-48" x2="126" y2="48" stroke="#38bdf8" stroke-width="3" stroke-dasharray="4 2"/>
+        <text x="126" y="-55" font-size="8" font-weight="700" fill="#38bdf8" text-anchor="middle">+${beamVoltageV}V</text>
+        <text x="126" y="-65" font-size="8" font-weight="700" fill="#94a3b8" text-anchor="middle">Էկրանային ցանց</text>
+
+        <!-- Accelerator Grid (-300V) -->
+        <line x1="133" y1="-48" x2="133" y2="48" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="4 2"/>
+        <text x="133" y="60" font-size="8" font-weight="700" fill="#ef4444" text-anchor="middle">-300V</text>
+        <text x="133" y="70" font-size="8" font-weight="700" fill="#94a3b8" text-anchor="middle">Արագացնող ցանց</text>
+
+        <!-- High-Velocity Ion Plume Ejection -->
+        <path d="M 134,-44 Q ${134 + plumeLength * 0.6} -65 ${134 + plumeLength} -75 L ${134 + plumeLength} 75 Q ${134 + plumeLength * 0.6} 65 134 44 Z" fill="url(#ion-plume-grad)"/>
+
+        <!-- Fast Ion Streamers -->
+        <g stroke="${colors.primary}" stroke-width="1.8" opacity="0.8">
+          <line x1="135" y1="-25" x2="${135 + plumeLength * 0.9}" y2="-38" stroke-dasharray="10 4"/>
+          <line x1="135" y1="0" x2="${135 + plumeLength}" y2="0" stroke-dasharray="12 4"/>
+          <line x1="135" y1="25" x2="${135 + plumeLength * 0.9}" y2="38" stroke-dasharray="10 4"/>
+        </g>
+
+        <!-- Hollow Cathode Neutralizer (spraying electrons into plume) -->
+        <g id="neutralizer" transform="translate(142, -58)">
+          <rect x="0" y="0" width="14" height="8" rx="2" fill="#e2e8f0" stroke="#475569" stroke-width="1"/>
+          <!-- Electron spray path -->
+          <path d="M 14 4 Q 30 10 45 28" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="2 2"/>
+          <circle cx="45" cy="28" r="2" fill="#fbbf24"/>
+          <text x="20" y="-6" font-size="8" font-weight="700" fill="#fbbf24">Չեզոքացուցիչ (e⁻)</text>
+        </g>
+
+        <!-- Live Force Vectors -->
+        ${
+          showVectors
+            ? `
+          <!-- Exhaust Ion Thrust Vector (Right, blue) -->
+          <g stroke="${colors.primary}" stroke-width="2.5" fill="${colors.primary}">
+            <line x1="135" y1="0" x2="${135 + 85}" y2="0"/>
+            <polygon points="${135 + 92},0 ${135 + 83},-5 ${135 + 83},5"/>
+            <text x="${135 + 96}" y="-8" font-size="10" font-weight="700" fill="${colors.primary}">v_e = ${exhaustVelocityKms} կմ/վ</text>
+          </g>
+
+          <!-- Reaction Thrust on Spacecraft (Left, orange) -->
+          <g stroke="#f97316" stroke-width="3" fill="#f97316">
+            <line x1="-30" y1="0" x2="-95" y2="0"/>
+            <polygon points="-102,0 -93,-5 -93,5"/>
+            <text x="-106" y="-8" font-size="10" font-weight="700" fill="#f97316" text-anchor="end">F_քարշ = ${thrustMilliN} մՆ</text>
+          </g>
+        `
+            : ''
+        }
+      </g>
+
+      <!-- Right Section: Continuous Interplanetary Spiral Trajectory Inset -->
+      <g id="orbital-spiral-inset" transform="translate(425, 45)">
+        <rect width="235" height="190" rx="12" fill="#0f172a" fill-opacity="0.85" stroke="#334155" stroke-width="1.5"/>
+        <text x="14" y="24" font-size="11" font-weight="700" fill="#38bdf8">Տիեզերական Պարույր (Low-Thrust)</text>
+
+        <!-- Center: Sun -->
+        <g transform="translate(118, 105)">
+          <circle cx="0" cy="0" r="10" fill="#f59e0b" filter="drop-shadow(0 0 6px #f59e0b)"/>
+          
+          <!-- Inner Planet (Earth Orbit) -->
+          <circle cx="0" cy="0" r="32" fill="none" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/>
+          <circle cx="32" cy="0" r="3.5" fill="#38bdf8"/>
+          <text x="36" y="10" font-size="7" font-weight="700" fill="#38bdf8">Երկիր</text>
+
+          <!-- Outer Target (Mars / Asteroid Belt) -->
+          <circle cx="0" cy="0" r="72" fill="none" stroke="#ef4444" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>
+          <circle cx="-72" cy="0" r="3.5" fill="#ef4444"/>
+          <text x="-72" y="-6" font-size="7" font-weight="700" fill="#ef4444" text-anchor="middle">Մարս</text>
+
+          <!-- Continuous Outward Ion Spiral Trajectory -->
+          <path d="M 32 0 
+                   C 32 25, 10 38, -10 38 
+                   C -35 38, -48 15, -48 -10
+                   C -48 -40, -15 -58, 15 -58
+                   C 48 -58, 68 -25, 68 10
+                   C 68 45, 30 72, -15 72
+                   C -50 72, -72 40, -72 0"
+                fill="none" stroke="${colors.primary}" stroke-width="2" stroke-dasharray="5 3"/>
+          
+          <!-- Spacecraft Icon on Spiral -->
+          <circle cx="15" cy="-58" r="3" fill="#ffffff" stroke="${colors.primary}" stroke-width="1.5"/>
+          <polygon points="12,-63 20,-58 12,-53" fill="${colors.primary}"/>
+        </g>
+
+        <text x="14" y="174" font-size="9" font-weight="600" fill="#94a3b8">
+          Անընդհատ միկրոքարշուժով պարուրաձև թռիչք
+        </text>
+      </g>
+
+      <!-- Bottom Telemetry HUD Bar -->
+      <g transform="translate(425, 250)">
+        <rect width="235" height="110" rx="10" fill="#1e293b" fill-opacity="0.9" stroke="#475569" stroke-width="1.5"/>
+        <text x="14" y="24" font-size="11" font-weight="700" fill="#e2e8f0">Իոնային Տելեմետրիա</text>
+        <line x1="14" y1="32" x2="220" y2="32" stroke="#334155" stroke-width="1"/>
+        
+        <text x="14" y="52" font-size="10" font-weight="600" fill="#94a3b8">Տեսակարար Իմպուլս (I_sp)՝</text>
+        <text x="220" y="52" font-size="11" font-weight="700" fill="#38bdf8" text-anchor="end">${specificImpulseSec} վ</text>
+        
+        <text x="14" y="72" font-size="10" font-weight="600" fill="#94a3b8">Արտահոսքի Արագություն՝</text>
+        <text x="220" y="72" font-size="11" font-weight="700" fill="#22c55e" text-anchor="end">${exhaustVelocityKms} կմ/վ</text>
+        
+        <text x="14" y="92" font-size="10" font-weight="600" fill="#94a3b8">Էլեկտրական Հզորություն՝</text>
+        <text x="220" y="92" font-size="11" font-weight="700" fill="#fbbf24" text-anchor="end">${beamPowerKw} կՎտ</text>
+      </g>
+    </svg>
+  `;
+}
+
+/**
+ * Atmospheric Thermal Soaring & Glider Polar Artwork
+ */
+export function gliderThermalArt({
+  airSpeedKmh = 90,
+  bankAngleDeg = 30,
+  thermalStrength = 3.5,
+  thermalRadius = 120,
+  turnRadiusM = 78,
+  loadFactor = 1.15,
+  turnSinkRate = 1.1,
+  thermalUpdraft = 3.2,
+  netClimbRate = 2.1,
+  bestLd = 38,
+  isClimbing = true,
+  showVectors = true,
+} = {}) {
+  const isUp = netClimbRate > 0;
+  const statusColor = isUp ? '#22c55e' : '#ef4444';
+  const statusText = isUp
+    ? `🟢 ՎԵՐԵԼՔ ԹԵՐՄԻԿՈՒՄ՝ +${netClimbRate} մ/վ`
+    : `🔴 ԻՋԵՑՈՒՄ (ԿՈՐՈՒՍՏ)՝ ${netClimbRate} մ/վ`;
+
+  // Scale turn radius for visual inside 360px wide column
+  const visualRadius = Math.max(30, Math.min(130, (turnRadiusM / 150) * 100));
+
+  return `
+    <svg viewBox="0 0 680 380" class="aerolab-art glider-art" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Սավառնակը թերմիկ օդային հոսանքում և բևեռային կորը">
+      <defs>
+        <!-- Atmospheric Sky Gradient -->
+        <linearGradient id="sky-thermal" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#bae6fd"/>
+          <stop offset="55%" stop-color="#e0f2fe"/>
+          <stop offset="85%" stop-color="#f0fdf4"/>
+          <stop offset="100%" stop-color="#bbf7d0"/>
+        </linearGradient>
+
+        <!-- Thermal Convection Heatmap Gradient -->
+        <radialGradient id="thermal-column" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#fef08a" stop-opacity="0.85"/>
+          <stop offset="45%" stop-color="#fed7aa" stop-opacity="0.55"/>
+          <stop offset="80%" stop-color="#fecaca" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="#e0f2fe" stop-opacity="0"/>
+        </radialGradient>
+
+        <!-- Glider Wing Gradient -->
+        <linearGradient id="glider-wing" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="50%" stop-color="#e2e8f0"/>
+          <stop offset="100%" stop-color="#cbd5e1"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Sky & Landscape Background -->
+      <rect width="680" height="380" fill="url(#sky-thermal)"/>
+
+      <!-- Horizon Ground Landscape -->
+      <path d="M 0 330 Q 180 310 360 335 T 680 325 L 680 380 L 0 380 Z" fill="#86efac" opacity="0.6"/>
+      <path d="M 0 345 Q 220 330 440 350 T 680 340 L 680 380 L 0 380 Z" fill="#4ade80" opacity="0.8"/>
+
+      <!-- Convective Thermal Column (Center at X=240, Y=180) -->
+      <g id="thermal-updraft-column" transform="translate(240, 180)">
+        <ellipse cx="0" cy="0" rx="140" ry="150" fill="url(#thermal-column)"/>
+
+        <!-- Upward Flow Streamline Arrows -->
+        <g stroke="#f59e0b" stroke-width="2" stroke-linecap="round" fill="#f59e0b" opacity="0.75">
+          <line x1="-70" y1="90" x2="-70" y2="-90" stroke-dasharray="8 6"/>
+          <polygon points="-70,-96 -74,-88 -66,-88"/>
+          
+          <line x1="-25" y1="110" x2="-25" y2="-110" stroke-width="2.5" stroke-dasharray="10 5"/>
+          <polygon points="-25,-118 -30,-108 -20,-108"/>
+
+          <line x1="25" y1="110" x2="25" y2="-110" stroke-width="2.5" stroke-dasharray="10 5"/>
+          <polygon points="25,-118 20,-108 30,-108"/>
+
+          <line x1="70" y1="90" x2="70" y2="-90" stroke-dasharray="8 6"/>
+          <polygon points="70,-96 66,-88 74,-88"/>
+        </g>
+        <text x="0" y="-128" font-size="11" font-weight="700" fill="#b45309" text-anchor="middle">
+          Թերմիկ Կոնվեկտիվ Սյուն (w_core = ${thermalStrength} մ/վ)
+        </text>
+
+        <!-- Circling Track Oval (3D projection) -->
+        <ellipse cx="0" cy="0" rx="${visualRadius}" ry="${visualRadius * 0.45}" fill="none" stroke="#0284c7" stroke-width="2" stroke-dasharray="6 4" opacity="0.7"/>
+
+        <!-- Glider Position on Orbit -->
+        <g id="glider-actor" transform="translate(${visualRadius * 0.75}, ${-visualRadius * 0.3}) rotate(${bankAngleDeg})">
+          <!-- Sailplane Body (Fuselage) -->
+          <ellipse cx="0" cy="0" rx="26" ry="4.5" fill="#ffffff" stroke="#334155" stroke-width="1.5"/>
+          <!-- Cockpit Canopy (Blue tint) -->
+          <ellipse cx="6" cy="-1.5" rx="9" ry="2.5" fill="#38bdf8" stroke="#0284c7" stroke-width="1"/>
+          <!-- High-Aspect-Ratio Slender Wings -->
+          <polygon points="-4,-4 -75,-6 -75,6 -4,4" fill="url(#glider-wing)" stroke="#334155" stroke-width="1.2"/>
+          <polygon points="4,-4 75,-6 75,6 4,4" fill="url(#glider-wing)" stroke="#334155" stroke-width="1.2"/>
+          <!-- T-Tail Stabilizer -->
+          <line x1="-22" y1="0" x2="-22" y2="-12" stroke="#334155" stroke-width="2"/>
+          <line x1="-27" y1="-12" x2="-17" y2="-12" stroke="#334155" stroke-width="2"/>
+
+          <!-- Dynamic Force Vectors on Banked Glider -->
+          ${
+            showVectors
+              ? `
+            <!-- Lift Vector L (Perpendicular to wings, green) -->
+            <g stroke="#22c55e" stroke-width="2.5" fill="#22c55e">
+              <line x1="0" y1="0" x2="0" y2="-48"/>
+              <polygon points="0,-55 -4,-47 4,-47"/>
+              <text x="6" y="-35" font-size="9" font-weight="700" fill="#15803d">L_վերամբարձ</text>
+            </g>
+
+            <!-- Centrifugal Force (Horizontal, orange) -->
+            <g stroke="#f97316" stroke-width="2" fill="#f97316">
+              <line x1="0" y1="0" x2="35" y2="0"/>
+              <polygon points="41,0 33,-4 33,4"/>
+              <text x="12" y="14" font-size="8" font-weight="700" fill="#c2410c">F_կենտրոնախույս</text>
+            </g>
+          `
+              : ''
+          }
+        </g>
+
+        <!-- Circling Radius Indicator -->
+        <line x1="0" y1="0" x2="${visualRadius * 0.75}" y2="${-visualRadius * 0.3}" stroke="#0369a1" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <circle cx="0" cy="0" r="3" fill="#0369a1"/>
+        <text x="${visualRadius * 0.35}" y="${-visualRadius * 0.15 - 5}" font-size="9" font-weight="700" fill="#0369a1">
+          R = ${turnRadiusM} մ
+        </text>
+      </g>
+
+      <!-- Left Inset: Glider Drag Polar Graph -->
+      <g id="polar-curve-graph" transform="translate(25, 45)">
+        <rect width="180" height="155" rx="10" fill="#ffffff" fill-opacity="0.9" stroke="#cbd5e1" stroke-width="1.5"/>
+        <text x="12" y="20" font-size="11" font-weight="700" fill="#0f172a">Սավառնակի Պոլյարա</text>
+        <text x="12" y="32" font-size="8" font-weight="600" fill="#64748b">v_sink vs v_forward</text>
+
+        <!-- Coordinate axes -->
+        <g stroke="#94a3b8" stroke-width="1.2">
+          <!-- Forward Speed axis (X) -->
+          <line x1="25" y1="42" x2="165" y2="42"/>
+          <text x="160" y="38" font-size="8" fill="#64748b" text-anchor="end">v_արագ (կմ/ժ)</text>
+          
+          <!-- Sink axis (Y pointing DOWN) -->
+          <line x1="25" y1="42" x2="25" y2="140"/>
+          <text x="28" y="136" font-size="8" fill="#64748b">v_իջեցում (մ/վ)</text>
+        </g>
+
+        <!-- Polar Curve (Characteristic Parabolic Sink Curve) -->
+        <path d="M 35 110 Q 75 60 110 75 T 160 135" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+
+        <!-- Tangent Line for Best Glide Ratio (Max L/D) -->
+        <line x1="25" y1="42" x2="145" y2="120" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3 2"/>
+        <text x="135" y="115" font-size="8" font-weight="700" fill="#d97706">L/D = ${bestLd}</text>
+
+        <!-- Current Operating Point Dot -->
+        <circle cx="${Math.min(155, Math.max(35, 25 + (airSpeedKmh - 60) * 1.1))}" 
+                cy="${Math.min(140, Math.max(50, 42 + turnSinkRate * 25))}" 
+                r="4.5" fill="#ef4444" stroke="#ffffff" stroke-width="1.5"/>
+      </g>
+
+      <!-- Top Status Banner Pill -->
+      <g transform="translate(240, 25)">
+        <rect width="250" height="34" rx="8" fill="#0f172a" fill-opacity="0.9" stroke="${statusColor}" stroke-width="1.5"/>
+        <text x="125" y="22" font-size="11" font-weight="700" fill="${statusColor}" text-anchor="middle">
+          ${statusText}
+        </text>
+      </g>
+
+      <!-- Right Telemetry Panel -->
+      <g transform="translate(480, 45)">
+        <rect width="180" height="230" rx="10" fill="#0f172a" fill-opacity="0.9" stroke="#334155" stroke-width="1.5"/>
+        <text x="14" y="24" font-size="11" font-weight="700" fill="#f8fafc">Թռիչքային Տվյալներ</text>
+        <line x1="14" y1="32" x2="166" y2="32" stroke="#334155" stroke-width="1"/>
+        
+        <text x="14" y="52" font-size="10" font-weight="600" fill="#94a3b8">Առաջընթաց Արագություն՝</text>
+        <text x="166" y="52" font-size="11" font-weight="700" fill="#38bdf8" text-anchor="end">${airSpeedKmh} կմ/ժ</text>
+        
+        <text x="14" y="80" font-size="10" font-weight="600" fill="#94a3b8">Կողաթեքում (phi)՝</text>
+        <text x="166" y="80" font-size="11" font-weight="700" fill="#e2e8f0" text-anchor="end">${bankAngleDeg}°</text>
+
+        <text x="14" y="108" font-size="10" font-weight="600" fill="#94a3b8">Գերբեռնվածություն (n)՝</text>
+        <text x="166" y="108" font-size="11" font-weight="700" fill="#fbbf24" text-anchor="end">${loadFactor} g</text>
+
+        <text x="14" y="136" font-size="10" font-weight="600" fill="#94a3b8">Թերմիկ Վերելք՝</text>
+        <text x="166" y="136" font-size="11" font-weight="700" fill="#22c55e" text-anchor="end">+${thermalUpdraft} մ/վ</text>
+
+        <text x="14" y="164" font-size="10" font-weight="600" fill="#94a3b8">Սավառնակի Իջեցում՝</text>
+        <text x="166" y="164" font-size="11" font-weight="700" fill="#f87171" text-anchor="end">-${turnSinkRate} մ/վ</text>
+
+        <line x1="14" y1="180" x2="166" y2="180" stroke="#334155" stroke-width="1"/>
+
+        <text x="14" y="202" font-size="10" font-weight="700" fill="#e2e8f0">Արդյունարար Վերելք՝</text>
+        <text x="166" y="202" font-size="12" font-weight="800" fill="${statusColor}" text-anchor="end">
+          ${isUp ? '+' : ''}${netClimbRate} մ/վ
+        </text>
+      </g>
+    </svg>
+  `;
+}
+
+

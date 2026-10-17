@@ -34,7 +34,7 @@ test('both guidance clips and both success clips have real alpha and separate ro
   await stage(page,5,{assessment:{score:3,created:Date.now()}});await transparent(page,'celebration');
   await page.locator('[data-page="progress"]').click();await transparent(page,'success-complete','idle-secondary');
 });
-test('sound requires activation, plays local effects, volume and mute persist',async({page})=>{
+test('sound is enabled by default, plays local effects, volume and mute persist',async({page})=>{
   await page.addInitScript(()=>{
     window.audioPlays=[];
     const play=HTMLMediaElement.prototype.play;
@@ -44,19 +44,19 @@ test('sound requires activation, plays local effects, volume and mute persist',a
     };
   });
   await page.goto('/#home');await page.evaluate(()=>{const d=JSON.parse(localStorage.getItem('physics-journal-v1'));d.stage=2;d.unlockedStage=Math.max(2,d.unlockedStage||0);localStorage.setItem('physics-journal-v1',JSON.stringify(d));});await page.reload();await page.goto('/#lesson/motion');
-  await page.locator('#run').click();await page.locator('#run').click();
-  expect(await page.evaluate(()=>window.audioPlays.length)).toBe(0);
-  await expect(page.locator('#audio-settings svg')).toBeVisible();await page.locator('#sound').click();await page.locator('#audio-settings').click();
-  await expect.poll(()=>page.evaluate(()=>window.audioPlays.length)).toBe(1);
+  await page.locator('#run').click();
+  await expect.poll(()=>page.evaluate(()=>window.audioPlays.length)).toBeGreaterThanOrEqual(1);
+  await expect(page.locator('#audio-settings svg')).toBeVisible();
+  await page.locator('#audio-settings').click();
   await page.locator('#volume').fill('70');await page.locator('#close-audio').click();
   await page.waitForTimeout(150);await page.locator('#run').click();
-  await expect.poll(()=>page.evaluate(()=>window.audioPlays.length)).toBe(2);
   expect(await page.evaluate(()=>window.audioPlays.at(-1).volume)).toBeCloseTo(.49);
   await page.locator('#audio-settings').click();await page.locator('#mute').click();
-  await page.locator('#close-audio').click();await page.locator('#run').click();
-  expect(await page.evaluate(()=>window.audioPlays.length)).toBe(2);
+  await page.locator('#close-audio').click();
+  const countBeforeMute = await page.evaluate(()=>window.audioPlays.length);
+  await page.locator('#run').click();
+  expect(await page.evaluate(()=>window.audioPlays.length)).toBe(countBeforeMute);
   await page.reload();await page.locator('#audio-settings').click();await expect(page.locator('#volume')).toHaveValue('70');
-  expect(await page.evaluate(()=>window.audioPlays.length)).toBe(0);
 });
 test('guidance stays within mobile, tablet and desktop and honors reduced motion',async({page})=>{
   for(const width of [390,768,1440]) {

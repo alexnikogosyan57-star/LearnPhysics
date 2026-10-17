@@ -10,6 +10,8 @@ import {
   turbofanBraytonModel,
   orbitPhysicsModel,
   helicopterSwashplateModel,
+  gliderThermalModel,
+  ionThrusterModel,
   AERO_CHALLENGES,
   DIY_PROJECTS,
   AERO_BADGES,
@@ -206,8 +208,43 @@ test('Helicopter aerodynamics: collective climb/hover, cyclic forward tilt, and 
   assert.equal(spinLeft.isHovering, false);
 });
 
+test('Glider Thermal soaring aerodynamics: sink polar, banking turn load factor, and net climb rate', () => {
+  // Straight level glide at optimal speed
+  const level = gliderThermalModel({ airSpeedKmh: 90, bankAngleDeg: 0, thermalStrength: 0 });
+  assert.equal(level.loadFactor, 1.0);
+  assert.ok(level.turnSinkRate > 0.5 && level.turnSinkRate < 1.5, 'Level sink rate should be around 0.8-1.2 m/s');
+  assert.ok(level.bestLd > 30, 'High-performance sailplane L/D should exceed 30');
+
+  // Circling in thermal updraft (+4 m/s) with optimal bank (30°)
+  const thermaling = gliderThermalModel({ airSpeedKmh: 85, bankAngleDeg: 30, thermalStrength: 4.0, thermalRadius: 120 });
+  assert.ok(thermaling.loadFactor > 1.1, 'Banking creates load factor > 1');
+  assert.ok(thermaling.turnRadiusM > 50 && thermaling.turnRadiusM < 150, 'Circling radius should be within thermal column');
+  assert.ok(thermaling.isClimbing, 'Net climb rate should be positive inside strong thermal');
+  assert.ok(thermaling.netClimbRate > 1.0, `Expected climb rate > 1.0 m/s, got ${thermaling.netClimbRate}`);
+
+  // Excessive bank angle (60°) dramatically spikes sink rate
+  const steepBank = gliderThermalModel({ airSpeedKmh: 85, bankAngleDeg: 60, thermalStrength: 4.0, thermalRadius: 120 });
+  assert.ok(steepBank.loadFactor >= 1.9, '60° bank creates 2g load factor');
+  assert.ok(steepBank.turnSinkRate > thermaling.turnSinkRate * 2, 'Steep bank sink rate must be more than double 30° bank');
+});
+
+test('Ion Thruster physics: electrostatic acceleration, ultra-high Isp, continuous thrust and daily Delta-v', () => {
+  // NASA Dawn class Xenon thruster (1500 V, 1.8 A)
+  const dawn = ionThrusterModel({ beamVoltageV: 1500, beamCurrentA: 1.8, propellant: 'xenon', spacecraftMassKg: 650 });
+  assert.ok(dawn.exhaustVelocityKms > 40 && dawn.exhaustVelocityKms < 55, `Exhaust velocity should be ~47 km/s, got ${dawn.exhaustVelocityKms}`);
+  assert.ok(dawn.specificImpulseSec > 4000, `Specific impulse (${dawn.specificImpulseSec}s) must exceed 4,000s (>10x chemical rockets)`);
+  assert.ok(dawn.thrustMilliN > 100 && dawn.thrustMilliN < 200, `Thrust (${dawn.thrustMilliN} mN) should be in millinewton range`);
+  assert.ok(dawn.beamPowerKw > 2.0 && dawn.beamPowerKw < 3.5, `Beam power should be ~2.7 kW`);
+  assert.ok(dawn.deltaVPerDayMs > 10, 'Continuous burn should yield >10 m/s Delta-v per day');
+
+  // Propellant comparison: lighter Argon vs heavier Xenon at same voltage
+  const argon = ionThrusterModel({ beamVoltageV: 1500, beamCurrentA: 1.8, propellant: 'argon' });
+  assert.ok(argon.exhaustVelocityKms > dawn.exhaustVelocityKms, 'Lighter ion (Ar) reaches higher exhaust velocity than Xe at same voltage');
+  assert.ok(argon.specificImpulseSec > dawn.specificImpulseSec, 'Argon Isp exceeds Xenon Isp');
+});
+
 test('AeroLab DIY projects, challenges, and mastery badges integrity', () => {
-  assert.ok(DIY_PROJECTS.length >= 10, 'Must have at least 10 DIY maker projects');
+  assert.ok(DIY_PROJECTS.length >= 12, 'Must have at least 12 DIY maker projects');
   for (const project of DIY_PROJECTS) {
     assert.ok(project.title.length > 0);
     assert.ok(project.materials.length >= 3);
@@ -215,7 +252,7 @@ test('AeroLab DIY projects, challenges, and mastery badges integrity', () => {
     assert.ok(project.physicsSecret.length > 20);
   }
 
-  assert.ok(AERO_CHALLENGES.length >= 10, 'Must have at least 10 conceptual challenges');
+  assert.ok(AERO_CHALLENGES.length >= 12, 'Must have at least 12 conceptual challenges');
   for (const challenge of AERO_CHALLENGES) {
     assert.ok(challenge.question.length > 0);
     assert.equal(challenge.options.length, 4);
@@ -223,7 +260,7 @@ test('AeroLab DIY projects, challenges, and mastery badges integrity', () => {
     assert.ok(challenge.explanation.length > 10);
   }
 
-  assert.ok(AERO_BADGES.length >= 9, 'Must have at least 9 mastery badges');
+  assert.ok(AERO_BADGES.length >= 12, 'Must have at least 12 mastery badges');
   for (const badge of AERO_BADGES) {
     assert.ok(badge.id.length > 0);
     assert.ok(badge.title.length > 0);
@@ -231,4 +268,5 @@ test('AeroLab DIY projects, challenges, and mastery badges integrity', () => {
     assert.equal(typeof badge.check, 'function');
   }
 });
+
 

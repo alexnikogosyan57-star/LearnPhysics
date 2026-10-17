@@ -68,22 +68,54 @@ test.describe('AeroLab Interactive Flight & Rocketry Laboratory', () => {
     await page.locator('button[data-jetpreset="takeoff"]').click();
     await expect(page.locator('#label-jet-throttle')).toContainText('100 %');
 
-    // 7. Switch to DIY Guide Tab (8 projects)
+    // 7. Switch to Helicopter & Swashplate Tab
+    await page.locator('[data-aerotab="helicopter"]').click();
+    await expect(page.locator('.helicopter-simulator-svg')).toBeVisible();
+    await expect(page.locator('#val-heli-lift')).toBeVisible();
+    // Test cyclic forward preset
+    await page.locator('button[data-helipreset="forward"]').click();
+    await expect(page.locator('#label-heli-cyclic')).toContainText('+25');
+
+    // 8. Switch to Newton's Orbital Cannon Tab
+    await page.locator('[data-aerotab="orbit"]').click();
+    await expect(page.locator('.orbit-simulator-svg')).toBeVisible();
+    await expect(page.locator('#val-orbit-v0')).toBeVisible();
+    // Test escape velocity preset
+    await page.locator('button[data-orbitpreset="escape"]').click();
+    await expect(page.locator('#label-orbit-v0')).toContainText('11 կմ/վ');
+
+    // 9. Switch to Glider Thermal Soaring Tab
+    await page.locator('[data-aerotab="glider"]').click();
+    await expect(page.locator('.glider-art')).toBeVisible();
+    await expect(page.locator('#val-glider-net')).toBeVisible();
+    // Test steep bank preset
+    await page.locator('button[data-gliderpreset="steep"]').click();
+    await expect(page.locator('#label-glider-bank')).toContainText('55°');
+
+    // 10. Switch to Ion Space Thruster Tab
+    await page.locator('[data-aerotab="ion"]').click();
+    await expect(page.locator('.ion-art')).toBeVisible();
+    await expect(page.locator('#val-ion-isp')).toBeVisible();
+    // Test BepiColombo preset
+    await page.locator('button[data-ionpreset="bepi"]').click();
+    await expect(page.locator('#label-ion-voltage')).toContainText('2200 Վ');
+
+    // 11. Switch to DIY Guide Tab (12 projects)
     await page.locator('[data-aerotab="diy"]').click();
     await expect(page.locator('.diy-cards-grid')).toBeVisible();
-    await expect(page.locator('.diy-project-card')).toHaveCount(8);
+    await expect(page.locator('.diy-project-card')).toHaveCount(12);
 
-    // Select Guided Balloon Rocket
-    await page.locator('[data-diyselect="balloon-rocket"]').click();
-    await expect(page.locator('.blueprint-header h2')).toContainText('Սենյակային Ռեակտիվ Փուչիկ-Հրթիռ');
-    await expect(page.locator('.blueprint-secret-box')).toContainText('Նյուտոնի 3-րդ օրենք');
+    // Select Biomimetic Ornithopter
+    await page.locator('[data-diyselect="diy-ornithopter"]').click();
+    await expect(page.locator('.blueprint-header h2')).toContainText('Բիոմիմետիկ Թափահարող Թև');
+    await expect(page.locator('.blueprint-secret-box')).toContainText('աերոէլաստիկ');
 
-    // 8. Switch to Badges Tab
+    // 12. Switch to Badges Tab (12 badges)
     await page.locator('[data-aerotab="badges"]').click();
     await expect(page.locator('.badges-view-container')).toBeVisible();
-    await expect(page.locator('.aero-badge-card')).toHaveCount(6);
+    await expect(page.locator('.aero-badge-card')).toHaveCount(12);
 
-    // 9. Switch to AeroQuiz Tab
+    // 13. Switch to AeroQuiz Tab
     await page.locator('[data-aerotab="quiz"]').click();
     await expect(page.locator('.aero-quiz-container')).toBeVisible();
     await expect(page.locator('[data-aerochoice="1"]')).toBeVisible();
@@ -100,7 +132,7 @@ test.describe('AeroLab Interactive Flight & Rocketry Laboratory', () => {
 
     // Continue to next question
     await page.locator('#btn-aero-continue').click();
-    await expect(page.locator('.quiz-header span')).toContainText('Հարց 2 / 8');
+    await expect(page.locator('.quiz-header span')).toContainText('Հարց 2 / 13');
   });
 
   test('AeroLab responsive layout at 1440x900 and 1920x1080', async ({ page }) => {

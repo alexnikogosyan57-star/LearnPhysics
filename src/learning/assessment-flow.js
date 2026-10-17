@@ -1,5 +1,6 @@
 import {assessmentState,questionIndex,submitAssessment,continueAssessment} from './assessment-machine.js';
 import {activityMarkup,isAnswered,scoreActivity,bindActivity,escapeHTML as esc} from './activities.js';
+import {playSound} from '../audio.js';
 
 export function ensureAssessment(owner){
  if(!owner.assessmentFlow){
@@ -73,13 +74,17 @@ export function bindAssessment(root,owner,items,save,render,onComplete){
  if(m.phase!=='FEEDBACK')bindActivity(root,f.draft,refresh=>{save();if(refresh)render();else {const btn=root.querySelector('#assessment-check');if(btn)btn.disabled=!isAnswered(q,f.draft);}});
  root.querySelector('#assessment-hint')?.addEventListener('click',()=>{
   f.hintLevel = Math.min(3, (f.hintLevel || 0) + 1);
+  playSound('hint');
   repaint();
  });
  root.querySelector('#assessment-check')?.addEventListener('click',()=>{
   if(!isAnswered(q,f.draft) || m.phase === 'FEEDBACK') return;
   const btn = root.querySelector('#assessment-check');
   if(btn) btn.disabled = true;
-  submitAssessment(m,f.draft,scoreActivity(q,f.draft,1)===1);
+  const isCorrect = scoreActivity(q,f.draft,1)===1;
+  submitAssessment(m,f.draft,isCorrect);
+  if(isCorrect) playSound('correct');
+  else playSound('incorrect');
   repaint();
   requestAnimationFrame(()=>{
    root.querySelector('#assessment-continue')?.focus();
@@ -92,6 +97,7 @@ export function bindAssessment(root,owner,items,save,render,onComplete){
   if(m.phase==='COMPLETED'){
    const results=m.original.map(r=>{const item=items[r.index],weight=item.weight||1;return {answer:r.response,correct:r.correct,weight,points:scoreActivity(item,r.response,weight)};});
    f.review={corrected:m.corrected.length,unresolved:m.unresolved.map(idx=>({question:items[idx].question,why:items[idx].why}))};
+   playSound('complete');
    onComplete(results,f.review);
   }
   repaint();

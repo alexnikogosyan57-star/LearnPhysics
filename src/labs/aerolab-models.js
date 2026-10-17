@@ -449,6 +449,126 @@ export function helicopterSwashplateModel({
   };
 }
 
+/**
+ * Atmospheric Thermal Soaring & Glider Polar Model
+ * Computes forward airspeed, banked turn dynamics, sink polar, Gaussian updraft column, and net climb rate.
+ */
+export function gliderThermalModel({
+  airSpeedKmh = 90,        // Forward airspeed (km/h)
+  bankAngleDeg = 30,       // Turn bank angle (deg)
+  thermalStrength = 3.5,   // Core thermal velocity w_core (m/s)
+  thermalRadius = 120,     // Core thermal radius (m)
+  gliderMass = 380,        // Glider + pilot mass (kg)
+  wingArea = 10.5,         // Wing area S (m²)
+  aspectRatio = 22,        // Wing aspect ratio AR
+  oswaldEff = 0.90,        // Oswald efficiency e
+  cd0 = 0.0125,            // Parasite zero-lift drag coefficient
+} = {}) {
+  const va = Math.max(12, (airSpeedKmh * 1000) / 3600); // m/s
+  const phi = radians(Math.min(65, Math.max(0, bankAngleDeg)));
+  const cosPhi = Math.max(0.2, Math.cos(phi));
+  const tanPhi = Math.tan(phi);
+
+  // Load factor n = 1 / cos(phi)
+  const loadFactor = 1 / cosPhi;
+
+  // Level flight sink polar: v_sink = (rho * S * cd0 / (2 * m * g)) * va^3 + (2 * m * g / (pi * e * AR * rho * S)) * (1 / va)
+  const k1 = (RHO_AIR * wingArea * cd0) / (2 * gliderMass * G);
+  const k2 = (2 * gliderMass * G) / (Math.PI * oswaldEff * aspectRatio * RHO_AIR * wingArea);
+  const levelSinkRate = k1 * Math.pow(va, 3) + k2 * (1 / va);
+
+  // Banked turn sink rate increase
+  const turnSinkRate = levelSinkRate / Math.pow(cosPhi, 1.5);
+
+  // Turn radius R = va^2 / (g * tan(phi))
+  const turnRadius = tanPhi > 0.05 ? (va * va) / (G * tanPhi) : 9999;
+
+  // Thermal updraft at radius R: Gaussian profile
+  const thermalUpdraft = turnRadius < 9999
+    ? thermalStrength * Math.exp(-Math.pow(turnRadius / thermalRadius, 2))
+    : thermalStrength;
+
+  // Net climb rate
+  const netClimbRate = thermalUpdraft - turnSinkRate;
+
+  // Best L/D calculations for level flight
+  const bestLd = 0.5 * Math.sqrt((Math.PI * oswaldEff * aspectRatio) / cd0);
+  const bestSpeedKmh = Math.pow((4 * Math.pow(gliderMass * G, 2)) / (Math.PI * oswaldEff * aspectRatio * Math.pow(RHO_AIR * wingArea, 2) * cd0), 0.25) * 3.6;
+
+  return {
+    forwardSpeedKmh: Number(airSpeedKmh.toFixed(1)),
+    bankAngleDeg: Number(bankAngleDeg.toFixed(1)),
+    turnRadiusM: Number(turnRadius.toFixed(1)),
+    loadFactor: Number(loadFactor.toFixed(2)),
+    turnSinkRate: Number(turnSinkRate.toFixed(2)),
+    thermalUpdraft: Number(thermalUpdraft.toFixed(2)),
+    netClimbRate: Number(netClimbRate.toFixed(2)),
+    bestLd: Number(bestLd.toFixed(1)),
+    bestSpeedKmh: Number(bestSpeedKmh.toFixed(1)),
+    isClimbing: netClimbRate > 0,
+  };
+}
+
+/**
+ * Ion Thruster Electrostatic & Deep Space Propulsion Physics Model
+ * Propellants: 'xenon' | 'krypton' | 'argon' | 'iodine'
+ */
+export function ionThrusterModel({
+  beamVoltageV = 1500,     // Extraction voltage (Volts)
+  beamCurrentA = 1.8,      // Beam current (Amperes)
+  propellant = 'xenon',    // Propellant gas
+  spacecraftMassKg = 650,  // Spacecraft mass (kg)
+  massUtilization = 0.88,  // Ionization efficiency eta_m
+} = {}) {
+  const PROPELLANTS = {
+    xenon:   { massAmu: 131.293, name: 'Քսենոն (Xe)', color: '#88aaff' },
+    krypton: { massAmu: 83.798,  name: 'Կրիպտոն (Kr)', color: '#aaffaa' },
+    argon:   { massAmu: 39.948,  name: 'Արգոն (Ar)',   color: '#ddaaff' },
+    iodine:  { massAmu: 126.904, name: 'Յոդ (I₂)',     color: '#ff88ee' },
+  };
+
+  const prop = PROPELLANTS[propellant] || PROPELLANTS.xenon;
+  const ionMassKg = prop.massAmu * 1.66053906660e-27;
+  const elemCharge = 1.602176634e-19;
+
+  // Exhaust velocity: v_e = sqrt(2 * q * V / m_ion)
+  const exhaustVelocity = Math.sqrt((2 * elemCharge * beamVoltageV) / ionMassKg);
+
+  // Specific impulse: I_sp = v_e / g_0
+  const specificImpulse = exhaustVelocity / G;
+
+  // Ion mass flow rate: m_dot_ion = I_beam * m_ion / q
+  const ionMassFlow = (beamCurrentA * ionMassKg) / elemCharge; // kg/s
+  const totalMassFlow = ionMassFlow / massUtilization;        // kg/s
+  const massFlowMgS = totalMassFlow * 1e6;                    // mg/s
+
+  // Electrostatic thrust: F = m_dot_ion * v_e
+  const thrustN = ionMassFlow * exhaustVelocity;
+  const thrustMilliN = thrustN * 1000;
+
+  // Electrical power
+  const beamPowerW = beamCurrentA * beamVoltageV;
+  const totalPowerW = beamPowerW / 0.82; // PPU electrical efficiency ~82%
+
+  // Acceleration of spacecraft: a = F / m
+  const accelerationMmS2 = (thrustN / spacecraftMassKg) * 1000;
+
+  // Delta-v accumulated per 24 hours of continuous burn
+  const deltaVPerDayMs = (thrustN / spacecraftMassKg) * 86400;
+
+  return {
+    propellantName: prop.name,
+    exhaustVelocityKms: Number((exhaustVelocity / 1000).toFixed(2)),
+    specificImpulseSec: Number(specificImpulse.toFixed(0)),
+    thrustMilliN: Number(thrustMilliN.toFixed(2)),
+    beamPowerKw: Number((beamPowerW / 1000).toFixed(2)),
+    totalPowerKw: Number((totalPowerW / 1000).toFixed(2)),
+    massFlowMgS: Number(massFlowMgS.toFixed(2)),
+    accelerationMmS2: Number(accelerationMmS2.toFixed(3)),
+    deltaVPerDayMs: Number(deltaVPerDayMs.toFixed(1)),
+    thrustToPowerRatio: Number((thrustMilliN / (totalPowerW / 1000)).toFixed(2)), // mN/kW
+  };
+}
 
 /**
  * Water & Air Pressure Rocket Physics State Initialization
@@ -1038,6 +1158,96 @@ export const DIY_PROJECTS = [
       "Եթե գնդիկը դուրս է թռչում օղակից՝ արագությունը գերազանցել է խույսի արագությունը ($v_0 > v_{\\text{esc}}$)։",
     ],
   },
+  {
+    id: "diy-ornithopter",
+    title: "Բիոմիմետիկ Թափահարող Թև (Ռետինամոտորով Օրնիտոպտեր)",
+    subtitle: "Թռչնանման թռիչքի ինժեներիա · Լևերային մեխանիզմ և ճկուն աերոէլաստիկ թև",
+    difficulty: "Միջին / Բարդ",
+    buildTime: "45 րոպե",
+    materials: [
+      "Բամբուկե շամփուրներ (20 սմ) կամ 1.5 մմ ածխածնային (carbon) ձողիկներ",
+      "Ավիամոդելային էլաստիկ ռետինե քուղ (1.5-2 մմ լայնությամբ, 30 սմ երկարությամբ)",
+      "Պոլիէթիլենային թաղանթ կամ թեթև մոմած թուղթ / ծխախոտի թուղթ (կալկա)",
+      "Պողպատե ամուր մետաղալար (0.8-1 մմ)՝ ծնկաձև լիսեռ (կրանկ) պատրաստելու համար",
+      "Հյութի պլաստիկ ձողիկ (սլամիկ) կամ բարակ պլաստիկ ուլունքներ (առանցքակալի համար)",
+      "Սուպերսոսինձ (ցիանակրիլատ) կամ տաք սոսինձ և կարի ամուր թել",
+      "Կլորաշուրթ աքցան (ծռելու համար)",
+    ],
+    physicsSecret:
+      "Ինչո՞ւ է թափահարող թևը թռչունին առաջ մղում, այլ ոչ թե միայն վեր ու վար ցնցում։ Գաղտնիքը թևի ճկուն աերոէլաստիկության (aeroelasticity) մեջ է։ Թևի առաջնային եզրը կոշտ է, իսկ հետևի թաղանթը՝ ճկուն։ Ներքև հարվածի (downstroke) ժամանակ օդի ճնշումը հետևի եզրը ծալում է վեր, ինչի շնորհիվ վերամբարձ ուժի վեկտորը թեքվում է առաջ՝ առաջացնելով և՛ վերամբարձ ուժ, և՛ քարշուժ։ Իսկ Ստրուհալի թիվը (St = f·A/v) 0.2-0.4 միջակայքում ապահովում է մրրիկների պտտման օպտիմալ արդյունավետություն։",
+    steps: [
+      {
+        title: "1. Ֆյուզելաժի (հիմնական առանցքի) պատրաստում",
+        detail: "Վերցրու 20-22 սմ երկարությամբ բամբուկե կամ ածխածնային ձողը։ Առջևի ծայրին ամրացրու 1.5 սմ երկարությամբ պլաստիկ ձողիկը (առանցքակալ)՝ փաթաթելով թելով և սոսնձելով։ Հետևի ծայրին սոսնձիր մետաղալարե փոքրիկ կեռիկ՝ ռետինի համար։",
+      },
+      {
+        title: "2. Ծնկաձև լիսեռի (կրանկշաֆտի) ծռում",
+        detail: "0.8 մմ պողպատե լարից պատրաստիր Z-աձև ծնկաձև լիսեռ (ծնկի շառավիղը՝ 6-8 մմ)։ Անցկացրու առջևի առանցքակալի միջով, իսկ ետևի ծայրը ծռիր կեռիկի տեսքով։ Ծնկին ամրացրու երկու միացնող շատուններ։",
+      },
+      {
+        title: "3. Թևերի հոդակապային մեխանիզմի հավաքում",
+        detail: "Ֆյուզելաժի առջևում ամրացրու T-աձև խաչմերուկ։ Երկու թևերի առաջնային ձողերը հոդակապով ամրացրու T-աձև հենարանին, իսկ շատունները միացրու թևերի լծակներին, որպեսզի լիսեռի պտույտի դեպքում թևերը հավասարաչափ վեր ու վար թափահարեն։",
+      },
+      {
+        title: "4. Ճկուն թաղանթի (մեմբրանի) փակցնում",
+        detail: "Թեթև պոլիէթիլենից կամ կալկայից կտրիր թևի ուրվագիծը (30 սմ ընդհանուր բացվածքով)։ Կարևոր է՝ սոսնձիր ՄԻԱՅՆ առաջնային կոշտ ձողին և ֆյուզելաժին։ Հետևի եզրը պետք է մնա լիովին ազատ և ճկուն։",
+      },
+      {
+        title: "5. Պոչային կայունարարի տեղադրում",
+        detail: "Ֆյուզելաժի հետևում սոսնձիր V-աձև պոչ՝ հորիզոնականից 10-15° դեպի վեր թեքությամբ՝ ապահովելով տանգաժային կայունություն։",
+      },
+      {
+        title: "6. Ռետինամոտորի լարում և թռիչք",
+        detail: "Ռետինե քուղը միացրու կեռիկների միջև։ Լարիր ռետինը 120-150 պտույտով։ Պահիր մարմինը հորիզոնական, բաց թող թևերը և թեթևակի հրիր առաջ։ Թռչունը թափահարելով կսլանա օդ։",
+      },
+    ],
+    troubleshooting: [
+      "Եթե թռչունը պտտվում է գետնին՝ թևերի մեմբրանի լարվածությունը անհավասար է։ Հավասարեցրու թաղանթը։",
+      "Եթե թափահարում է, բայց չի բարձրանում՝ հետևի եզրը չափազանց կոշտ է (չի ճկվում) կամ պոչի անկյունը փոքր է։",
+    ],
+  },
+  {
+    id: "diy-glider-polar",
+    title: "Բարձր Աերոդինամիկ Որակի Թերմիկ Սավառնակ",
+    subtitle: "V-աձև կայունացում (Dihedral), պոլյարա և վերընթաց տաք հոսանքների որսում",
+    difficulty: "Միջին",
+    buildTime: "35 րոպե",
+    materials: [
+      "Թեթև բալսա փայտ (1.5-2 մմ) կամ դեպրոն (առաստաղի թեթև փրփրապլաստ, 3 մմ)",
+      "Ծանրոցի պլաստիլին կամ մանր մետաղադրամ (քթամասի CoM բալանսավորման համար)",
+      "Քանոն, մատիտ և մոդելային դանակ",
+      "Թղթե կպչուն ժապավեն (մալյարնի սկոչ) կամ PVA սոսինձ",
+      "Հղկաթուղթ (մանրահատիկ նաշկա)՝ թևի պրոֆիլի առաջնամասը կլորացնելու համար",
+    ],
+    physicsSecret:
+      "Ինչու՞ է սավառնակը կարողանում հարյուրավոր մետրեր սահել առանց շարժիչի։ Գաղտնիքը աերոդինամիկ որակի ($L/D > 15-20$) մեջ է։ Թևի V-աձև թեքությունը (Dihedral angle, 4-6°) ապահովում է ինքնակայունացում կողաթեքման (roll) ժամանակ. երբ սավառնակը թեքվում է մի կողմ, ցածր թևի հորիզոնական պրոյեկցիան և վերամբարձ ուժը մեծանում են՝ ինքնուրույն ուղղելով թռիչքը։ Իսկ Ծանրության Կենտրոնը (CoM) թևի առաջնային քորդայի 28-33%-ի վրա տեղադրելով՝ ապահովվում է կատարյալ տանգաժային կայունություն։",
+    steps: [
+      {
+        title: "Թևերի և պրոֆիլի ձևավորում",
+        detail: "Կտրիր 40 սմ երկարությամբ և 7 սմ լայնությամբ թևի սալիկը։ Հղկաթղթով զգուշորեն կլորացրու վերին առաջնային եզրը, իսկ հետևի եզրը հղկիր սրածայր՝ ստանալով Բեռնուլիի աերոդինամիկ պրոֆիլ։",
+      },
+      {
+        title: "V-աձև Dihedral անկյան ստեղծում",
+        detail: "Թևը կենտրոնից կիսիր երկու մասի։ Ծայրերը բարձրացրու 2-3-ական սմ դեպի վեր և կենտրոնում միացումն ամրացրու սոսնձով ու կպչուն ժապավենով։",
+      },
+      {
+        title: "Ֆյուզելաժի և պոչի հավաքում",
+        detail: "Վերցրու 35 սմ երկարությամբ ուղիղ ձողը։ Հետևի ծայրին ամրացրու հորիզոնական ստաբիլիզատորը և կիլը։ Թևը ամրացրու ֆյուզելաժի վրա առջևից մոտ 8 սմ հեռավորության վրա։",
+      },
+      {
+        title: "Բալանսավորում (CoM կարգավորում)",
+        detail: "Հենիր սավառնակը երկու մատներիդ վրա՝ թևի առաջնային եզրից 2.2 սմ խորությամբ։ Եթե պոչը ծանր է՝ քթամասին ավելացրու մի փոքր պլաստիլին, մինչև սավառնակը կանգնի կատարյալ հորիզոնական։",
+      },
+      {
+        title: "Փորձնական արձակում և թերմիկների որս",
+        detail: "Սավառնակը արձակիր թեթևակի հորիզոնական հրումով։ Ճիշտ կարգավորված մոդելը սահուն կսավառնի ամբողջ սենյակով կամ բացատով՝ օգտագործելով անգամ ամենափոքր վերընթաց օդային հոսքերը։",
+      },
+    ],
+    troubleshooting: [
+      "Եթե սավառնակը ալիքաձև ցատկոտում է (stall-dive-stall)՝ քթամասը չափազանց թեթև է։ Ավելացրու պլաստիլին քթին։",
+      "Եթե քարի պես սուզվում է գետին՝ քիթը ծանր է։ Հեռացրու մի փոքր պլաստիլին։",
+    ],
+  },
 ];
 
 /**
@@ -1174,6 +1384,45 @@ export const AERO_CHALLENGES = [
     explanation:
       "Ճիշտ է։ Swashplate (լիցքաթիթեղ) մեխանիզմը կատարում է այս հրաշալի ֆունկցիան։ Լիցքաթիթեղը վեր-վար շարժելով՝ մեծանում է բոլոր թիակների գրոհի անկյունը (վերամբարձ ուժ $L$), իսկ այն թեքելով՝ առաջանում է ցիկլիկ անկյունային փոփոխություն, որը 90° գիրոսկոպիկ պրեցեսիայի շնորհիվ թեքում է ողջ քարշուժի վեկտորը թռիչքի ուղղությամբ։",
   },
+  {
+    id: "ion-propulsion-advantage",
+    question: "Ինչու՞ են խոր տիեզերական միջմոլորակային առաքելություններում (NASA Dawn, BepiColombo) քիմիական հրթիռների փոխարեն օգտագործում իոնային էլեկտրական շարժիչներ։",
+    options: [
+      "Իոնային շարժիչները կարող են Երկրի մակերևույթից տիեզերանավն արձակել ակնթարթորեն",
+      "Նրանք ունեն հսկայական տեսակարար իմպուլս ($I_{\\text{sp}} > 3000-5000$ վ) և վառելիքի նվազագույն ծախսով (մգ/վ) ամիսներ շարունակ ապահովում են մեծ $\\Delta v$",
+      "Իոնային շարժիչները էլեկտրաէներգիա չեն պահանջում",
+      "Որպեսզի տիեզերանավը լինի կապույտ գույնի",
+    ],
+    correct: 1,
+    explanation:
+      "Ճիշտ է։ Էլեկտրաստատիկ դաշտով արագացվող Քսենոնի իոնները արտանետվում են 30-50 կմ/վ արագությամբ ($v_e$), ինչը 10 անգամ գերազանցում է քիմիական հրթիռների արտանետման արագությանը։ Թեև քարշուժը փոքր է (միլինյուտոններ), սակայն ամիսներ շարունակ անընդհատ աշխատելով՝ այն խնայում է տոննաներով վառելիք և ապահովում ահռելի $\\Delta v$։",
+  },
+  {
+    id: "ornithopter-downstroke-physics",
+    question: "Ինչպե՞ս է թռչունի կամ օրնիտոպտերի թևի վայրէջքի հարվածը (downstroke) միաժամանակ ստեղծում և՛ վերամբարձ ուժ, և՛ առաջ մղող քարշուժ։",
+    options: [
+      "Թևը պարզապես օդը տաքացնում է ներքևում",
+      "Առաջնային եզրը կոշտ է, իսկ հետևի եզրը աերոէլաստիկորեն ծալվում է վեր՝ թեքելով վերամբարձ ուժի վեկտորը առաջ և վեր",
+      "Թռչունը թևի վրա ունի ռեակտիվ այրիչներ",
+      "Քամին միշտ փչում է թռչունի թիկունքից",
+    ],
+    correct: 1,
+    explanation:
+      "Ճիշտ է։ Շնորհիվ աերոէլաստիկության (aeroelastic twist)՝ ներքև հարվածելիս թևի ճկուն հետևի եզրը օդի ճնշման տակ բարձրանում է վեր։ Արդյունքում արդյունարար աերոդինամիկ ուժի վեկտորը թեքվում է առաջ և վեր՝ առաջացնելով և՛ վերամբարձ ուժ (lift), և՛ հորիզոնական քարշուժ (propulsive thrust)։",
+  },
+  {
+    id: "thermal-soaring-bank-angle",
+    question: "Ինչու՞ սավառնորդը (glider pilot) չպետք է թերմիկի մեջ պտտվելիս չափազանց մեծ կողաթեքման անկյուն ընտրի (օր. $\\phi > 60^\\circ$)։",
+    options: [
+      "Որովհետև ինքնաթիռի թևերը կընկնեն տաքությունից",
+      "Մեծ թեքության դեպքում ծանրաբեռնվածությունը ($n = 1/\\cos\\phi$) և ինդուկտիվ դիմադրությունը կտրուկ աճում են՝ հանգեցնելով սեփական իջեցման արագության մեծացման",
+      "Որպեսզի արևը չկուրացնի պիլոտի աչքերը",
+      "Սավառնակը կարող է պտտվել միայն հարթ առանց թեքվելու",
+    ],
+    correct: 1,
+    explanation:
+      "Ճիշտ է։ Շրջադարձի ժամանակ գերբեռնվածության աճի ($n = 1/\\cos\\phi$) պատճառով սավառնակի սեփական իջեցման արագությունը ($v_{\\text{sink}}$) կտրուկ մեծանում է։ Եթե $\\phi > 50-60^\\circ$, իջեցման արագությունը գերազանցում է թերմիկի վերընթաց հոսքին, և սավառնակը սկսում է բարձրանալու փոխարեն կորցնել բարձրությունը։ Օպտիմալ անկյունը սովորաբար 30°-40° է։",
+  },
 ];
 
 /**
@@ -1263,12 +1512,42 @@ export const AERO_BADGES = [
     },
   },
   {
+    id: "badge-ion",
+    icon: "⚡",
+    title: "Իոնային Պիոներ",
+    desc: "Իոնային շարժիչով հասիր >4000 վ տեսակարար իմպուլսի ($I_{\\text{sp}}$)",
+    points: 550,
+    check: (aero) => {
+      const ion = ionThrusterModel(aero.ion || {});
+      return ion.specificImpulseSec >= 4000;
+    },
+  },
+  {
+    id: "badge-glider",
+    icon: "🌬️",
+    title: "Թերմիկ Սավառնող",
+    desc: "Թերմիկի մեջ ստացիր դրական վերելքի արագություն ($w_{\\text{net}} > 1.5$ մ/վ)",
+    points: 400,
+    check: (aero) => {
+      const g = gliderThermalModel(aero.glider || {});
+      return g.netClimbRate >= 1.5;
+    },
+  },
+  {
+    id: "badge-ornithopter",
+    icon: "🕊️",
+    title: "Կենսաթռիչքի Վարպետ",
+    desc: "Ուսումնասիրիր օրնիտոպտերի բիոմիմետիկ նախագիծը DIY բաժնում",
+    points: 300,
+    check: (aero) => aero.diySelected === 'diy-ornithopter',
+  },
+  {
     id: "badge-aeroquiz",
     icon: "🏆",
     title: "Ավիացիայի Գիտնական",
     desc: "Պատասխանիր բոլոր հարցերին AeroQuiz-ում",
     points: 300,
-    check: (aero) => (aero.quiz?.score || 0) >= 8,
+    check: (aero) => (aero.quiz?.score || 0) >= 10,
   },
 ];
 

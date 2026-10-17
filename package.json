@@ -8,7 +8,7 @@
     "build": "vite build",
     "test": "node --test tests/*.test.js",
     "build:pages": "vite build --base=./",
-    "export:standalone": "npm run build:pages && python3 scripts/export-standalone.py"
+    "export:standalone": "npm run build:pages && python scripts/export-standalone.py"
   },
   "devDependencies": {
     "vite": "^7.1.0",
