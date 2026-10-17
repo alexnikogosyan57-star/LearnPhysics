@@ -817,3 +817,433 @@ export function turbofanEngineArt({
   `;
 }
 
+/**
+ * TAB: Newton's Orbital Cannonball & Keplerian Satellite Simulator
+ * Renders Earth globe, atmospheric glow, mountain launcher, orbital trajectories,
+ * and live centripetal gravity vs tangential velocity vectors.
+ */
+export function orbitCannonArt({
+  launchAltitudeKm = 400,
+  horizontalVelocityKms = 7.67,
+  orbitModel,
+  showVectors = true,
+} = {}) {
+  const m = orbitModel || {};
+  const status = m.status || 'circular';
+  const v0 = horizontalVelocityKms || 7.67;
+  const v1 = m.v1Kms || 7.67;
+  const vEsc = m.vEscKms || 10.85;
+
+  // Scale: Earth radius R_E = 6371 km -> 105 px
+  const rEarth = 105;
+  const scale = rEarth / 6371; // px per km
+  const r0 = rEarth + Math.min(1800, launchAltitudeKm) * scale;
+
+  // Earth center in SVG
+  const cx = 300;
+  const cy = 250;
+
+  // Trajectory points string
+  let pathD = '';
+  if (m.trajectoryPoints && m.trajectoryPoints.length > 1) {
+    const pts = m.trajectoryPoints.map((pt, idx) => {
+      const px = cx + pt.x * scale;
+      const py = cy + pt.y * scale;
+      return `${idx === 0 ? 'M' : 'L'} ${px.toFixed(1)} ${py.toFixed(1)}`;
+    });
+    if (m.isStableOrbit && status !== 'hyperbolic' && status !== 'parabolic') {
+      pts.push('Z');
+    }
+    pathD = pts.join(' ');
+  } else {
+    // Fallback circular path
+    pathD = `M ${cx} ${cy - r0} A ${r0} ${r0} 0 1 0 ${cx} ${cy + r0} A ${r0} ${r0} 0 1 0 ${cx} ${cy - r0} Z`;
+  }
+
+  // Trajectory stroke styling
+  let orbitColor = '#22c55e'; // Green for circular LEO
+  let orbitGlow = 'rgba(34, 197, 94, 0.4)';
+  let statusBadgeBg = '#14532d';
+  let statusBadgeText = '#86efac';
+  let statusLabel = '✓ Կայուն Շրջանաձև Ուղեծիր (1-ին տիեզերական)';
+
+  if (status === 'suborbital_crash') {
+    orbitColor = '#ef4444';
+    orbitGlow = 'rgba(239, 68, 68, 0.4)';
+    statusBadgeBg = '#7f1d1d';
+    statusBadgeText = '#fca5a5';
+    statusLabel = '⚠️ Ենթաուղեծրային Բալիստիկ Անկում (v < v₁)';
+  } else if (status === 'elliptic') {
+    orbitColor = '#f59e0b';
+    orbitGlow = 'rgba(245, 158, 11, 0.4)';
+    statusBadgeBg = '#78350f';
+    statusBadgeText = '#fde68a';
+    statusLabel = '⬭ Էլիպսաձև Կեպլերյան Ուղեծիր (Կայուն)';
+  } else if (status === 'parabolic' || status === 'hyperbolic') {
+    orbitColor = '#c084fc';
+    orbitGlow = 'rgba(192, 132, 252, 0.4)';
+    statusBadgeBg = '#581c87';
+    statusBadgeText = '#e9d5ff';
+    statusLabel = '🌌 Խույսի Հետագիծ (2-րդ տիեզերական / Հեռացում)';
+  }
+
+  // Velocity vector length (px)
+  const vLen = Math.min(90, Math.max(25, v0 * 6.5));
+  // Gravity vector length (px)
+  const gLen = Math.min(55, Math.max(20, (m.gravityAtAlt || 8.7) * 4.5));
+
+  // Satellite position (at launch apoapsis/periapsis on top)
+  const satX = cx;
+  const satY = cy - r0;
+
+  return `
+    <svg viewBox="0 0 600 440" class="orbit-simulator-svg" aria-label="Նյուտոնի ուղեծրային թնդանոթ և Երկիր">
+      <defs>
+        <!-- Deep Space Canvas Gradient -->
+        <radialGradient id="space-bg" cx="50%" cy="50%" r="70%">
+          <stop offset="0%" stop-color="#0a1122"/>
+          <stop offset="100%" stop-color="#040711"/>
+        </radialGradient>
+        <!-- Earth Radial Ocean Gradient -->
+        <radialGradient id="earth-ocean" cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#1d4ed8"/>
+          <stop offset="50%" stop-color="#1e3a8a"/>
+          <stop offset="100%" stop-color="#0f172a"/>
+        </radialGradient>
+        <!-- Atmosphere Glow Filter -->
+        <filter id="atmo-glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="6"/>
+        </filter>
+        <filter id="orbit-glow-filter" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="3"/>
+        </filter>
+      </defs>
+
+      <!-- Space Background -->
+      <rect width="600" height="440" rx="14" fill="url(#space-bg)"/>
+
+      <!-- Distant Stars -->
+      <g fill="#ffffff" opacity="0.35">
+        <circle cx="45" cy="40" r="1"/>
+        <circle cx="120" cy="85" r="1.5"/>
+        <circle cx="210" cy="35" r="1"/>
+        <circle cx="510" cy="65" r="1.5"/>
+        <circle cx="560" cy="140" r="1"/>
+        <circle cx="80" cy="380" r="1"/>
+        <circle cx="530" cy="390" r="1.5"/>
+        <circle cx="480" cy="320" r="1"/>
+        <circle cx="35" cy="220" r="1.2"/>
+        <circle cx="560" cy="270" r="1"/>
+      </g>
+
+      <!-- Circular LEO Reference Ring (Subtle Dashed) -->
+      <circle cx="${cx}" cy="${cy}" r="${rEarth + 400 * scale}" fill="none" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="4 4" opacity="0.3"/>
+
+      <!-- Atmospheric Haze Ring (Kármán line 100km) -->
+      <circle cx="${cx}" cy="${cy}" r="${rEarth + 100 * scale}" fill="none" stroke="#38bdf8" stroke-width="3" opacity="0.5" filter="url(#atmo-glow)"/>
+
+      <!-- Actual Orbital Trajectory Path (Glow underlayer + Crisp curve) -->
+      ${
+        pathD
+          ? `
+        <path d="${pathD}" fill="none" stroke="${orbitColor}" stroke-width="6" opacity="0.4" filter="url(#orbit-glow-filter)"/>
+        <path d="${pathD}" fill="none" stroke="${orbitColor}" stroke-width="2.5" stroke-dasharray="${status === 'circular' ? 'none' : '6 3'}"/>
+      `
+          : ''
+      }
+
+      <!-- Earth Globe -->
+      <g id="earth-globe">
+        <!-- Ocean Base -->
+        <circle cx="${cx}" cy="${cy}" r="${rEarth}" fill="url(#earth-ocean)" stroke="#60a5fa" stroke-width="1.5"/>
+        
+        <!-- Continents (Curved stylized landmasses) -->
+        <path d="M ${cx - 60} ${cy - 40} C ${cx - 30} ${cy - 70}, ${cx + 20} ${cy - 60}, ${cx + 40} ${cy - 30} C ${cx + 50} ${cy}, ${cx + 10} ${cy + 30}, ${cx - 20} ${cy + 15} C ${cx - 50} ${cy + 10}, ${cx - 70} ${cy - 10}, ${cx - 60} ${cy - 40} Z" fill="#15803d" opacity="0.85"/>
+        <path d="M ${cx + 10} ${cy + 25} C ${cx + 35} ${cy + 15}, ${cx + 65} ${cy + 35}, ${cx + 55} ${cy + 75} C ${cx + 35} ${cy + 85}, ${cx + 15} ${cy + 60}, ${cx + 10} ${cy + 25} Z" fill="#166534" opacity="0.85"/>
+        <path d="M ${cx - 75} ${cy + 10} C ${cx - 45} ${cy + 20}, ${cx - 35} ${cy + 60}, ${cx - 60} ${cy + 70} C ${cx - 80} ${cy + 60}, ${cx - 85} ${cy + 30}, ${cx - 75} ${cy + 10} Z" fill="#15803d" opacity="0.8"/>
+        
+        <!-- Polar Ice Caps -->
+        <ellipse cx="${cx}" cy="${cy - rEarth + 6}" rx="32" ry="8" fill="#f8fafc" opacity="0.9"/>
+        <ellipse cx="${cx}" cy="${cy + rEarth - 6}" rx="28" ry="7" fill="#f8fafc" opacity="0.9"/>
+
+        <!-- Earth Radius Label -->
+        <line x1="${cx}" y1="${cy}" x2="${cx + rEarth}" y2="${cy}" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="3 3"/>
+        <text x="${cx + 35}" y="${cy - 6}" font-size="10" font-weight="700" fill="#93c5fd">R_E = 6,371 կմ</text>
+        <circle cx="${cx}" cy="${cy}" r="3.5" fill="#38bdf8"/>
+      </g>
+
+      <!-- Launch Mountain / Orbital Station Tower -->
+      <g id="launch-tower">
+        <polygon points="${cx - 7},${cy - rEarth} ${cx + 7},${cy - rEarth} ${cx},${satY}" fill="#64748b" stroke="#334155" stroke-width="1.2"/>
+        <rect x="${cx - 4}" y="${satY - 3}" width="8" height="6" rx="2" fill="#38bdf8"/>
+        <!-- Tower Height Indicator -->
+        <text x="${cx - 14}" y="${(cy - rEarth + satY) / 2 + 3}" font-size="9" font-weight="700" fill="#cbd5e1" text-anchor="end">h = ${launchAltitudeKm} կմ</text>
+      </g>
+
+      <!-- Satellite at Orbital Launch Point (satX, satY) -->
+      <g transform="translate(${satX}, ${satY})">
+        <!-- Satellite Main Bus -->
+        <rect x="-8" y="-6" width="16" height="12" rx="3" fill="#e2e8f0" stroke="#0f172a" stroke-width="1.5"/>
+        <!-- Solar Panels (Left & Right) -->
+        <rect x="-26" y="-5" width="16" height="10" rx="1.5" fill="#0284c7" stroke="#38bdf8" stroke-width="1"/>
+        <line x1="-18" y1="-5" x2="-18" y2="5" stroke="#bae6fd" stroke-width="0.8"/>
+        <rect x="10" y="-5" width="16" height="10" rx="1.5" fill="#0284c7" stroke="#38bdf8" stroke-width="1"/>
+        <line x1="18" y1="-5" x2="18" y2="5" stroke="#bae6fd" stroke-width="0.8"/>
+        <circle cx="0" cy="0" r="2.5" fill="#22c55e"/>
+      </g>
+
+      <!-- Live Dynamic Vectors Overlay -->
+      ${
+        showVectors
+          ? `
+        <!-- Tangential Velocity Vector (Horizontal, Cyan/Green) -->
+        <g stroke="${orbitColor}" stroke-width="3" fill="${orbitColor}">
+          <line x1="${satX}" y1="${satY}" x2="${satX + vLen}" y2="${satY}"/>
+          <polygon points="${satX + vLen + 7},${satY} ${satX + vLen},${satY - 4.5} ${satX + vLen},${satY + 4.5}"/>
+          <text x="${satX + vLen + 12}" y="${satY - 6}" font-size="11" font-weight="700" fill="${orbitColor}">
+            v₀ = ${v0} կմ/վ (Հորիզոնական արագություն)
+          </text>
+        </g>
+
+        <!-- Gravitational Centripetal Acceleration Vector (Points to Earth Center, Red) -->
+        <g stroke="#ef4444" stroke-width="3" fill="#ef4444">
+          <line x1="${satX}" y1="${satY}" x2="${satX}" y2="${satY + gLen}"/>
+          <polygon points="${satX},${satY + gLen + 7} ${satX - 4.5},${satY + gLen} ${satX + 4.5},${satY + gLen}"/>
+          <text x="${satX + 8}" y="${satY + gLen / 2 + 4}" font-size="11" font-weight="700" fill="#fca5a5">
+            g = ${m.gravityAtAlt || 8.7} մ/վ² (Ազատ անկում)
+          </text>
+        </g>
+      `
+          : ''
+      }
+
+      <!-- Apoapsis / Periapsis Markers if Elliptic -->
+      ${
+        status === 'elliptic'
+          ? `
+        <g transform="translate(25, 60)">
+          <rect width="180" height="48" rx="8" fill="#1e293b" fill-opacity="0.9" stroke="#f59e0b" stroke-width="1.5"/>
+          <text x="10" y="20" font-size="11" font-weight="700" fill="#fde68a">Ապոգեյ (h_a)՝ ${m.apoapsisKm} կմ</text>
+          <text x="10" y="38" font-size="11" font-weight="700" fill="#93c5fd">Պերիգեյ (h_p)՝ ${m.periapsisKm} կմ</text>
+        </g>
+      `
+          : ''
+      }
+
+      <!-- Top Status Banner Pill -->
+      <g transform="translate(20, 18)">
+        <rect width="360" height="34" rx="8" fill="${statusBadgeBg}" fill-opacity="0.92" stroke="${orbitColor}" stroke-width="1.5"/>
+        <text x="14" y="22" font-size="12" font-weight="700" fill="${statusBadgeText}">
+          ${statusLabel}
+        </text>
+      </g>
+
+      <!-- Bottom Right Telemetry Box -->
+      <g transform="translate(380, 360)">
+        <rect width="200" height="64" rx="8" fill="#0f172a" fill-opacity="0.92" stroke="#334155" stroke-width="1.5"/>
+        <text x="12" y="20" font-size="11" font-weight="700" fill="#38bdf8">1-ին տիեզերական v₁՝ ${v1} կմ/վ</text>
+        <text x="12" y="38" font-size="11" font-weight="700" fill="#c084fc">2-րդ տիեզերական v_esc՝ ${vEsc} կմ/վ</text>
+        <text x="12" y="54" font-size="10" font-weight="600" fill="#94a3b8">
+          Պարբերություն T՝ ${m.periodMin ? m.periodMin + ' րոպե' : 'Անվերջ / Անկում'}
+        </text>
+      </g>
+    </svg>
+  `;
+}
+
+/**
+ * TAB: Helicopter Swashplate & Rotor Aerodynamics
+ * Renders main rotor mast, swashplate assembly (rotating and stationary plates),
+ * dynamic blade pitch angle, tail boom anti-torque, and lift/thrust decomposition.
+ */
+export function helicopterSwashplateArt({
+  colPitchDeg = 11,
+  tiltForwardDeg = 0,
+  tiltRollDeg = 0,
+  mainTorqueNm = 4200,
+  tailAntiTorqueNm = 4200,
+  netYawTorqueNm = 0,
+  yawState = 'balanced',
+  isHover = true,
+  flightState = 'hover',
+  totalThrustKn = 20.16,
+  verticalLiftKn = 20.16,
+  forwardThrustKn = 0,
+  showVectors = true,
+} = {}) {
+  // Swashplate vertical displacement (collective): 0 to 20 px
+  const swashplateY = 200 - (colPitchDeg - 4) * 1.5;
+  // Swashplate tilt angle (degrees): cyclic forward tilt
+  const swashplateAngle = -tiltForwardDeg; // negative tilts forward
+
+  // Rotor blade tilt angle
+  const bladeAngle = colPitchDeg;
+
+  // Lift and forward propulsion vectors
+  const liftLen = Math.min(85, Math.max(15, verticalLiftKn * 3.8));
+  const fwdLen = Math.min(65, Math.abs(forwardThrustKn) * 12);
+
+  // Status colors
+  let yawColor = '#22c55e';
+  let yawLabel = '✓ Կայուն Կուրս (Հակապտտող մոմենտը հավասարակշռված է)';
+  if (yawState === 'yaw_left') {
+    yawColor = '#ef4444';
+    yawLabel = '⚠️ Պոչային հակամոմենտը թույլ է → Անկառավարելի պտույտ ձախ';
+  } else if (yawState === 'yaw_right') {
+    yawColor = '#f59e0b';
+    yawLabel = '⚠️ Պոչային հակամոմենտը ավելցուկային է → Պտույտ աջ';
+  }
+
+  return `
+    <svg viewBox="0 0 600 380" class="helicopter-simulator-svg" aria-label="Ուղղաթիռի լիցքաթիթեղ և ռոտորի աերոդինամիկա">
+      <defs>
+        <linearGradient id="heli-bg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#f8fafc"/>
+          <stop offset="100%" stop-color="#e2e8f0"/>
+        </linearGradient>
+        <linearGradient id="mast-grad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#64748b"/>
+          <stop offset="50%" stop-color="#94a3b8"/>
+          <stop offset="100%" stop-color="#475569"/>
+        </linearGradient>
+        <linearGradient id="blade-grad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#1e293b"/>
+          <stop offset="50%" stop-color="#334155"/>
+          <stop offset="100%" stop-color="#0f172a"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Background Box -->
+      <rect width="600" height="380" rx="14" fill="url(#heli-bg)" stroke="#cbd5e1" stroke-width="2"/>
+
+      <!-- Tail Boom & Tail Rotor Silhouette (Right Side) -->
+      <g id="tail-section" transform="translate(360, 250)">
+        <!-- Tail Boom Tube -->
+        <polygon points="0,0 180,-15 180,-5 0,15" fill="#475569"/>
+        <!-- Vertical Stabilizer Fin -->
+        <polygon points="170,-45 195,-55 190,15 170,10" fill="#334155"/>
+        <!-- Tail Rotor Hub & Blades -->
+        <circle cx="185" cy="-20" r="6" fill="#f97316"/>
+        <line x1="185" y1="-50" x2="185" y2="10" stroke="#f97316" stroke-width="4" stroke-linecap="round"/>
+        <!-- Tail Rotor Anti-Torque Thrust Arrow -->
+        <g stroke="#06b6d4" stroke-width="3" fill="#06b6d4">
+          <line x1="185" y1="-20" x2="185" y2="-70"/>
+          <polygon points="185,-78 180,-70 190,-70"/>
+          <text x="140" y="-82" font-size="11" font-weight="700" fill="#0891b2">F_պոչ (${tailAntiTorqueNm} Ն·մ)</text>
+        </g>
+      </g>
+
+      <!-- Main Helicopter Fuselage Base -->
+      <g id="fuselage" transform="translate(180, 240)">
+        <!-- Cabin Silhouette -->
+        <path d="M 0 35 C -40 35, -70 10, -70 -20 C -70 -45, -30 -50, 20 -50 C 90 -50, 180 -15, 180 15 C 180 35, 120 35, 0 35 Z" fill="#334155"/>
+        <!-- Cockpit Glass Window -->
+        <path d="M -20 -45 C -55 -40, -65 -25, -65 -15 C -45 -15, -10 -25, 0 -45 Z" fill="#38bdf8" opacity="0.8"/>
+        <!-- Landing Skids -->
+        <line x1="-50" y1="45" x2="140" y2="45" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+        <line x1="-20" y1="35" x2="-30" y2="45" stroke="#1e293b" stroke-width="3"/>
+        <line x1="80" y1="35" x2="70" y2="45" stroke="#1e293b" stroke-width="3"/>
+      </g>
+
+      <!-- Main Rotor Mast (Vertical Steel Shaft) -->
+      <rect x="232" y="90" width="16" height="150" fill="url(#mast-grad)" stroke="#334155" stroke-width="1.5"/>
+
+      <!-- Main Rotor Torque Reaction Spiral (Orange Arrow) -->
+      <g stroke="#f97316" stroke-width="2.5" fill="none">
+        <path d="M 220 220 C 210 230, 270 235, 260 215" stroke-dasharray="4 2"/>
+        <polygon points="262,210 256,218 266,217" fill="#f97316"/>
+        <text x="272" y="225" font-size="10" font-weight="700" fill="#ea580c">τ_ռեակցիա (${mainTorqueNm} Ն·մ)</text>
+      </g>
+
+      <!-- Swashplate Assembly (Լիցքաթիթեղ) -->
+      <g id="swashplate-assembly" transform="translate(240, ${swashplateY}) rotate(${swashplateAngle})">
+        <!-- Lower Fixed (Stationary) Swashplate -->
+        <rect x="-36" y="10" width="72" height="10" rx="4" fill="#64748b" stroke="#334155" stroke-width="1.5"/>
+        <text x="42" y="18" font-size="9" font-weight="700" fill="#475569">Անշարժ սկավառակ</text>
+        
+        <!-- Ball Bearing Divider -->
+        <circle cx="-20" cy="8" r="2.5" fill="#e2e8f0"/>
+        <circle cx="0" cy="8" r="2.5" fill="#e2e8f0"/>
+        <circle cx="20" cy="8" r="2.5" fill="#e2e8f0"/>
+
+        <!-- Upper Rotating Swashplate -->
+        <rect x="-38" y="-2" width="76" height="9" rx="3.5" fill="#0284c7" stroke="#0369a1" stroke-width="1.5"/>
+        <text x="42" y="5" font-size="9" font-weight="700" fill="#0284c7">Պտտվող սկավառակ</text>
+
+        <!-- Pushrod Links up to Rotor Head -->
+        <line x1="-28" y1="-2" x2="-28" y2="-50" stroke="#0284c7" stroke-width="3" stroke-linecap="round"/>
+        <line x1="28" y1="-2" x2="28" y2="-50" stroke="#0284c7" stroke-width="3" stroke-linecap="round"/>
+      </g>
+
+      <!-- Rotor Head & Blade Grips at Mast Top (240, 90) -->
+      <g id="rotor-head" transform="translate(240, 90) rotate(${swashplateAngle})">
+        <circle cx="0" cy="0" r="12" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+        
+        <!-- Left Blade (Advancing Blade) -->
+        <g transform="translate(-12, 0) rotate(${bladeAngle})">
+          <polygon points="0,-4 -190,-7 -190,7 0,4" fill="url(#blade-grad)" stroke="#0f172a" stroke-width="1.5"/>
+          <line x1="-185" y1="0" x2="-5" y2="0" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <text x="-150" y="-12" font-size="10" font-weight="700" fill="#1e293b">Թիակ 1 (Առաջընթաց)</text>
+        </g>
+
+        <!-- Right Blade (Retreating Blade) -->
+        <g transform="translate(12, 0) rotate(${-bladeAngle})">
+          <polygon points="0,-4 190,-7 190,7 0,4" fill="url(#blade-grad)" stroke="#0f172a" stroke-width="1.5"/>
+          <line x1="5" y1="0" x2="185" y2="0" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <text x="90" y="-12" font-size="10" font-weight="700" fill="#1e293b">Թիակ 2 (Հետընթաց)</text>
+        </g>
+      </g>
+
+      <!-- Live Force Vectors at Rotor Hub (240, 90) -->
+      ${
+        showVectors
+          ? `
+        <!-- Vertical Lift Vector (Green) -->
+        <g stroke="#22c55e" stroke-width="3.5" fill="#22c55e">
+          <line x1="240" y1="90" x2="240" y2="${90 - liftLen}"/>
+          <polygon points="240,${90 - liftLen - 8} 234,${90 - liftLen} 246,${90 - liftLen}"/>
+          <text x="248" y="${90 - liftLen / 2}" font-size="11" font-weight="700" fill="#15803d">
+            L_վերամբարձ = ${verticalLiftKn} կՆ
+          </text>
+        </g>
+
+        <!-- Forward Propulsion Vector (Cyan, if cyclic tilt active) -->
+        ${
+          fwdLen > 4
+            ? `
+          <g stroke="#0284c7" stroke-width="3" fill="#0284c7">
+            <line x1="240" y1="90" x2="${240 - forwardThrustKn * 10}" y2="90"/>
+            <polygon points="${240 - forwardThrustKn * 10 - 7},90 ${240 - forwardThrustKn * 10},85 ${240 - forwardThrustKn * 10},95"/>
+            <text x="${240 - forwardThrustKn * 10 - 15}" y="82" font-size="11" font-weight="700" fill="#0284c7" text-anchor="end">
+              T_առաջ = ${forwardThrustKn} կՆ
+            </text>
+          </g>
+        `
+            : ''
+        }
+      `
+          : ''
+      }
+
+      <!-- Top Status Banner Pill -->
+      <g transform="translate(20, 20)">
+        <rect width="360" height="34" rx="8" fill="#0f172a" fill-opacity="0.9" stroke="${yawColor}" stroke-width="1.5"/>
+        <text x="14" y="22" font-size="12" font-weight="700" fill="${yawColor}">
+          ${yawLabel}
+        </text>
+      </g>
+
+      <!-- Bottom Swashplate Callout -->
+      <g transform="translate(20, 320)">
+        <rect width="320" height="42" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+        <text x="12" y="18" font-size="11" font-weight="700" fill="#0f172a">
+          ⚙️ Լիցքաթիթեղ (Swashplate)՝
+        </text>
+        <text x="12" y="34" font-size="10" font-weight="600" fill="#64748b">
+          Կոլեկտիվ քայլ՝ ${colPitchDeg}° | Ցիկլիկ թեքում՝ ${tiltForwardDeg}°
+        </text>
+      </g>
+    </svg>
+  `;
+}
+
