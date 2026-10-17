@@ -7,6 +7,7 @@ test.describe('AeroLab Interactive Flight & Rocketry Laboratory', () => {
     await page.goto('/#aerolab');
 
     await expect(page.locator('.aerolab-header h1')).toContainText('Թռչող Սարքերի Լաբորատորիա');
+    await page.locator('[data-aeromode="sandbox"]').click();
     await expect(page.locator('.aerolab-tabs')).toBeVisible();
 
     // Verify 0 horizontal overflow

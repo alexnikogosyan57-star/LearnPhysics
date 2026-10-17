@@ -118,7 +118,7 @@ export function aerolabView(state) {
   return `
     <div class="aerolab-container" data-tab="${aero.tab}" data-mode="${learning.activeMode}">
       <!-- Hub Header & Mode Switcher -->
-      <header class="aero-hub-header">
+      <header class="aerolab-header aero-hub-header">
         <div class="aero-hub-top">
           <div class="aero-hub-meta">
             <span class="aero-badge">🚀 ԱԵՐՈԴԻՆԱՄԻԿԱ ԵՎ ԻՆԺԵՆԵՐԻԱ</span>
