@@ -111,71 +111,121 @@ export function initialAeroLabState() {
 export function aerolabView(state) {
   state.aerolab ||= initialAeroLabState();
   const aero = state.aerolab;
+  const learning = ensureAeroLearningState(state);
+
+  const isLearningPath = learning.activeMode !== 'sandbox';
 
   return `
-    <div class="aerolab-container" data-tab="${aero.tab}">
-      <!-- Lab Header & Introduction -->
-      <div class="aerolab-header">
-        <div class="aerolab-title-row">
-          <div class="aerolab-badge">🚀 ԱԵՐՈԴԻՆԱՄԻԿԱ ԵՎ ԹՌԻՉՔ</div>
-          <h1>Թռչող Սարքերի Լաբորատորիա</h1>
-          <p class="aerolab-subtitle">
-            Ֆիզիկայի տեսությունից մինչև տանը սարքվող հրթիռներ և սավառնակներ։ Ուսումնասիրի՛ր ռեակտիվ ուժերը, վերամբարձ ուժն ու աերոդինամիկան կենդանի փորձերով։
-          </p>
+    <div class="aerolab-container" data-tab="${aero.tab}" data-mode="${learning.activeMode}">
+      <!-- Hub Header & Mode Switcher -->
+      <header class="aero-hub-header">
+        <div class="aero-hub-top">
+          <div class="aero-hub-meta">
+            <span class="aero-badge">🚀 ԱԵՐՈԴԻՆԱՄԻԿԱ ԵՎ ԻՆԺԵՆԵՐԻԱ</span>
+            <h1>Թռչող Սարքերի Լաբորատորիա</h1>
+            <p class="aero-hub-sub">
+              Ֆիզիկայի բացարձակ զրոյից մինչև աերոդինամիկա և տիեզերական հրթիռներ՝ ինտերակտիվ քայլ առ քայլ փորձերով։
+            </p>
+          </div>
+
+          <!-- Gamification HUD -->
+          <div class="aero-hub-hud">
+            <div class="aero-hud-pill xp" title="Ընդհանուր վաստակած միավորներ">
+              <span class="aero-hud-icon">⚡</span>
+              <strong>${learning.xp}</strong>
+              <small>XP</small>
+            </div>
+            <div class="aero-hud-pill streak" title="Ամենօրյա ուսումնական շարք">
+              <span class="aero-hud-icon">🔥</span>
+              <strong>${learning.streak}</strong>
+              <small>օր</small>
+            </div>
+            <div class="aero-hud-pill progress" title="Մակարդակ 1-ի ավարտված դասեր">
+              <span class="aero-hud-icon">🧭</span>
+              <strong>${learning.completedLessons.length} / 5</strong>
+              <small>դաս</small>
+            </div>
+          </div>
         </div>
 
-        <!-- Navigation Tabs (Duolingo Style 3D Pills) -->
-        <nav class="aerolab-tabs" role="tablist" aria-label="Լաբորատորիայի բաժիններ">
-          <button class="tab-button ${aero.tab === 'rocket' ? 'active' : ''}" data-aerotab="rocket" role="tab" aria-selected="${aero.tab === 'rocket'}">
-            <span class="tab-icon">🚀</span>
-            <span>Հրթիռի Թռիչք</span>
-          </button>
-          <button class="tab-button ${aero.tab === 'drone' ? 'active' : ''}" data-aerotab="drone" role="tab" aria-selected="${aero.tab === 'drone'}">
-            <span class="tab-icon">🛸</span>
-            <span>Քվադրոկոպտեր</span>
-          </button>
-          <button class="tab-button ${aero.tab === 'helicopter' ? 'active' : ''}" data-aerotab="helicopter" role="tab" aria-selected="${aero.tab === 'helicopter'}">
-            <span class="tab-icon">🚁</span>
-            <span>Ուղղաթիռ & Swashplate</span>
-          </button>
-          <button class="tab-button ${aero.tab === 'tunnel' ? 'active' : ''}" data-aerotab="tunnel" role="tab" aria-selected="${aero.tab === 'tunnel'}">
-            <span class="tab-icon">💨</span>
-            <span>Աերոդինամիկ Խողովակ</span>
-          </button>
-          <button class="tab-button ${aero.tab === 'supersonic' ? 'active' : ''}" data-aerotab="supersonic" role="tab" aria-selected="${aero.tab === 'supersonic'}">
-            <span class="tab-icon">⚡</span>
-            <span>Գերձայնային Թռիչք</span>
-          </button>
-          <button class="tab-button ${aero.tab === 'jet' ? 'active' : ''}" data-aerotab="jet" role="tab" aria-selected="${aero.tab === 'jet'}">
-            <span class="tab-icon">✈️</span>
-            <span>Տուրբոֆեն Շարժիչ</span>
-          </button>
-          <button class="tab-button ${aero.tab === 'orbit' ? 'active' : ''}" data-aerotab="orbit" role="tab" aria-selected="${aero.tab === 'orbit'}">
-            <span class="tab-icon">🛰️</span>
-            <span>Ուղեծրային Թնդանոթ</span>
-          </button>
-          <button class="tab-button ${aero.tab === 'glider' ? 'active' : ''}" data-aerotab="glider" role="tab" aria-selected="${aero.tab === 'glider'}">
-            <span class="tab-icon">🌬️</span>
-            <span>Թերմիկ Սավառնում</span>
-          </button>
-          <button class="tab-button ${aero.tab === 'ion' ? 'active' : ''}" data-aerotab="ion" role="tab" aria-selected="${aero.tab === 'ion'}">
-            <span class="tab-icon">⚡</span>
-            <span>Իոնային Շարժիչ</span>
-          </button>
-          <button class="tab-button ${aero.tab === 'diy' ? 'active' : ''}" data-aerotab="diy" role="tab" aria-selected="${aero.tab === 'diy'}">
-            <span class="tab-icon">🛠️</span>
-            <span>Տնային DIY Ինժեներիա</span>
-          </button>
-          <button class="tab-button ${aero.tab === 'badges' ? 'active' : ''}" data-aerotab="badges" role="tab" aria-selected="${aero.tab === 'badges'}">
-            <span class="tab-icon">🏆</span>
-            <span>Ձեռքբերումներ</span>
-          </button>
-          <button class="tab-button ${aero.tab === 'quiz' ? 'active' : ''}" data-aerotab="quiz" role="tab" aria-selected="${aero.tab === 'quiz'}">
-            <span class="tab-icon">🎯</span>
-            <span>Մինի-Ստուգում</span>
-          </button>
-        </nav>
-      </div>
+        <!-- Mode Segmented Switcher -->
+        <div class="aero-mode-switcher-wrap">
+          <div class="aero-mode-switcher" role="tablist">
+            <button class="aero-mode-tab ${isLearningPath ? 'active' : ''}" data-aeromode="path">
+              <span class="aero-mode-icon">🎓</span>
+              <span class="aero-mode-text">Ուսուցման Ճանապարհ</span>
+              <span class="aero-mode-badge">Duolingo + Brilliant</span>
+            </button>
+            <button class="aero-mode-tab ${!isLearningPath ? 'active' : ''}" data-aeromode="sandbox">
+              <span class="aero-mode-icon">🛠️</span>
+              <span class="aero-mode-text">Ազատ Լաբորատորիա</span>
+              <span class="aero-mode-badge">12 Սիմուլյատոր</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      ${isLearningPath ? renderLearningPathView(learning) : renderSandboxView(aero)}
+
+      ${learning.currentLessonId ? renderLessonModal(learning) : ''}
+    </div>
+  `;
+}
+
+function renderSandboxView(aero) {
+  return `
+    <div class="aerolab-sandbox-wrap">
+      <!-- Navigation Tabs (Duolingo Style 3D Pills) -->
+      <nav class="aerolab-tabs" role="tablist" aria-label="Լաբորատորիայի բաժիններ">
+        <button class="tab-button ${aero.tab === 'rocket' ? 'active' : ''}" data-aerotab="rocket" role="tab" aria-selected="${aero.tab === 'rocket'}">
+          <span class="tab-icon">🚀</span>
+          <span>Հրթիռի Թռիչք</span>
+        </button>
+        <button class="tab-button ${aero.tab === 'drone' ? 'active' : ''}" data-aerotab="drone" role="tab" aria-selected="${aero.tab === 'drone'}">
+          <span class="tab-icon">🛸</span>
+          <span>Քվադրոկոպտեր</span>
+        </button>
+        <button class="tab-button ${aero.tab === 'helicopter' ? 'active' : ''}" data-aerotab="helicopter" role="tab" aria-selected="${aero.tab === 'helicopter'}">
+          <span class="tab-icon">🚁</span>
+          <span>Ուղղաթիռ & Swashplate</span>
+        </button>
+        <button class="tab-button ${aero.tab === 'tunnel' ? 'active' : ''}" data-aerotab="tunnel" role="tab" aria-selected="${aero.tab === 'tunnel'}">
+          <span class="tab-icon">💨</span>
+          <span>Աերոդինամիկ Խողովակ</span>
+        </button>
+        <button class="tab-button ${aero.tab === 'supersonic' ? 'active' : ''}" data-aerotab="supersonic" role="tab" aria-selected="${aero.tab === 'supersonic'}">
+          <span class="tab-icon">⚡</span>
+          <span>Գերձայնային Թռիչք</span>
+        </button>
+        <button class="tab-button ${aero.tab === 'jet' ? 'active' : ''}" data-aerotab="jet" role="tab" aria-selected="${aero.tab === 'jet'}">
+          <span class="tab-icon">✈️</span>
+          <span>Տուրբոֆեն Շարժիչ</span>
+        </button>
+        <button class="tab-button ${aero.tab === 'orbit' ? 'active' : ''}" data-aerotab="orbit" role="tab" aria-selected="${aero.tab === 'orbit'}">
+          <span class="tab-icon">🛰️</span>
+          <span>Ուղեծրային Թնդանոթ</span>
+        </button>
+        <button class="tab-button ${aero.tab === 'glider' ? 'active' : ''}" data-aerotab="glider" role="tab" aria-selected="${aero.tab === 'glider'}">
+          <span class="tab-icon">🌬️</span>
+          <span>Թերմիկ Սավառնում</span>
+        </button>
+        <button class="tab-button ${aero.tab === 'ion' ? 'active' : ''}" data-aerotab="ion" role="tab" aria-selected="${aero.tab === 'ion'}">
+          <span class="tab-icon">⚡</span>
+          <span>Իոնային Շարժիչ</span>
+        </button>
+        <button class="tab-button ${aero.tab === 'diy' ? 'active' : ''}" data-aerotab="diy" role="tab" aria-selected="${aero.tab === 'diy'}">
+          <span class="tab-icon">🛠️</span>
+          <span>Տնային DIY Ինժեներիա</span>
+        </button>
+        <button class="tab-button ${aero.tab === 'badges' ? 'active' : ''}" data-aerotab="badges" role="tab" aria-selected="${aero.tab === 'badges'}">
+          <span class="tab-icon">🏆</span>
+          <span>Ձեռքբերումներ</span>
+        </button>
+        <button class="tab-button ${aero.tab === 'quiz' ? 'active' : ''}" data-aerotab="quiz" role="tab" aria-selected="${aero.tab === 'quiz'}">
+          <span class="tab-icon">🎯</span>
+          <span>Մինի-Ստուգում</span>
+        </button>
+      </nav>
 
       <!-- Tab Content Area -->
       <div class="aerolab-content">
@@ -183,6 +233,459 @@ export function aerolabView(state) {
       </div>
     </div>
   `;
+}
+
+function renderLearningPathView(learning) {
+  const lessonKeys = ['1.1', '1.2', '1.3', '1.4', '1.5'];
+  const nodeOffsets = ['pos-center', 'pos-left', 'pos-right', 'pos-left-sub', 'pos-right-sub'];
+
+  const nodesHtml = lessonKeys
+    .map((key, i) => {
+      const lesson = LEVEL_1_LESSONS[key];
+      const isCompleted = learning.completedLessons.includes(key);
+      const isUnlocked = canOpenAeroLesson(learning, key);
+      const isCurrent = isUnlocked && !isCompleted;
+      const status = isCompleted ? 'completed' : isCurrent ? 'current' : 'locked';
+      const icon = isCompleted ? '✓' : isUnlocked ? lesson.badge.split(' ')[0] : '🔒';
+
+      return `
+      <div class="aero-node-wrapper ${nodeOffsets[i]} status-${status}">
+        ${isCurrent ? `<div class="aero-node-callout">ՍԿՍԵԼ</div>` : ''}
+        <button class="aero-node-btn ${status}" data-openlesson="${key}" aria-label="${lesson.title}" ${!isUnlocked ? 'disabled' : ''}>
+          <span class="aero-node-icon">${icon}</span>
+          ${isCompleted ? '<span class="aero-node-check-badge">✓</span>' : ''}
+        </button>
+        <div class="aero-node-info">
+          <span class="aero-node-num">Դաս ${key}</span>
+          <strong class="aero-node-title">${lesson.title}</strong>
+          <span class="aero-node-reward">+${lesson.xpReward} XP</span>
+        </div>
+      </div>
+    `;
+    })
+    .join('');
+
+  const allLevel1Done = learning.completedLessons.length >= 5;
+  const trophyHtml = `
+    <div class="aero-node-wrapper pos-center status-${allLevel1Done ? 'completed' : 'locked'}">
+      <button class="aero-node-btn trophy ${allLevel1Done ? 'completed' : 'locked'}" ${allLevel1Done ? '' : 'disabled'}>
+        <span class="aero-node-icon">🏆</span>
+      </button>
+      <div class="aero-node-info">
+        <span class="aero-node-num">ՄԱԿԱՐԴԱԿ 1-Ի ԳԱՎԱԹ</span>
+        <strong class="aero-node-title">${allLevel1Done ? 'Շնորհավորո՛ւմ ենք։ Բոլոր 5 դասերը հանձնված են' : 'Ավարտիր բոլոր 5 դասերը'}</strong>
+      </div>
+    </div>
+  `;
+
+  return `
+    <div class="aero-path-container">
+      <!-- Level 1 Banner -->
+      <section class="aero-level-banner">
+        <div class="aero-level-badge">🧭 ՄԱԿԱՐԴԱԿ 1 / 7</div>
+        <h2>Ֆիզիկայի Բացարձակ Հիմունքներ</h2>
+        <p>Շարժում, դիրք, արագություն, արագացում, զանգված, իներցիա և Գալիլեյի ազատ անկում։</p>
+        <div class="aero-level-progress-bar">
+          <div class="aero-level-progress-fill" style="width: ${learning.completedLessons.length * 20}%"></div>
+        </div>
+        <span class="aero-level-progress-label">${learning.completedLessons.length} / 5 դաս ավարտված (${learning.completedLessons.length * 20}%)</span>
+      </section>
+
+      <!-- Duolingo Snake Learning Path -->
+      <section class="aero-snake-section">
+        <div class="aero-snake-path">
+          ${nodesHtml}
+          ${trophyHtml}
+        </div>
+      </section>
+
+      <!-- Safe DIY Glider Engineering Box -->
+      ${renderDiyGliderCard(learning)}
+
+      <!-- Upcoming Curriculum Roadmap (Levels 2-7) -->
+      <section class="aero-roadmap-section">
+        <h3 class="aero-roadmap-title">🗺️ Հետագա Ուսումնական Ծրագիր</h3>
+        <p class="aero-roadmap-sub">Բացահայտիր թռիչքի գիտության հաջորդ մակարդակները՝ Մակարդակ 1-ն ավարտելուց հետո։</p>
+        <div class="aero-roadmap-grid">
+          ${AEROLAB_CURRICULUM.slice(1)
+            .map(
+              (l) => `
+            <div class="aero-roadmap-card preview">
+              <div class="roadmap-card-icon">${l.icon}</div>
+              <div class="roadmap-card-info">
+                <h4>${l.title}</h4>
+                <span class="roadmap-card-sub">${l.subtitle}</span>
+                <p>${l.description}</p>
+              </div>
+              <span class="roadmap-card-badge">Շուտով</span>
+            </div>
+          `,
+            )
+            .join('')}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderDiyGliderCard(learning) {
+  const diy = DIY_SAFE_PROJECT_GLIDER;
+  const mats = learning.diyProgress?.materialsChecked || [];
+  const steps = learning.diyProgress?.stepsCompleted || [];
+
+  return `
+    <section class="aero-diy-card">
+      <div class="aero-diy-header">
+        <div class="aero-diy-meta">
+          <span class="aero-badge-pill green">${diy.badge}</span>
+          <h3>${diy.title}</h3>
+          <p class="aero-diy-sub">Փորձիր ֆիզիկան սեփական ձեռքերով՝ սովորական թղթով և ամրակներով։</p>
+        </div>
+        <div class="aero-diy-stats">
+          <span>⏱️ ${diy.durationMin} րոպե</span>
+          <span>📊 ${diy.difficulty}</span>
+        </div>
+      </div>
+
+      <div class="aero-diy-safety-banner">
+        🛡️ <strong>Անվտանգության երաշխիք.</strong> ${diy.safetyWarning}
+      </div>
+
+      <div class="aero-diy-grid">
+        <!-- Materials Checklist -->
+        <div class="aero-diy-col">
+          <h4>📋 Անհրաժեշտ նյութեր</h4>
+          <ul class="aero-diy-checklist">
+            ${diy.materials
+              .map(
+                (m) => `
+              <li>
+                <label class="aero-checkbox-label">
+                  <input type="checkbox" data-diymat="${m.id}" ${mats.includes(m.id) ? 'checked' : ''} />
+                  <span class="aero-check-text">${m.icon} ${m.name}</span>
+                </label>
+              </li>
+            `,
+              )
+              .join('')}
+          </ul>
+        </div>
+
+        <!-- Step by Step Guide -->
+        <div class="aero-diy-col steps">
+          <h4>👣 Քայլ առ քայլ ինժեներական հավաքում</h4>
+          <div class="aero-diy-steps-list">
+            ${diy.steps
+              .map(
+                (s) => `
+              <div class="aero-diy-step-item ${steps.includes(s.step) ? 'done' : ''}">
+                <div class="step-check-col">
+                  <input type="checkbox" data-diystep="${s.step}" ${steps.includes(s.step) ? 'checked' : ''} />
+                </div>
+                <div class="step-text-col">
+                  <strong>Քայլ ${s.step}. ${s.title}</strong>
+                  <p>${s.instruction}</p>
+                </div>
+              </div>
+            `,
+              )
+              .join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- Engineering Takeaway -->
+      <div class="aero-diy-takeaway">
+        💡 <strong>Ինժեներական Եզրակացություն.</strong> ${diy.engineeringTakeaway}
+      </div>
+    </section>
+  `;
+}
+
+function renderLessonModal(learning) {
+  if (!learning.currentLessonId) return '';
+  const lesson = LEVEL_1_LESSONS[learning.currentLessonId];
+  if (!lesson) return '';
+
+  const activeStepIdx = learning.activeStep || 0;
+  const currentStep = lesson.steps[activeStepIdx];
+  const stepTitles = [
+    'Հարց',
+    'Կանխատեսում',
+    'Փորձ',
+    'Դիտարկում',
+    'Բացատրություն',
+    'Մարտահրավեր',
+    'Ավարտ',
+  ];
+
+  return `
+    <div class="aero-modal-backdrop" role="dialog" aria-modal="true" aria-label="${lesson.title}">
+      <div class="aero-modal-container">
+        <!-- Modal Top Bar -->
+        <header class="aero-modal-header">
+          <div class="aero-modal-title-col">
+            <span class="aero-modal-badge">${lesson.badge}</span>
+            <h3>Դաս ${lesson.number}. ${lesson.title}</h3>
+          </div>
+          <button class="aero-modal-close-btn" data-closelesson title="Փակել">✕</button>
+        </header>
+
+        <!-- 7-Step Progress Pill Tracker -->
+        <div class="aero-step-tracker" role="tablist">
+          ${stepTitles
+            .map(
+              (st, i) => `
+            <div class="aero-step-pill ${i === activeStepIdx ? 'active' : i < activeStepIdx ? 'done' : ''}">
+              <span class="aero-step-num">${i + 1}</span>
+              <span class="aero-step-name">${st}</span>
+            </div>
+          `,
+            )
+            .join('')}
+        </div>
+
+        <!-- Active Step Main Body -->
+        <div class="aero-modal-body">
+          ${renderStepBody(lesson, currentStep, learning)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderStepBody(lesson, step, learning) {
+  if (step.type === 'question') {
+    return `
+      <div class="aero-step-pane question-pane">
+        <div class="aero-step-header-tag">${step.badge}</div>
+        <h2>${step.title}</h2>
+        <div class="aero-question-hero">
+          <p class="aero-question-prompt">${step.prompt}</p>
+          <div class="aero-question-detail">💡 ${step.detail}</div>
+        </div>
+        <div class="aero-step-footer">
+          <button class="button" data-stepadvance="1">
+            <span>Առաջարկել կանխատեսում</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  if (step.type === 'prediction') {
+    return `
+      <div class="aero-step-pane prediction-pane">
+        <div class="aero-step-header-tag">${step.badge}</div>
+        <h2>${step.title}</h2>
+        <p class="aero-step-sub">Ընտրիր տարբերակը, որն ըստ քեզ ճիշտ է։ Փորձից հետո կտեսնենք իրականությունը։</p>
+
+        <div class="aero-prediction-options">
+          ${step.options
+            .map(
+              (opt) => `
+            <button class="aero-option-card ${learning.userPrediction === opt.id ? 'selected' : ''}" data-predictchoice="${opt.id}">
+              <span class="aero-option-radio">${learning.userPrediction === opt.id ? '●' : '○'}</span>
+              <span class="aero-option-text">${opt.text}</span>
+            </button>
+          `,
+            )
+            .join('')}
+        </div>
+
+        <div class="aero-step-footer">
+          <button class="button" data-stepadvance="2" ${learning.userPrediction === null ? 'disabled' : ''}>
+            <span>Հաստատել և անցնել փորձին</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  if (step.type === 'experiment') {
+    return `
+      <div class="aero-step-pane experiment-pane">
+        <div class="aero-step-header-tag">${step.badge}</div>
+        <h2>${step.title}</h2>
+        <p class="aero-step-sub">${step.instruction}</p>
+
+        <!-- Dynamic Simulation Canvas Widget Mount -->
+        <div id="lesson-widget-mount" data-widget="${step.widgetType}"></div>
+
+        <div class="aero-step-footer">
+          <button class="button" data-stepadvance="3">
+            <span>Ավարտել փորձը և անցնել դիտարկմանը</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  if (step.type === 'observation') {
+    return `
+      <div class="aero-step-pane observation-pane">
+        <div class="aero-step-header-tag">${step.badge}</div>
+        <h2>${step.title}</h2>
+        <p class="aero-step-sub">Ահա այն առանցքային կետերը, որոնք պետք էր նկատել սիմուլյացիայի ժամանակ.</p>
+
+        <div class="aero-observation-list">
+          ${step.questions
+            .map(
+              (q, idx) => `
+            <div class="aero-obs-item">
+              <span class="aero-obs-num">#${idx + 1}</span>
+              <p class="aero-obs-text">${q}</p>
+            </div>
+          `,
+            )
+            .join('')}
+        </div>
+
+        <div class="aero-step-footer">
+          <button class="button" data-stepadvance="4">
+            <span>Տեսնել ֆիզիկայի բացատրությունը</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  if (step.type === 'explanation') {
+    return `
+      <div class="aero-step-pane explanation-pane">
+        <div class="aero-step-header-tag">${step.badge}</div>
+        <h2>${step.title}</h2>
+
+        <div class="aero-explanation-content">
+          ${step.content}
+        </div>
+
+        <div class="aero-step-footer">
+          <button class="button" data-stepadvance="5">
+            <span>Անցնել ամրապնդման մարտահրավերին</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  if (step.type === 'challenge') {
+    const isSubmitted = learning.challengeSubmitted;
+    const selectedOpt = step.options.find((o) => o.id === learning.challengeSelected);
+    const isCorrect = isSubmitted && selectedOpt?.correct;
+
+    return `
+      <div class="aero-step-pane challenge-pane">
+        <div class="aero-step-header-tag">${step.badge}</div>
+        <h2>${step.title}</h2>
+
+        <div class="aero-challenge-box">
+          <p class="aero-challenge-q">${step.question}</p>
+
+          <div class="aero-challenge-options">
+            ${step.options
+              .map((opt) => {
+                let cls = '';
+                if (learning.challengeSelected === opt.id) cls = 'selected';
+                if (isSubmitted) {
+                  if (opt.correct) cls += ' correct-answer';
+                  else if (learning.challengeSelected === opt.id) cls += ' wrong-answer';
+                }
+                return `
+                <button class="aero-option-card ${cls}" data-chalchoice="${opt.id}" ${isSubmitted ? 'disabled' : ''}>
+                  <span class="aero-option-letter">${String.fromCharCode(65 + opt.id)}</span>
+                  <span class="aero-option-text">${opt.text}</span>
+                </button>
+              `;
+              })
+              .join('')}
+          </div>
+        </div>
+
+        <!-- Hint Section -->
+        <div class="aero-hint-area">
+          <button class="aero-hint-toggle" id="btn-chal-hint">
+            💡 ${learning.showHint ? 'Թաքցնել հուշումը' : 'Հուշում (Hint)'}
+          </button>
+          ${learning.showHint ? `<div class="aero-hint-box">${step.hint}</div>` : ''}
+        </div>
+
+        <!-- Feedback Dock -->
+        <div class="aero-challenge-dock ${isSubmitted ? (isCorrect ? 'dock-success' : 'dock-error') : ''}">
+          ${
+            !isSubmitted
+              ? `
+            <div class="aero-dock-content">
+              <span class="aero-dock-prompt">Ընտրիր պատասխանը և ստուգիր արդյունքը։</span>
+              <button class="button" id="btn-chal-check" ${learning.challengeSelected === null ? 'disabled' : ''}>
+                ՍՏՈՒԳԵԼ
+              </button>
+            </div>
+          `
+              : isCorrect
+                ? `
+            <div class="aero-dock-content success">
+              <div class="aero-dock-msg">
+                <strong>🎉 ՃԻՇՏ Է։ ԳԵՐԱԶԱՆՑ ԱՐԴՅՈՒՆՔ</strong>
+                <p>${step.explanation}</p>
+              </div>
+              <button class="button" data-stepadvance="6">
+                ՇԱՐՈՒՆԱԿԵԼ →
+              </button>
+            </div>
+          `
+                : `
+            <div class="aero-dock-content error">
+              <div class="aero-dock-msg">
+                <strong>❌ Ոչինչ, փորձիր նորից</strong>
+                <p>Ուշադիր կարդա հարցը կամ բացիր հուշումը՝ ճիշտ տրամաբանությունը գտնելու համար։</p>
+              </div>
+              <button class="button secondary" id="btn-chal-retry">
+                ՓՈՐՁԵԼ ՆՈՐԻՑ
+              </button>
+            </div>
+          `
+          }
+        </div>
+      </div>
+    `;
+  }
+
+  if (step.type === 'complete') {
+    return `
+      <div class="aero-step-pane complete-pane">
+        <div class="aero-step-header-tag gold">${step.badge}</div>
+        <div class="aero-victory-trophy">🏆</div>
+        <h2>${step.title}</h2>
+        <p class="aero-step-sub">${step.summary}</p>
+
+        <!-- Unlocked Formula Card -->
+        <div class="aero-formula-card">
+          <span class="aero-formula-badge">🔓 ԱՊԱԿՈՂՊՎԱԾ ԲԱՆԱՁԵՎ</span>
+          <div class="aero-formula-symbol">${step.unlockedFormula.symbol}</div>
+          <strong class="aero-formula-name">${step.unlockedFormula.name}</strong>
+          <span class="aero-formula-units">${step.unlockedFormula.units}</span>
+        </div>
+
+        <div class="aero-reward-xp-pill">
+          ⚡ <strong>+${lesson.xpReward} XP</strong> ավելացվեց քո պրոֆիլին
+        </div>
+
+        <div class="aero-step-footer">
+          <button class="button" id="btn-lesson-finish">
+            <span>Ավարտել և վերադառնալ ճանապարհին 🚀</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  return '';
 }
 
 function renderTabContent(aero) {
@@ -1721,9 +2224,165 @@ function renderAeroQuiz(aero) {
 export function bindAeroLab(root, state, save, render) {
   state.aerolab ||= initialAeroLabState();
   const aero = state.aerolab;
+  const learning = ensureAeroLearningState(state);
   let disposed = false;
   let raf = null;
   let lastTime = performance.now();
+  let cleanupWidget = null;
+
+  // Mount active simulation widget if inside Step 2 of a lesson
+  const widgetMount = root.querySelector('#lesson-widget-mount');
+  if (widgetMount && learning.currentLessonId) {
+    const lesson = LEVEL_1_LESSONS[learning.currentLessonId];
+    const step = lesson?.steps[learning.activeStep];
+    if (step && step.type === 'experiment') {
+      cleanupWidget = mountLessonWidget(widgetMount, step.widgetType);
+    }
+  }
+
+  // Segmented Mode Switcher (Learning Path vs Free Sandbox)
+  root.querySelectorAll('[data-aeromode]').forEach((b) => {
+    b.onclick = () => {
+      learning.activeMode = b.dataset.aeromode;
+      playSound('tap');
+      save();
+      render();
+    };
+  });
+
+  // Open Lesson from Snake Path
+  root.querySelectorAll('[data-openlesson]').forEach((b) => {
+    b.onclick = () => {
+      const lessonId = b.dataset.openlesson;
+      if (!canOpenAeroLesson(learning, lessonId)) {
+        playSound('wrong');
+        return;
+      }
+      learning.currentLessonId = lessonId;
+      learning.activeStep = 0;
+      learning.userPrediction = null;
+      learning.challengeSelected = null;
+      learning.challengeSubmitted = false;
+      learning.showHint = false;
+      playSound('tap');
+      save();
+      render();
+    };
+  });
+
+  // Close Lesson Modal
+  root.querySelectorAll('[data-closelesson]').forEach((b) => {
+    b.onclick = () => {
+      learning.currentLessonId = null;
+      playSound('tap');
+      save();
+      render();
+    };
+  });
+
+  // Step Advance in 7-Step Modal
+  root.querySelectorAll('[data-stepadvance]').forEach((b) => {
+    b.onclick = () => {
+      const nextStep = Number(b.dataset.stepadvance);
+      learning.activeStep = nextStep;
+      playSound('tap');
+      save();
+      render();
+    };
+  });
+
+  // Prediction Choice Selection
+  root.querySelectorAll('[data-predictchoice]').forEach((b) => {
+    b.onclick = () => {
+      learning.userPrediction = Number(b.dataset.predictchoice);
+      playSound('tap');
+      render();
+    };
+  });
+
+  // Challenge Question Choice Selection
+  root.querySelectorAll('[data-chalchoice]').forEach((b) => {
+    b.onclick = () => {
+      if (learning.challengeSubmitted) return;
+      learning.challengeSelected = Number(b.dataset.chalchoice);
+      playSound('tap');
+      render();
+    };
+  });
+
+  // Challenge Check Button
+  const chalCheck = root.querySelector('#btn-chal-check');
+  if (chalCheck) {
+    chalCheck.onclick = () => {
+      if (learning.challengeSelected === null) return;
+      learning.challengeSubmitted = true;
+      const lesson = LEVEL_1_LESSONS[learning.currentLessonId];
+      const step = lesson.steps[learning.activeStep];
+      const opt = step.options.find((o) => o.id === learning.challengeSelected);
+      if (opt && opt.correct) {
+        playSound('correct');
+      } else {
+        playSound('wrong');
+      }
+      save();
+      render();
+    };
+  }
+
+  // Challenge Hint Toggle
+  const chalHint = root.querySelector('#btn-chal-hint');
+  if (chalHint) {
+    chalHint.onclick = () => {
+      learning.showHint = !learning.showHint;
+      playSound('hint');
+      render();
+    };
+  }
+
+  // Challenge Retry Button
+  const chalRetry = root.querySelector('#btn-chal-retry');
+  if (chalRetry) {
+    chalRetry.onclick = () => {
+      learning.challengeSubmitted = false;
+      learning.challengeSelected = null;
+      playSound('tap');
+      render();
+    };
+  }
+
+  // Complete / Finish Lesson & Claim XP
+  const lessonFinish = root.querySelector('#btn-lesson-finish');
+  if (lessonFinish) {
+    lessonFinish.onclick = () => {
+      const lesson = LEVEL_1_LESSONS[learning.currentLessonId];
+      recordAeroLessonCompletion(state, learning.currentLessonId, lesson?.xpReward || 50);
+      learning.currentLessonId = null;
+      learning.activeStep = 0;
+      playSound('streak');
+      save();
+      render();
+    };
+  }
+
+  // DIY Materials Checklist Toggle
+  root.querySelectorAll('[data-diymat]').forEach((cb) => {
+    cb.onchange = () => {
+      toggleDiyMaterial(state, cb.dataset.diymat);
+      playSound('tap');
+      save();
+      render();
+    };
+  });
+
+  // DIY Steps Checklist Toggle
+  root.querySelectorAll('[data-diystep]').forEach((cb) => {
+    cb.onchange = () => {
+      toggleDiyStep(state, Number(cb.dataset.diystep));
+      playSound('tap');
+      save();
+      render();
+    };
+  });
 
   // Tab switching with delegation & direct handlers
   root.querySelectorAll('[data-aerotab]').forEach((b) => {
@@ -2330,5 +2989,8 @@ export function bindAeroLab(root, state, save, render) {
     disposed = true;
     aero.running = false;
     cancelAnimationFrame(raf);
+    if (cleanupWidget) {
+      cleanupWidget();
+    }
   };
 }

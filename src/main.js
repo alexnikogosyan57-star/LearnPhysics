@@ -190,7 +190,7 @@ function questionLayout(content, eventKey, caption, state = "thinking") {
 }
 function shell(body) {
   const active = ["lesson", "electric"].includes(page) ? "path" : page;
-  return `<a class="skip-link" href="#main-content">Անցնել բովանդակությանը</a><header class="site-header" data-screen="${page}"><div class="header-inner"><a class="brand" href="#home" aria-label="Ֆիզիկան շուրջդ է՝ գլխավոր էջ"><span class="brand-symbol">${icon("orbit")}</span><span>Ֆիզիկան <span class="brand-second">շուրջդ է</span></span></a><div class="audio-controls" role="group" aria-label="Ձայնի կառավարում"><button id="sound" class="icon-button sound-button" aria-label="${audioState().enabled?'Անջատել ձայնը':'Միացնել ձայնը'}" title="${audioState().enabled?'Անջատել ձայնը':'Միացնել ձայնը'}" aria-pressed="${audioState().enabled}">${icon(audioState().enabled ? "volume-2" : "volume-x")}</button><button id="audio-settings" class="icon-button" aria-label="Ձայնի կարգավորումներ" title="Ձայնի կարգավորումներ" aria-haspopup="dialog" aria-controls="audio-dialog">${icon('sliders-horizontal')}</button><span id="sound-status" class="sr-only" role="status" aria-live="polite"></span></div><button id="nav-toggle" class="icon-button nav-toggle" aria-label="Բացել բաժինները" aria-expanded="false" aria-controls="main-nav">${icon("menu")}</button><nav id="main-nav" aria-label="Հիմնական բաժիններ">${navigation.map(([id, label, i]) => `<button data-page="${id}" class="nav-item ${active === id ? "active" : ""}" ${active === id ? 'aria-current="page"' : ""}>${icon(i)}<span>${label}</span></button>`).join("")}</nav></div></header><div class="main-shell" data-screen="${page}"><div class="page-layout ${page==='path'&&data.learning.selectedTopic?'with-context':''}"><main id="main-content" tabindex="-1">${body}</main>${page==='path'&&data.learning.selectedTopic?pathContextView(data):''}</div><footer><span>Ֆիզիկան շուրջդ է <span class="footer-dot">·</span> 9-րդ դասարան</span><span>${icon("hard-drive")} Քո գրառումները պահվում են այս սարքում</span></footer><p id="storage-warning" role="status"></p></div><dialog id="audio-dialog" aria-labelledby="audio-title"><button class="dialog-close icon-button" id="close-audio" aria-label="Փակել">${icon("x")}</button><span class="eyebrow">Ձայնի կարգավորումներ</span><h2 id="audio-title">Սովորելու հանգիստ միջավայր</h2><p>Կարճ, մեղմ ձայնային էֆեկտներ՝ փորձը սկսելիս, ճիշտ պատասխանի ու պահպանված գրառման համար։ Երաժշտություն չկա։</p><label class="volume-label">Ձայնի մակարդակ <input id="volume" type="range" min="0" max="100" value="${audioState().volume}" aria-label="Ձայնի մակարդակ"></label><button class="button" id="enable-sound" type="button">Միացնել ձայնը</button><button class="button secondary" id="mute">${icon("volume-x")} Անջատել ձայնը</button><p class="audio-note"><span id="audio-status" role="status">${audioState().enabled ? "Ձայնը միացված է։" : "Ձայնն անջատված է։ Միացրու այն, երբ ցանկանաս։"}</span><br>Տեղային ձայնային էֆեկտներ՝ Kenney · CC0։</p></dialog>`;
+  return `<a class="skip-link" href="#main-content">Անցնել բովանդակությանը</a><header class="site-header" data-screen="${page}"><div class="header-inner"><a class="brand" href="#home" aria-label="Ֆիզիկան շուրջդ է՝ գլխավոր էջ"><span class="brand-symbol">${icon("orbit")}</span><span>Ֆիզիկան <span class="brand-second">շուրջդ է</span></span></a><div class="audio-controls" role="group" aria-label="Ձայնի կառավարում"><button id="sound" class="icon-button sound-button" aria-label="${audioState().enabled?'Անջատել ձայնը':'Միացնել ձայնը'}" title="${audioState().enabled?'Անջատել ձայնը':'Միացնել ձայնը'}" aria-pressed="${audioState().enabled}">${icon(audioState().enabled ? "volume-2" : "volume-x")}</button><span id="sound-status" class="sr-only" role="status" aria-live="polite"></span></div><button id="nav-toggle" class="icon-button nav-toggle" aria-label="Բացել բաժինները" aria-expanded="false" aria-controls="main-nav">${icon("menu")}</button><nav id="main-nav" aria-label="Հիմնական բաժիններ">${navigation.map(([id, label, i]) => `<button data-page="${id}" class="nav-item ${active === id ? "active" : ""}" ${active === id ? 'aria-current="page"' : ""}>${icon(i)}<span>${label}</span></button>`).join("")}</nav></div></header><div class="main-shell" data-screen="${page}"><div class="page-layout ${page==='path'&&data.learning.selectedTopic?'with-context':''}"><main id="main-content" tabindex="-1">${body}</main>${page==='path'&&data.learning.selectedTopic?pathContextView(data):''}</div><footer><span>Ֆիզիկան շուրջդ է <span class="footer-dot">·</span> 9-րդ դասարան</span><span>${icon("hard-drive")} Քո գրառումները պահվում են այս սարքում</span></footer><p id="storage-warning" role="status"></p></div><dialog id="audio-dialog" aria-labelledby="audio-title"><button class="dialog-close icon-button" id="close-audio" aria-label="Փակել">${icon("x")}</button><span class="eyebrow">Ձայնի կարգավորումներ</span><h2 id="audio-title">Սովորելու հանգիստ միջավայր</h2><p>Կարճ, մեղմ ձայնային էֆեկտներ՝ փորձը սկսելիս, ճիշտ պատասխանի ու պահպանված գրառման համար։ Երաժշտություն չկա։</p><label class="volume-label">Ձայնի մակարդակ <input id="volume" type="range" min="0" max="100" value="${audioState().volume}" aria-label="Ձայնի մակարդակ"></label><button class="button" id="enable-sound" type="button">Միացնել ձայնը</button><button class="button secondary" id="mute">${icon("volume-x")} Անջատել ձայնը</button><p class="audio-note"><span id="audio-status" role="status">${audioState().enabled ? "Ձայնը միացված է։" : "Ձայնն անջատված է։ Միացրու այն, երբ ցանկանաս։"}</span><br>Տեղային ձայնային էֆեկտներ՝ Kenney · CC0։</p></dialog>`;
 }
 function home() {
   const current = [...investigations,...foundations,...electricLessons].find(l => l.id === data.currentLesson);
@@ -626,15 +626,19 @@ function saveMotionNote() {
 }
 function syncAudioControls(message=''){
  const state=audioState(),label=state.enabled?'Անջատել ձայնը':'Միացնել ձայնը';
- $('#sound').innerHTML=icon(state.enabled?'volume-2':'volume-x');
- $('#sound').setAttribute('aria-pressed',String(state.enabled));
- $('#sound').setAttribute('aria-label',label);$('#sound').title=label;
- $('#volume').value=state.volume;
- $('#enable-sound').disabled=state.enabled;
- $('#mute').disabled=!state.enabled;
+ const sBtn=$('#sound');
+ if(sBtn){
+  sBtn.innerHTML=icon(state.enabled?'volume-2':'volume-x');
+  sBtn.setAttribute('aria-pressed',String(state.enabled));
+  sBtn.setAttribute('aria-label',label);sBtn.title=label;
+  createIcons({icons,root:sBtn});
+ }
+ const vol=$('#volume');if(vol)vol.value=state.volume;
+ const en=$('#enable-sound');if(en)en.disabled=state.enabled;
+ const mu=$('#mute');if(mu)mu.disabled=!state.enabled;
  const status=message||(state.enabled?'Ձայնը միացված է։':'Ձայնն անջատված է։');
- $('#audio-status').textContent=status;$('#sound-status').textContent=status;
- createIcons({icons,root:$('#sound')});
+ const aStat=$('#audio-status');if(aStat)aStat.textContent=status;
+ const sStat=$('#sound-status');if(sStat)sStat.textContent=status;
 }
 function bind() {
   document
@@ -649,12 +653,20 @@ function bind() {
     go("home");
   };
   $("#sound").onclick = () => {toggleSound();syncAudioControls();};
-  $("#audio-settings").onclick = () => $("#audio-dialog").showModal();
-  $("#close-audio").onclick = () => $("#audio-dialog").close();
-  $("#enable-sound").disabled=audioState().enabled;$("#mute").disabled=!audioState().enabled;
-  $("#volume").oninput = (e) => { setVolume(e.target.value); syncAudioControls(); };
-  $("#enable-sound").onclick = () => { enableSound(); syncAudioControls(); };
-  $("#mute").onclick = () => { muteSound(); syncAudioControls(); };
+  const audioSettingsBtn = $("#audio-settings");
+  if (audioSettingsBtn) audioSettingsBtn.onclick = () => $("#audio-dialog")?.showModal();
+  const closeAudioBtn = $("#close-audio");
+  if (closeAudioBtn) closeAudioBtn.onclick = () => $("#audio-dialog")?.close();
+  const enBtn = $("#enable-sound"), muteBtn = $("#mute"), volInput = $("#volume");
+  if (enBtn) {
+    enBtn.disabled = audioState().enabled;
+    enBtn.onclick = () => { enableSound(); syncAudioControls(); };
+  }
+  if (muteBtn) {
+    muteBtn.disabled = !audioState().enabled;
+    muteBtn.onclick = () => { muteSound(); syncAudioControls(); };
+  }
+  if (volInput) volInput.oninput = (e) => { setVolume(e.target.value); syncAudioControls(); };
   if(page==='lesson'&&data.stage===5&&!data.assessment){bindAssessment(document,data.motionFlow ||= {},motionItems(),save,render,(results,review)=>{data.assessment={score:results.filter(r=>r.correct).length,created:Date.now(),review};recordResult(data,'motion',data.assessment.score,3,{questions:results,review},topics);data.motionNoteId=null;saveMotionNote();});return;}
   $("#run")?.addEventListener("click", () => {
     playSound("control");

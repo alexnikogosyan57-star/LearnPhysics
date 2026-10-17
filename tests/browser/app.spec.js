@@ -72,11 +72,9 @@ test("full investigation, simulation, notebook and reload", async ({
   await page.locator('[data-page="notebook"]').first().click();
   await expect(page.locator(".note")).toContainText("Իմ խմբագրված");
   await page.locator("#sound").click();
-  await page.locator("#audio-settings").click();
-  await page.locator("#volume").fill("70");
-  await page.locator("#mute").click();
-  await expect(page.locator("#volume")).toHaveValue("70");
-  await page.locator("#close-audio").click();
+  await expect(page.locator("#sound")).toHaveAttribute("aria-pressed", "false");
+  await page.locator("#sound").click();
+  await expect(page.locator("#sound")).toHaveAttribute("aria-pressed", "true");
   await page.locator('[data-page="progress"]').first().click();
   await expect(page.locator(".progress-stats")).toContainText("2");
   page.once("dialog", (d) => d.accept());
